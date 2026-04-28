@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Portal de Solicitudes Masivas</title>
+    <style>
+        /* Un poco de diseño para que se vea bonito */
+        body { font-family: Arial, sans-serif; background-color: #f4f7f6; padding: 20px; }
+        .contenedor-principal { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0px 0px 10px rgba(0,0,0,0.1); }
+        .caja-solicitud { border: 2px dashed #008CBA; padding: 15px; margin-bottom: 15px; border-radius: 5px; background-color: #fdfdfd; }
+        input, textarea { width: 100%; margin-bottom: 10px; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px;}
+        button { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;}
+        .btn-agregar { background-color: #4CAF50; color: white; }
+        .btn-enviar { background-color: #008CBA; color: white; width: 100%; font-size: 16px; margin-top: 15px; padding: 15px;}
+    </style>
+</head>
+<body>
+
+    <div class="contenedor-principal">
+        <h2 style="text-align: center; color: #333;">📝 Portal de Solicitudes</h2>
+        <p style="text-align: center; color: #666;">Agrega tantas solicitudes como necesites y envíalas de un solo golpe.</p>
+
+        <div id="lista-formularios"></div>
+
+        <button class="btn-agregar" onclick="agregarNuevaFila()">+ Agregar otra solicitud</button>
+        <hr style="margin: 20px 0; border: 1px solid #eee;">
+        <button class="btn-enviar" onclick="enviarTodoANube()">🚀 Enviar Todas las Solicitudes a la Nube</button>
+    </div>
+
+    <script>
+        // ¡OJO! REEMPLAZA ESTO CON LA URL DE TU FUNCION DE GOOGLE CLOUD
+        const URL_DE_NUBE = "https://portal-github-562255084707.europe-west1.run.app";
+
+        let contador = 0;
+
+        // Esta instrucción crea un bloque nuevo de preguntas
+        function agregarNuevaFila() {
+            contador++;
+            const div = document.createElement('div');
+            div.className = 'caja-solicitud';
+            div.innerHTML = `
+                <h4 style="margin-top: 0;">Solicitud #${contador}</h4>
+                <label>Nombre del solicitante:</label>
+                <input type="text" class="campo-nombre" placeholder="Ej. Ana García">
+                
+                <label>Detalles de la solicitud:</label>
+                <textarea class="campo-detalle" rows="3" placeholder="Escribe aquí los detalles..."></textarea>
+            `;
+            document.getElementById('lista-formularios').appendChild(div);
+        }
+
+        // Esta instrucción empaca todo y lo manda a Google
+        async function enviarTodoANube() {
+            const cajas = document.querySelectorAll('.caja-solicitud');
+            let todasLasRespuestas = [];
+
+            // Revisamos cada cajita y guardamos lo que escribieron
+            cajas.forEach(caja => {
+                const nombre = caja.querySelector('.campo-nombre').value;
+                const detalle = caja.querySelector('.campo-detalle').value;
+                
+                // Solo empacamos si escribieron algo
+                if (nombre !== "" || detalle !== "") {
+                    todasLasRespuestas.push({ nombre: nombre, detalle: detalle });
+                }
+            });
+
+            if (todasLasRespuestas.length === 0) {
+                alert("⚠️ Por favor, llena al menos una solicitud antes de enviar.");
+                return;
+            }
+
+            // Cambiamos el texto del botón para que el usuario sepa que está cargando
+            document.querySelector('.btn-enviar').innerText = "⏳ Enviando...";
+
+            // Enviamos el paquete gigante a Google Cloud
+            try {
+                const respuesta = await fetch(URL_DE_NUBE, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ paqueteDeSolicitudes: todasLasRespuestas })
+                });
+
+                if (respuesta.ok) {
+                    alert("✅ ¡Éxito! Todas tus solicitudes fueron enviadas.");
+                    document.getElementById('lista-formularios').innerHTML = ''; // Limpiamos la pantalla
+                    contador = 0; // Reiniciamos el conteo
+                    agregarNuevaFila(); // Ponemos una cajita nueva vacía
+                } else {
+                    alert("❌ Hubo un error de parte de Google Cloud.");
+                }
+            } catch (error) {
+                alert("❌ Error de conexión. Revisa que pusiste bien la URL en el código.");
+            }
+
+            // Volvemos a poner el botón normal
+            document.querySelector('.btn-enviar').innerText = "🚀 Enviar Todas las Solicitudes a la Nube";
+        }
+
+        // Arrancamos poniendo la primera cajita apenas se abre la página
+        agregarNuevaFila();
+    </script>
+</body>
+</html>
