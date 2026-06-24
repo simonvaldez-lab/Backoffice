@@ -3,221 +3,498 @@
 <head>
     <meta charset="UTF-8">
     <title>Operaciones de Tesorería - Bold</title>
+    
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; padding: 20px; color: #333; }
-        .contenedor { max-width: 800px; margin: 0 auto; }
-        .header { background-color: #673ab7; color: white; padding: 20px; border-radius: 8px 8px 0 0; text-align: center; }
-        .caja-solicitud { background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-left: 5px solid #673ab7; }
-        .fila { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 15px; }
-        .columna { flex: 1; min-width: 200px; }
-        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; color: #555; }
-        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-family: inherit; }
-        .btn { padding: 12px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 16px; transition: 0.3s; }
-        .btn-agregar { background-color: #e0e0e0; color: #333; width: 100%; margin-bottom: 20px; }
-        .btn-agregar:hover { background-color: #d5d5d5; }
-        .btn-enviar { background-color: #673ab7; color: white; width: 100%; padding: 15px; }
-        .btn-enviar:hover { background-color: #5e35b1; }
-        .oculto { display: none; }
+        /* --- ESTILOS GENERALES Y DASHBOARD BOLD --- */
+        body { 
+            font-family: 'Inter', 'Segoe UI', sans-serif; 
+            margin: 0; 
+            background-color: #f8f9fa;
+            color: #0b1442;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* --- BARRA SUPERIOR (TOPBAR) --- */
+        .topbar {
+            background-color: white;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            border-bottom: 1px solid #e2e8f0;
+            z-index: 10;
+        }
+        .logo { font-size: 24px; font-weight: 900; color: #0b1442; letter-spacing: -1px; }
+        .topbar-derecha { display: flex; align-items: center; gap: 15px; }
+        .avatar { width: 35px; height: 35px; background-color: #cbd5e1; border-radius: 50%; }
+
+        /* --- ESTRUCTURA PRINCIPAL (SIDEBAR + CONTENIDO) --- */
+        .contenedor-principal {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* --- BARRA LATERAL (SIDEBAR) --- */
+        .sidebar {
+            width: 250px;
+            background-color: white;
+            border-right: 1px solid #e2e8f0;
+            padding: 20px 0;
+            overflow-y: auto;
+        }
+        .menu-categoria { font-size: 12px; color: #94a3b8; margin: 15px 0 5px 20px; text-transform: uppercase; font-weight: 600; }
+        .menu-item { padding: 12px 20px; display: flex; align-items: center; color: #475569; text-decoration: none; font-size: 14px; cursor: pointer; }
+        .menu-item:hover { background-color: #f1f5f9; }
+        .menu-item.activo { background-color: #f1f5f9; color: #0b1442; font-weight: bold; border-left: 3px solid #0b1442; }
+
+        /* --- ÁREA DE CONTENIDO (DERECHA) --- */
+        .contenido { flex: 1; padding: 40px; overflow-y: auto; }
+        .titulo-seccion { font-size: 24px; font-weight: 800; color: #0b1442; margin-bottom: 5px; }
+        .subtitulo { color: #475569; margin-bottom: 30px; font-size: 14px; }
+
+        /* --- ESTILOS DE LOS FORMULARIOS --- */
+        .caja-solicitud { background: white; padding: 30px; margin-bottom: 20px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .fila { display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 20px; }
+        .columna { flex: 1; min-width: 250px; }
+        label { display: block; font-weight: 700; margin-bottom: 8px; font-size: 13px; color: #0b1442; }
+
+        /* Inputs estilo Bold */
+        input, select, textarea { 
+            width: 100%; padding: 12px 15px; background-color: #f4f5f7; border: 1px solid transparent; 
+            border-radius: 8px; box-sizing: border-box; font-family: inherit; color: #0b1442; transition: 0.2s;
+        }
+        input:focus, select:focus { border: 1px solid #0b1442; outline: none; background-color: white; }
+
+        /* Botones */
+        .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; transition: 0.3s; }
+        .btn-agregar { background-color: white; color: #0b1442; border: 1px solid #0b1442; margin-bottom: 20px; }
+        .btn-agregar:hover { background-color: #f8f9fa; }
+        .btn-enviar { background-color: #0b1442; color: white; width: 100%; padding: 15px; font-size: 16px; }
+        .btn-enviar:hover { background-color: #1e293b; }
+
+        /* --- ESTILOS PARA LOS MODALES Y EL SPINNER --- */
+        .overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center;
+            z-index: 9999; backdrop-filter: blur(3px);
+        }
+        .modal { background: white; padding: 30px; border-radius: 8px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .icono-modal { font-size: 40px; width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px auto; color: white; font-weight: bold; }
+        .icono-modal.exito { background-color: #4CAF50; }
+        .icono-modal.error { background-color: #F44336; }
+        .spinner-contenedor { text-align: center; color: white; font-size: 16px; font-weight: bold; }
+        .spinner { width: 50px; height: 50px; border: 5px solid rgba(255, 255, 255, 0.3); border-radius: 50%; border-top-color: #673ab7; animation: girar 1s ease-in-out infinite; margin: 0 auto 15px auto; }
+        @keyframes girar { to { transform: rotate(360deg); } }
+        .oculto { display: none !important; }
+
+        /* --- ESTILOS PARA LAS VISTAS Y TABLAS --- */
+        .tabla-bold { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .tabla-bold th { background-color: #f1f5f9; color: #475569; font-weight: 700; text-align: left; padding: 15px; font-size: 13px; text-transform: uppercase; }
+        .tabla-bold td { padding: 15px; border-bottom: 1px solid #e2e8f0; font-size: 14px; color: #0b1442; }
+        .tabla-bold tr:hover { background-color: #f8f9fa; }
+        .badge { padding: 5px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        .badge.pendiente { background-color: #fef08a; color: #854d0e; }
+        .badge.aprobado { background-color: #bbf7d0; color: #166534; }
+        
+        .btn-accion { padding: 8px 12px; border: none; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: bold; margin-right: 5px; }
+        .btn-accion.aprobar { background-color: #0b1442; color: white; }
+        .btn-accion.rechazar { background-color: white; color: #F44336; border: 1px solid #F44336; }
     </style>
 </head>
 <body>
+    <div id="vista-historial" class="oculto">
+                <h1 class="titulo-seccion">Historial de Operaciones</h1>
+                <p class="subtitulo">Aquí puedes consultar el estado de las operaciones que has cargado anteriormente.</p>
 
-<div class="contenedor">
-    <div class="header">
-        <h1 style="margin: 0;">Operaciones de Tesorería</h1>
-        <p style="margin: 5px 0 0 0;">Portal de carga masiva</p>
+                <div style="background: white; border-radius: 8px; border: 1px solid #e2e8f0; overflow: hidden; margin-top: 20px;">
+                    <table class="tabla-bold">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Fecha Carga</th>
+                                <th>Compañía</th>
+                                <th>Tipo de Pago</th>
+                                <th>Valor Total</th>
+                                <th>Estado</th>
+                                <th>Comprobante</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong style="color: #673ab7;">OP-1001</strong></td>
+                                <td>23/06/2026</td>
+                                <td>Bold CO</td>
+                                <td>Nómina</td>
+                                <td>$45,000,000</td>
+                                <td><span class="badge aprobado" style="background-color: #bbf7d0; color: #166534;">✓ Aprobada</span></td>
+                                <td><a href="#" style="color: #4f46e5; text-decoration: none; font-weight: bold;">📄 Descargar</a></td>
+                            </tr>
+                            <tr>
+                                <td><strong style="color: #673ab7;">OP-1002</strong></td>
+                                <td>22/06/2026</td>
+                                <td>Bold CF</td>
+                                <td>Proveedores</td>
+                                <td>$12,500,000</td>
+                                <td><span class="badge" style="background-color: #fee2e2; color: #991b1b;">✕ Rechazada</span></td>
+                                <td style="color: #94a3b8;">Sin comprobante</td>
+                            </tr>
+                            <tr>
+                                <td><strong style="color: #673ab7;">OP-1003</strong></td>
+                                <td>23/06/2026</td>
+                                <td>Bold Capital</td>
+                                <td>Traslados</td>
+                                <td>$150,000,000</td>
+                                <td><span class="badge pendiente">⏳ Pendiente</span></td>
+                                <td style="color: #94a3b8;">En proceso...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+    <div id="overlay-carga" class="overlay oculto">
+        <div class="spinner-contenedor">
+            <div class="spinner"></div>
+            <p>Subiendo archivos y procesando...<br>Por favor, no cierres esta pestaña.</p>
+        </div>
     </div>
 
-    <div id="lista-formularios"></div>
+    <div id="modal-exito" class="overlay oculto">
+        <div class="modal">
+            <div class="icono-modal exito">✓</div>
+            <h2>¡Operaciones Enviadas!</h2>
+            <p>Los registros y archivos se han guardado correctamente en Tesorería.</p>
+            <button class="btn btn-enviar" onclick="cerrarModales()">Entendido</button>
+        </div>
+    </div>
 
-    <button class="btn btn-agregar" onclick="agregarFormulario()">+ Agregar otra operación</button>
-    <button class="btn btn-enviar" onclick="enviarTodo()">🚀 Enviar Operaciones a Tesorería</button>
-</div>
+    <div id="modal-error" class="overlay oculto">
+        <div class="modal">
+            <div class="icono-modal error">✕</div>
+            <h2>Hubo un problema</h2>
+            <p id="mensaje-error-texto">No pudimos enviar los datos. Por favor, intenta de nuevo.</p>
+            <button class="btn btn-agregar" onclick="cerrarModales()">Cerrar y Revisar</button>
+        </div>
+    </div>
 
-<script>
-    // --- BASE DE DATOS DE TUS MENÚS EN CASCADA ---
-    const urlCloudFunction = "AQUI_PEGA_TU_URL_DE_GOOGLE_CLOUD"; 
-    let contador = 0;
-
-    const opcionesSubtipo = {
-        "Compensación": ["Pago de compensación CUD", "Confirmación abono por adquirencia", "Pago de compensación por Emisión"],
-        "Nómina": ["Colaboradores (reembolsos, viáticos, etc)", "Pacto Colectivo - Cheque", "Pacto Colectivo - PSE"],
-        "Payroll": ["Ajustes de nómina", "Pago de liquidaciones", "Pago de nómina", "Pagos a SENA"],
-        "Proveedores": ["Cheques por Ventanilla", "Proveedores Locales", "Proveedores Locales - PSE", "Proveedores Internacionales"],
-        "Traslados": ["Adición FIC Agregadora Bold. CF...", "Traslados Entre Cuentas", "Traslados CUD", "Recaudo TC"],
-        "PSE Cash In": ["Opción PSE 1", "Opción PSE 2"]
-    };
-
-    const opcionesCuentasOrigen = {
-        "Bold CO": ["Bold. CO: Davivienda 451770073547 Ahorros COP", "Bold. CO: Bancolombia 0400000126 Ahorros COP", "Bold. CO: Bancolombia 04000004981 Ahorros COP"],
-        "Bold CF": ["Bold. CF: Bancolombia 04000002167 Ahorros COP", "Bold. CF: Silicon Valley Bank 3303688751 Corriente USD", "Bold. CF: Credicorp 1-1-58903-3 CCA COP"],
-        "Bold Capital": ["Cuenta Capital 1", "Cuenta Capital 2"]
-    };
-
-    // Función para crear un bloque nuevo en la pantalla
-    function agregarFormulario() {
-        contador++;
-        const id = contador;
-        const div = document.createElement('div');
-        div.className = 'caja-solicitud';
-        div.id = `solicitud-${id}`;
+    <header class="topbar">
         
-        div.innerHTML = `
-            <h3 style="margin-top: 0; color: #673ab7; border-bottom: 1px solid #eee; padding-bottom: 10px;">Operación #${id}</h3>
+        <div class="logo">bold</div>
+        <div class="topbar-derecha">
+            <select id="simulador-rol" onchange="cambiarRol(this.value)" style="padding: 5px 10px; border-radius: 5px; font-weight: bold; border: 1px solid #cbd5e1; background: #f8f9fa;">
+                <option value="solicitante">Rol: Solicitante (Carga)</option>
+                <option value="aprobador">Rol: Aprobador</option>
+                <option value="preparador">Rol: Preparador</option>
+            </select>
+
+            <span style="font-size: 14px; font-weight: bold; margin-left: 15px;">🇨🇴 Bold</span>
+            <div class="avatar"></div>
+        </div>
+    </header>
+    
+
+    <div class="contenedor-principal">
+        
+        <aside class="sidebar">
+            <div class="menu-categoria">Operaciones</div>
+            <div class="menu-item activo" id="menu-carga" onclick="cambiarRol('solicitante')">Carga de Operaciones</div>
+            <div class="menu-item" id="menu-historial" onclick="cambiarVista('historial')">Historial de Operaciones</div>
             
-            <div class="fila">
-                <div class="columna">
-                    <label>Correo Electrónico *</label>
-                    <input type="email" class="val-correo" placeholder="ejemplo@bold.co" required>
-                </div>
-                <div class="columna">
-                    <label>Fecha de cumplimiento *</label>
-                    <input type="date" class="val-fecha" required>
-                </div>
-            </div>
+            <div class="menu-categoria">Aprobaciones y Ejecución</div>
+            <div class="menu-item" id="menu-aprobacion" onclick="cambiarRol('aprobador')">Bandeja de Aprobador</div>
+            <div class="menu-item" id="menu-ejecucion" onclick="cambiarRol('preparador')">Ejecución Banco</div>
+        </aside>
 
-            <div class="fila">
-                <div class="columna">
-                    <label>Tipo de Pago *</label>
-                    <select class="val-tipo" onchange="actualizarSubtipos(${id})" required>
-                        <option value="">Seleccione...</option>
-                        <option value="Compensación">Compensación</option>
-                        <option value="Nómina">Nómina</option>
-                        <option value="Payroll">Payroll</option>
-                        <option value="Proveedores">Proveedores</option>
-                        <option value="Traslados">Traslados</option>
-                        <option value="PSE Cash In">PSE Cash In</option>
-                    </select>
-                </div>
-                <div class="columna">
-                    <label>Tipo de Operación (Subcategoría) *</label>
-                    <select class="val-subtipo" required>
-                        <option value="">Primero elija un Tipo de Pago</option>
-                    </select>
-                </div>
-            </div>
+        <main class="contenido">
+            <h1 class="titulo-seccion">&lt; Operaciones de Tesorería</h1>
+            <p class="subtitulo">Ingresa los datos para la carga masiva de operaciones. Adjunta el Excel y verifica el resumen antes de enviar.</p>
 
-            <div class="fila">
-                <div class="columna">
-                    <label>Compañía *</label>
-                    <select class="val-compania" onchange="actualizarCuentas(${id})" required>
-                        <option value="">Seleccione...</option>
-                        <option value="Bold CO">Bold CO</option>
-                        <option value="Bold CF">Bold CF</option>
-                        <option value="Bold Capital">Bold Capital</option>
-                    </select>
-                </div>
-                <div class="columna">
-                    <label>Cuenta Origen *</label>
-                    <select class="val-origen" required>
-                        <option value="">Primero elija una Compañía</option>
-                    </select>
-                </div>
-            </div>
+            <div id="lista-formularios"></div>
 
-            <div class="fila oculto" id="caja-destino-${id}">
-                <div class="columna">
-                    <label style="color: #d32f2f;">Cuenta Destino (Solo Traslados) *</label>
-                    <input type="text" class="val-destino" placeholder="Escriba la cuenta destino">
-                </div>
-            </div>
+            <button class="btn btn-agregar" onclick="agregarFormulario()">+ Agregar otra operación</button>
+            <button class="btn btn-enviar" onclick="enviarTodo()">🚀 Enviar Operaciones a Tesorería</button>
+        </main>
+    </div>
 
-            <div class="fila">
-                <div class="columna">
-                    <label>Nombre del Archivo</label>
-                    <input type="text" class="val-nombre-archivo" placeholder="Ej. 21042026_PAGOPROV_CF">
-                </div>
-                <div class="columna">
-                    <label>Adjuntar documento</label>
-                    <input type="file" class="val-archivo">
-                </div>
-            </div>
+    <script>
+        // --- BASE DE DATOS DE TUS MENÚS EN CASCADA ---
+        let contador = 0;
 
-            <div class="fila">
-                <div class="columna">
-                    <label>Moneda *</label>
-                    <select class="val-moneda" required>
-                        <option value="COP">COP</option>
-                        <option value="USD">USD</option>
-                        <option value="EUR">EUR</option>
-                        <option value="GBP">GBP</option>
-                    </select>
-                </div>
-                <div class="columna">
-                    <label>Valor *</label>
-                    <input type="number" step="0.01" class="val-valor" placeholder="Ej. 147894651.00" required>
-                </div>
-                <div class="columna">
-                    <label>Cantidad de registros *</label>
-                    <input type="number" class="val-registros" placeholder="Ej. 1" required>
-                </div>
-            </div>
+        const opcionesSubtipo = {
+            "Compensación": ["Pago de compensación CUD", "Confirmación abono por adquirencia", "Pago de compensación por Emisión"],
+            "Nómina": ["Colaboradores (reembolsos, viáticos, etc)", "Pacto Colectivo - Cheque", "Pacto Colectivo - PSE"],
+            "Payroll": ["Ajustes de nómina", "Pago de liquidaciones", "Pago de nómina", "Pagos a SENA"],
+            "Proveedores": ["Cheques por Ventanilla", "Proveedores Locales", "Proveedores Locales - PSE", "Proveedores Internacionales"],
+            "Traslados": ["Adición FIC Agregadora Bold. CF...", "Traslados Entre Cuentas", "Traslados CUD", "Recaudo TC"],
+            "PSE Cash In": ["Opción PSE 1", "Opción PSE 2"]
+        };
 
-            <div class="fila">
-                <div class="columna">
-                    <label>Observaciones</label>
-                    <textarea class="val-observaciones" rows="2" placeholder="Opcional..."></textarea>
+        const opcionesCuentasOrigen = {
+            "Bold CO": ["Bold. CO: Davivienda 451770073547 Ahorros COP", "Bold. CO: Bancolombia 0400000126 Ahorros COP", "Bold. CO: Bancolombia 04000004981 Ahorros COP"],
+            "Bold CF": ["Bold. CF: Bancolombia 04000002167 Ahorros COP", "Bold. CF: Silicon Valley Bank 3303688751 Corriente USD", "Bold. CF: Credicorp 1-1-58903-3 CCA COP"],
+            "Bold Capital": ["Cuenta Capital 1", "Cuenta Capital 2"]
+        };
+
+        // Función para crear un bloque nuevo en la pantalla
+        function agregarFormulario() {
+           // ==========================================
+        // FUNCIONES DEL SOLICITANTE (WIZARD & DUPLICAR)
+        // ==========================================
+        function agregarFormulario(datosCopiados = null) {
+            contador++;
+            const id = contador;
+            const div = document.createElement('div');
+            div.className = 'caja-solicitud';
+            div.id = `solicitud-${id}`;
+            
+            // Si hay más de 1 formulario, mostramos el botón de duplicar
+            const btnDuplicar = (contador > 1 && !datosCopiados) ? 
+                `<button type="button" onclick="duplicarUltimaOperacion(${id})" style="background: #e0e7ff; color: #4f46e5; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-left: 15px;">📋 Copiar anterior</button>` : '';
+
+            div.innerHTML = `
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 20px;">
+                    <div style="display: flex; align-items: center;">
+                        <h3 style="margin: 0; color: #0b1442;">Operación #${id}</h3>
+                        ${btnDuplicar}
+                    </div>
+                    <button onclick="eliminarFormulario(${id})" style="background: none; border: none; color: #F44336; cursor: pointer; font-weight: bold; font-size: 14px;">✕ Eliminar</button>
                 </div>
-            </div>
-        `;
-        document.getElementById('lista-formularios').appendChild(div);
-    }
+                
+                <div id="fase-1-${id}">
+                    <div style="margin-bottom: 15px; font-size: 12px; color: #673ab7; font-weight: bold;">PASO 1 DE 2: INFORMACIÓN BÁSICA</div>
+                    <div class="fila">
+                        <div class="columna"><label>Correo Electrónico *</label><input type="email" class="val-correo" placeholder="ejemplo@bold.co" required></div>
+                        <div class="columna"><label>Fecha de cumplimiento *</label><input type="date" class="val-fecha" required></div>
+                    </div>
+                    <div class="fila">
+                        <div class="columna"><label>Tipo de Pago *</label><select class="val-tipo" onchange="actualizarSubtipos(${id})" required>
+                            <option value="">Seleccione...</option><option value="Compensación">Compensación</option><option value="Nómina">Nómina</option><option value="Payroll">Payroll</option><option value="Proveedores">Proveedores</option><option value="Traslados">Traslados</option><option value="PSE Cash In">PSE Cash In</option>
+                        </select></div>
+                        <div class="columna"><label>Tipo de Operación *</label><select class="val-subtipo" required><option value="">Primero elija un Tipo</option></select></div>
+                    </div>
+                    <div class="fila">
+                        <div class="columna"><label>Compañía *</label><select class="val-compania" onchange="actualizarCuentas(${id})" required>
+                            <option value="">Seleccione...</option><option value="Bold CO">Bold CO</option><option value="Bold CF">Bold CF</option><option value="Bold Capital">Bold Capital</option>
+                        </select></div>
+                        <div class="columna"><label>Cuenta Origen *</label><select class="val-origen" required><option value="">Primero elija Compañía</option></select></div>
+                    </div>
+                    <div class="fila oculto" id="caja-destino-${id}">
+                        <div class="columna"><label style="color: #d32f2f;">Cuenta Destino *</label><input type="text" class="val-destino" placeholder="Escriba la cuenta destino"></div>
+                    </div>
+                    <div style="text-align: right; margin-top: 20px;">
+                        <button type="button" class="btn" style="background: #0b1442; color: white;" onclick="cambiarFase(${id}, 2)">Siguiente Paso ➔</button>
+                    </div>
+                </div>
 
-    // Lógica para cambiar los subtipos y mostrar/ocultar "Cuenta Destino"
-    function actualizarSubtipos(id) {
-        const bloque = document.getElementById(`solicitud-${id}`);
-        const tipoSel = bloque.querySelector('.val-tipo').value;
-        const subSel = bloque.querySelector('.val-subtipo');
-        const cajaDestino = document.getElementById(`caja-destino-${id}`);
+                <div id="fase-2-${id}" class="oculto">
+                    <div style="margin-bottom: 15px; font-size: 12px; color: #673ab7; font-weight: bold;">PASO 2 DE 2: ARCHIVO Y MONTOS</div>
+                    <div class="fila">
+                        <div class="columna"><label>Nombre del Archivo</label><input type="text" class="val-nombre-archivo" placeholder="Ej. 21042026_PAGOPROV"></div>
+                        <div class="columna"><label>Adjuntar documento de Excel</label><input type="file" class="val-archivo" accept=".xlsx, .xls" onchange="procesarExcel(event, ${id})"></div>
+                    </div>
+                    <div id="resumen-excel-${id}" style="display: none; margin-bottom: 20px; padding: 15px; background-color: #e0e7ff; border-left: 4px solid #4f46e5; border-radius: 4px;">
+                        <strong style="color: #0b1442;">📊 Vista previa del Excel:</strong><p style="margin: 5px 0; font-size: 14px; color: #0b1442;" id="texto-resumen-${id}"></p>
+                    </div>
+                    <div class="fila">
+                        <div class="columna"><label>Moneda *</label><select class="val-moneda" required><option value="COP">COP</option><option value="USD">USD</option><option value="EUR">EUR</option></select></div>
+                        <div class="columna"><label>Valor Total *</label><input type="number" step="0.01" class="val-valor" required></div>
+                        <div class="columna"><label>Registros *</label><input type="number" class="val-registros" required></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 20px;">
+                        <button type="button" class="btn" style="background: #e2e8f0; color: #0b1442;" onclick="cambiarFase(${id}, 1)">⬅ Atrás</button>
+                        <span style="color: #4CAF50; font-weight: bold; align-self: center;">✓ Formulario listo</span>
+                    </div>
+                </div>
+            `;
+            document.getElementById('lista-formularios').appendChild(div);
 
-        // Limpiar opciones anteriores
-        subSel.innerHTML = '<option value="">Seleccione...</option>';
-        
-        // Llenar nuevas opciones
-        if (opcionesSubtipo[tipoSel]) {
-            opcionesSubtipo[tipoSel].forEach(opcion => {
-                const opt = document.createElement('option');
-                opt.value = opcion;
-                opt.innerHTML = opcion;
-                subSel.appendChild(opt);
-            });
+            // Si vino con la orden de duplicar, rellenamos los datos básicos
+            if (datosCopiados) {
+                setTimeout(() => {
+                    document.querySelector(`#solicitud-${id} .val-correo`).value = datosCopiados.correo;
+                    document.querySelector(`#solicitud-${id} .val-fecha`).value = datosCopiados.fecha;
+                    document.querySelector(`#solicitud-${id} .val-tipo`).value = datosCopiados.tipo;
+                    actualizarSubtipos(id); // Recargamos el menú en cascada
+                    setTimeout(() => { document.querySelector(`#solicitud-${id} .val-subtipo`).value = datosCopiados.subtipo; }, 50);
+                    
+                    document.querySelector(`#solicitud-${id} .val-compania`).value = datosCopiados.compania;
+                    actualizarCuentas(id); // Recargamos el menú en cascada
+                    setTimeout(() => { document.querySelector(`#solicitud-${id} .val-origen`).value = datosCopiados.origen; }, 50);
+                }, 50);
+            }
         }
 
-        // LA REGLA DE ORO: Si es Traslado, mostrar Cuenta Destino. Si no, ocultarla.
-        if (tipoSel === "Traslados") {
-            cajaDestino.classList.remove('oculto');
-        } else {
-            cajaDestino.classList.add('oculto');
-            bloque.querySelector('.val-destino').value = ""; // Limpiar valor
+        // Lógica para cambiar los subtipos y mostrar/ocultar "Cuenta Destino"
+        function actualizarSubtipos(id) {
+            const bloque = document.getElementById(`solicitud-${id}`);
+            const tipoSel = bloque.querySelector('.val-tipo').value;
+            const subSel = bloque.querySelector('.val-subtipo');
+            const cajaDestino = document.getElementById(`caja-destino-${id}`);
+
+            subSel.innerHTML = '<option value="">Seleccione...</option>';
+            if (opcionesSubtipo[tipoSel]) {
+                opcionesSubtipo[tipoSel].forEach(opcion => {
+                    const opt = document.createElement('option');
+                    opt.value = opcion; opt.innerHTML = opcion; subSel.appendChild(opt);
+                });
+            }
+
+            if (tipoSel === "Traslados") {
+                cajaDestino.classList.remove('oculto');
+            } else {
+                cajaDestino.classList.add('oculto');
+                bloque.querySelector('.val-destino').value = ""; 
+            }
         }
-    }
 
-    // Lógica para cambiar las cuentas origen según la compañía
-    function actualizarCuentas(id) {
-        const bloque = document.getElementById(`solicitud-${id}`);
-        const compSel = bloque.querySelector('.val-compania').value;
-        const origSel = bloque.querySelector('.val-origen');
+        // Lógica para cambiar las cuentas origen según la compañía
+        function actualizarCuentas(id) {
+            const bloque = document.getElementById(`solicitud-${id}`);
+            const compSel = bloque.querySelector('.val-compania').value;
+            const origSel = bloque.querySelector('.val-origen');
 
-        origSel.innerHTML = '<option value="">Seleccione...</option>';
-        
-        if (opcionesCuentasOrigen[compSel]) {
-            opcionesCuentasOrigen[compSel].forEach(opcion => {
-                const opt = document.createElement('option');
-                opt.value = opcion;
-                opt.innerHTML = opcion;
-                origSel.appendChild(opt);
-            });
+            origSel.innerHTML = '<option value="">Seleccione...</option>';
+            if (opcionesCuentasOrigen[compSel]) {
+                opcionesCuentasOrigen[compSel].forEach(opcion => {
+                    const opt = document.createElement('option');
+                    opt.value = opcion; opt.innerHTML = opcion; origSel.appendChild(opt);
+                });
+            }
         }
-    }
 
-    // Iniciar con un formulario en pantalla
-    window.onload = agregarFormulario;
+        // Cierra cualquier modal activo
+        function cerrarModales() {
+            document.getElementById('modal-exito').classList.add('oculto');
+            document.getElementById('modal-error').classList.add('oculto');
+            document.getElementById('overlay-carga').classList.add('oculto');
+        }
 
-    // Función temporal para probar que captura los datos
-    function enviarTodo() {
-        alert("¡Botón presionado! Los menús funcionan perfecto. El próximo paso es conectar esto a la Nube para enviar los archivos.");
-    }
-</script>
+        // ==========================================
+        // LÓGICA DEL DÍA 2: LEER EXCEL
+        // ==========================================
+        function procesarExcel(evento, id) {
+            const archivo = evento.target.files[0];
+            const cajaResumen = document.getElementById(`resumen-excel-${id}`);
+            const textoResumen = document.getElementById(`texto-resumen-${id}`);
+            const inputRegistros = document.querySelector(`#solicitud-${id} .val-registros`);
+            const inputValor = document.querySelector(`#solicitud-${id} .val-valor`);
 
+            if (!archivo) {
+                cajaResumen.style.display = 'none';
+                return;
+            }
+
+            const lector = new FileReader();
+            lector.onload = function(e) {
+                const datos = new Uint8Array(e.target.result);
+                const libro = XLSX.read(datos, { type: 'array' });
+                const nombrePrimeraHoja = libro.SheetNames[0];
+                const hoja = libro.Sheets[nombrePrimeraHoja];
+                const filas = XLSX.utils.sheet_to_json(hoja);
+
+                let cantidadFilas = filas.length;
+                let valorTotal = 0;
+
+                filas.forEach(fila => {
+                    let valorFila = fila.Valor || fila.Monto || fila.valor || fila.monto || 0;
+                    if (typeof valorFila === 'string') {
+                        valorFila = parseFloat(valorFila.replace(/[^0-9.-]+/g, ""));
+                    }
+                    valorTotal += Number(valorFila) || 0;
+                });
+
+                cajaResumen.style.display = 'block';
+                const formatoMoneda = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(valorTotal);
+                textoResumen.innerHTML = `Detectamos <b>${cantidadFilas} registros</b> por un total de <b>${formatoMoneda}</b>.`;
+
+                if (inputRegistros) inputRegistros.value = cantidadFilas;
+                if (inputValor) inputValor.value = valorTotal.toFixed(2);
+            };
+            lector.readAsArrayBuffer(archivo);
+        }
+
+        // Función temporal para probar que captura los datos
+        function enviarTodo() {
+            alert("¡Botón presionado! Los menús funcionan perfecto. El próximo paso es conectar esto a la Nube para enviar los archivos.");
+        }
+
+        // Iniciar con un formulario en pantalla
+        window.onload = agregarFormulario;
+
+        // ==========================================
+        // LÓGICA DE ROLES (SIMULADOR PARA KATE)
+        // ==========================================
+        function cambiarRol(rolSeleccionado) {
+            // 1. Ocultar todas las vistas
+            document.getElementById('vista-solicitante').classList.add('oculto');
+            document.getElementById('vista-aprobador').classList.add('oculto');
+            document.getElementById('vista-preparador').classList.add('oculto');
+
+            // 2. Mostrar solo la vista del rol seleccionado
+            document.getElementById(`vista-${rolSeleccionado}`).classList.remove('oculto');
+            
+            // 3. Cambiar visualmente el menú lateral para que tenga sentido
+            const menuActivo = document.querySelector('.menu-item.activo');
+            if(menuActivo) menuActivo.classList.remove('activo');
+
+            // Pequeño truco para iluminar el texto del sidebar correspondiente
+            const itemsMenu = document.querySelectorAll('.menu-item');
+            if (rolSeleccionado === 'solicitante') itemsMenu[1].classList.add('activo'); // Carga
+            if (rolSeleccionado === 'aprobador') itemsMenu[2].classList.add('activo');   // Payouts (simulado)
+            if (rolSeleccionado === 'preparador') itemsMenu[3].classList.add('activo');  // Terminales (simulado)
+        }
+
+    // Función para cambiar entre Fase 1 y Fase 2 dentro del mismo formulario
+        function cambiarFase(idFormulario, faseDestino) {
+            if (faseDestino === 2) {
+                document.getElementById(`fase-1-${idFormulario}`).classList.add('oculto');
+                document.getElementById(`fase-2-${idFormulario}`).classList.remove('oculto');
+            } else {
+                document.getElementById(`fase-2-${idFormulario}`).classList.add('oculto');
+                document.getElementById(`fase-1-${idFormulario}`).classList.remove('oculto');
+            }
+        }
+
+        // Función para copiar los datos del bloque anterior
+        function duplicarUltimaOperacion(idActual) {
+            const idAnterior = idActual - 1;
+            const bloqueAnterior = document.getElementById(`solicitud-${idAnterior}`);
+            if (!bloqueAnterior) return alert("No se encontró la operación anterior.");
+
+            // Recolectamos los datos básicos del anterior
+            const datosACopiar = {
+                correo: bloqueAnterior.querySelector('.val-correo').value,
+                fecha: bloqueAnterior.querySelector('.val-fecha').value,
+                tipo: bloqueAnterior.querySelector('.val-tipo').value,
+                subtipo: bloqueAnterior.querySelector('.val-subtipo').value,
+                compania: bloqueAnterior.querySelector('.val-compania').value,
+                origen: bloqueAnterior.querySelector('.val-origen').value
+            };
+
+            // Borramos el bloque actual vacío y creamos uno nuevo pre-llenado
+            eliminarFormulario(idActual);
+            agregarFormulario(datosACopiar);
+        }
+
+        // Función para cambiar a la vista Historial
+        function cambiarVista(vista) {
+            // Ocultamos todas las vistas del Solicitante
+            document.getElementById('vista-solicitante').classList.add('oculto');
+            document.getElementById('vista-historial').classList.add('oculto');
+            document.getElementById('vista-aprobador').classList.add('oculto');
+            document.getElementById('vista-preparador').classList.add('oculto');
+
+            if (vista === 'historial') {
+                document.getElementById('vista-historial').classList.remove('oculto');
+                document.querySelectorAll('.menu-item').forEach(i => i.classList.remove('activo'));
+                document.getElementById('menu-historial').classList.add('activo');
+            }
+        }
+    </script>
 </body>
 </html>

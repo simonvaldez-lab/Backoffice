@@ -1,0 +1,79 @@
+/* ===================================================
+   🎨 MODELO DE TABLA UNIFORME BOLD (DASHBOARD)
+   =================================================== */
+.tabla-container {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    overflow: hidden;
+    margin-top: 25px;
+}
+
+.tabla-bold {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.tabla-bold th {
+    background-color: #f8fafc; /* Gris sutil de fondo corporativo */
+    color: #475569; /* Texto legible para encabezados */
+    padding: 16px 20px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.tabla-bold td {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 14px;
+    color: #0b1442; /* Azul marino Bold */
+    vertical-align: middle;
+}
+
+.tabla-bold tr:last-child td {
+    border-bottom: none; /* Limpieza visual en la última fila */
+}
+
+.tabla-bold tr:hover {
+    background-color: #f8fafc; /* Efecto hover sutil al pasar el mouse */
+}
+
+/* --- BADGES DE ESTADO UNIFORMES --- */
+.badge {
+    padding: 6px 12px;
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.badge.pendiente { background-color: #fef9c3; color: #713f12; }
+.badge.aprobado { background-color: #dcfce7; color: #14532d; }
+.badge.rechazado { background-color: #fee2e2; color: #7f1d1d; }
+
+/* --- BOTONES DE ACCIÓN DENTRO DE TABLAS --- */
+.btn-tabla {
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+    display: inline-flex;
+    align-items: center;
+}
+.btn-tabla.primario { background-color: #0b1442; color: white; }
+.btn-tabla.primario:hover { background-color: #1e293b; }
+
+.btn-tabla.secundario { background-color: white; color: #64748b; border: 1px solid #cbd5e1; }
+.btn-tabla.secundario:hover { background-color: #f8fafc; color: #334155; }
+
+.btn-tabla.peligro { background-color: white; color: #ef4444; border: 1px solid #fee2e2; }
+.btn-tabla.peligro:hover { background-color: #fef2f2; }
