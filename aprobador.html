@@ -1,29 +1,344 @@
-<div class="tabla-container">
-    <table class="tabla-bold">
-        <thead>
-            <tr>
-                <th>ID Operación</th>
-                <th>Solicitante</th>
-                <th>Compañía</th>
-                <th>Tipo de Pago</th>
-                <th>Valor Total</th>
-                <th>Estado</th>
-                <th>Acciones</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><strong style="color: #673ab7;">#1045</strong></td>
-                <td>juan@bold.co</td>
-                <td>Bold CO</td>
-                <td>Traslados</td>
-                <td>$147,894,651.00</td>
-                <td><span class="badge pendiente">⏳ Pendiente</span></td>
-                <td>
-                    <button class="btn-tabla primario" style="margin-right: 5px;">Aprobar</button>
-                    <button class="btn-tabla peligro">Rechazar</button>
-                </td>
-            </tr>
-        </tbody>
-    </table>
-</div>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Bandeja de Aprobador Financiero - Auditoría de Pantallas</title>
+    <style>
+        /* Estilos Base */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #F8FAFC; color: #1E293B; padding: 20px; }
+        .titulo-seccion { font-size: 24px; font-weight: bold; margin-bottom: 5px; color: #0F172A; }
+        .subtitulo { color: #64748B; margin-bottom: 20px; font-size: 14px; }
+        
+        /* Controles y Tabla */
+        .header-acciones { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .controles { display: flex; gap: 15px; align-items: center; }
+        .input-busqueda, .select-filtro { padding: 10px; border: 1px solid #CBD5E1; border-radius: 6px; outline: none; width: 220px; font-size: 13px;}
+        
+        .tabla-contenedor { background: white; border-radius: 8px; border: 1px solid #E2E8F0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+        th { background: #F1F5F9; color: #475569; padding: 12px 15px; font-weight: 600; }
+        td { padding: 12px 15px; border-bottom: 1px solid #E2E8F0; vertical-align: middle; }
+        tr:hover { background-color: #F8FAFC; }
+        
+        /* Badges y Semáforos */
+        .badge { padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; text-transform: uppercase;}
+        .badge-moneda { background: #E0E7FF; color: #3730A3; border: 1px solid #C7D2FE;}
+        .badge-opex { background: #F3E8FF; color: #7E22CE; border: 1px solid #D8B4FE; }
+        .semaforo-caja { display: inline-flex; align-items: center; gap: 6px; background: #F8FAFC; padding: 4px 8px; border-radius: 6px; border: 1px solid #E2E8F0; font-size: 11px; font-weight: bold;}
+        .luz { width: 10px; height: 10px; border-radius: 50%; background: #22C55E; box-shadow: 0 0 5px #22C55E;}
+
+        /* Botones */
+        .btn { padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 12px; border: none; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 5px;}
+        .btn-detalle { background: #F1F5F9; color: #475569; border: 1px solid #CBD5E1;}
+        .btn-detalle:hover { background: #E2E8F0; }
+        .btn-aprobar { background: #0B1442; color: white; }
+        .btn-aprobar:hover { background: #172554; }
+        .btn-rechazar { background: white; color: #EF4444; border: 1px solid #EF4444; }
+        .btn-reportes { background: #3B82F6; color: white; padding: 10px 15px; font-size: 13px; }
+
+        /* Modales y Layout Split */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1000;}
+        .modal { background: white; padding: 25px; border-radius: 8px; width: 450px; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .modal-grande { width: 1050px; } 
+        .modal h2 { margin-top: 0; font-size: 18px; color: #0F172A; border-bottom: 1px solid #E2E8F0; padding-bottom: 10px; margin-bottom: 20px;}
+        
+        .modal-layout-split { display: flex; gap: 20px; }
+        .seccion-datos { flex: 1.1; }
+        .seccion-visor { flex: 0.9; border-left: 1px solid #E2E8F0; padding-left: 20px; display: none; flex-direction: column; }
+        
+        /* Grid de Detalles */
+        .grid-detalles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 15px; background: #F8FAFC; padding: 12px; border-radius: 8px; border: 1px solid #E2E8F0;}
+        .dato-grupo { display: flex; flex-direction: column; }
+        .dato-label { font-size: 10px; color: #64748B; text-transform: uppercase; font-weight: 600; margin-bottom: 2px;}
+        .dato-valor { font-size: 12px; color: #1E293B; font-weight: 500; }
+        .dato-full-width { grid-column: span 2; }
+        
+        .auditor-data { border-top: 1px dashed #CBD5E1; margin-top: 4px; padding-top: 4px; font-size: 11px; }
+        .auditor-ok { color: #15803D; font-weight: 500; }
+        .auditor-alerta { color: #B45309; font-weight: bold; }
+
+        /* Mensajes de Validación Automática */
+        .msg-validacion { padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 8px;}
+        .msg-match { background: #DCFCE7; color: #15803D; border: 1px solid #BBF7D0; }
+        .msg-discrepancia { background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; }
+
+        /* Visor de Documentos con Pestañas */
+        .tab-container { display: flex; gap: 5px; margin-bottom: 10px; }
+        .tab { padding: 6px 12px; border-radius: 4px 4px 0 0; background: #E2E8F0; border: none; font-size: 11px; font-weight: 600; cursor: pointer; color: #475569;}
+        .tab.active { background: #475569; color: white; }
+        .marco-visor { background: #334155; border-radius: 0 0 6px 6px; flex: 1; min-height: 400px; padding: 15px; color: white; overflow-y: auto; }
+        .documento-simulado { background: white; color: #1E293B; padding: 20px; border-radius: 4px; min-height: 360px; font-size: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);}
+
+        /* Timeline / Traza */
+        .timeline { border-left: 2px solid #CBD5E1; padding-left: 20px; margin-left: 10px;}
+        .timeline-item { margin-bottom: 15px; position: relative; }
+        .timeline-item::before { content: ''; position: absolute; left: -26px; top: 2px; width: 10px; height: 10px; background: #0B1442; border-radius: 50%; border: 2px solid white; }
+        .timeline-fecha { font-size: 11px; color: #64748B; font-weight: 600;}
+        .timeline-desc { font-size: 12px; color: #1E293B; margin-top: 2px; background: #F1F5F9; padding: 10px; border-radius: 6px; border: 1px solid #E2E8F0;}
+        
+        .form-group { margin-bottom: 15px; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #CBD5E1; border-radius: 6px; box-sizing: border-box;}
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <h1 class="titulo-seccion">Bandeja de Aprobador</h1>
+    <p class="subtitulo">Auditoría cruzada: Contraste visual de soportes originales vs capturas de pantalla de la operación.</p>
+
+    <div class="header-acciones">
+        <div class="controles">
+            <input type="text" class="input-busqueda" placeholder="Buscar por N° Radicado...">
+        </div>
+        <button class="btn btn-reportes" onclick="abrirModal('modalReportes')">📊 Reporte de Productividad</button>
+    </div>
+
+    <div class="tabla-contenedor">
+        <table>
+            <thead>
+                <tr>
+                    <th>Control ANS / Radicado</th>
+                    <th>Compañía & Operación</th>
+                    <th>Solicitante</th>
+                    <th>Valor Auditado</th>
+                    <th>Registros</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <div class="semaforo-caja"><span class="luz"></span> ANS: 2 Horas</div><br>
+                        <strong>RAD-2026-0891</strong>
+                    </td>
+                    <td>Empresa Matriz S.A.<br><span class="badge badge-opex" style="margin-top: 4px; display: inline-block;">OPEX</span></td>
+                    <td>juan.solicitante@bold.co</td>
+                    <td><strong>$ 45,230,000</strong> <span class="badge badge-moneda">COP</span></td>
+                    <td>14</td>
+                    <td style="display: flex; gap: 8px;">
+                        <button class="btn btn-detalle" onclick="abrirModal('modalDetalles')">🔍 Auditar Expediente</button>
+                        <button class="btn btn-aprobar" onclick="abrirModal('modalAprobar')">✓</button>
+                        <button class="btn btn-rechazar" onclick="abrirModal('modalRechazo')">✕</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="modal-overlay" id="modalDetalles">
+        <div class="modal modal-grande">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2 style="margin: 0; border: none; padding: 0;">Módulo de Auditoría de Soportes: RAD-2026-0891</h2>
+                <button class="btn" style="background:#3B82F6; color:white;" onclick="alternarVisor()">👁 Activar Visor de Evidencias Dual</button>
+            </div>
+
+            <div class="modal-layout-split">
+                
+                <div class="seccion-datos">
+                    <h3 style="font-size: 13px; color: #0F172A; margin: 0 0 10px 0; border-bottom: 2px solid #E2E8F0; padding-bottom: 3px;">Cotejo Operativo Horizontal</h3>
+                    
+                    <div class="grid-detalles">
+                        <div class="dato-grupo">
+                            <span class="dato-label">Cuenta Origen</span>
+                            <span class="dato-valor">Cta Cte Bancolombia *5678</span>
+                            <div class="auditor-data auditor-ok">✓ Screen Banco: Cta Cte *5678</div>
+                        </div>
+                        <div class="dato-grupo">
+                            <span class="dato-label">Moneda</span>
+                            <span class="dato-valor">COP</span>
+                            <div class="auditor-data auditor-ok">✓ Screen Banco: COP</div>
+                        </div>
+                        <div class="dato-grupo">
+                            <span class="dato-label">Valor Total (Solicitado)</span>
+                            <span class="dato-valor" style="font-weight: bold; color: #0B1442;">$ 48,500,000 COP</span>
+                            <div class="auditor-data auditor-alerta">⚠ Modificado en Banco: $ 45,230,000 COP</div>
+                        </div>
+                        <div class="dato-grupo">
+                            <span class="dato-label">Cantidad Registros</span>
+                            <span class="dato-valor">15 Transacciones</span>
+                            <div class="auditor-data auditor-alerta">⚠ Modificado en Banco: 14 Transacciones</div>
+                        </div>
+                    </div>
+
+                    <h3 style="font-size: 13px; color: #0F172A; margin: 15px 0 10px 0; border-bottom: 2px solid #E2E8F0; padding-bottom: 3px;">Traza del Historial & Resultado de Auditoría</h3>
+                    
+                    <div class="timeline">
+                        <div class="timeline-item">
+                            <div class="timeline-fecha">23 Jun 2026 - 11:00 AM</div>
+                            <div class="timeline-desc">
+                                <strong>1. RADICACIÓN (Solicitante):</strong> juan.solicitante@bold.co<br>
+                                <span style="font-size:11px; color:#64748B;">Documento cargado: Facturas_Junio.pdf (Monto original: $48.5M)</span>
+                            </div>
+                        </div>
+
+                        <div class="msg-validacion msg-discrepancia">
+                            <span>⚠</span> 
+                            <div>
+                                <strong>Resultado del Auditor de Pagos:</strong> Existen Discrepancias Financieras entre la solicitud original y el Screen Bancario. Ver justificación abajo.
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-fecha">23 Jun 2026 - 11:15 AM</div>
+                            <div class="timeline-desc" style="border-left: 4px solid #D97706;">
+                                <strong>2. PREPARACIÓN (Mesa de Control):</strong> analista.preparador@bold.co<br>
+                                <span style="font-size:11px; color:#1E293B; font-weight:500; display:block; margin: 4px 0;">
+                                    "Se adjunta screen del portal bancario. Se eliminó el registro N° 5 del lote porque la cuenta del proveedor rebotaba. El monto final real en el banco es de $45,230,000 COP."
+                                </span>
+                                <span style="color:#2563EB; font-weight:600; font-size:11px;">📄 Imagen Anexa: Screen_Portal_Bancario.png</span>
+                            </div>
+                        </div>
+
+                        <div class="timeline-item">
+                            <div class="timeline-fecha">Pendiente</div>
+                            <div class="timeline-desc" style="background: #FFFBEB;" id="trazaAprobador">
+                                <strong>3. CIERRE DE FLUJO:</strong> Esperando revisión definitiva de Kate.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="seccion-visor" id="contenedorVisor">
+                    <div class="tab-container">
+                        <button class="tab active" id="tabSol" onclick="cambiarPestana('solicitante')">📄 Factura (Solicitante)</button>
+                        <button class="tab" id="tabPrep" onclick="cambiarPestana('preparador')">🖼 Screen Banco (Preparador)</button>
+                    </div>
+                    
+                    <div class="marco-visor">
+                        <div class="documento-simulado" id="vistaSolicitante">
+                            <h4 style="color:#0B1442; margin-top:0; border-bottom:1px solid #E2E8F0; padding-bottom:5px;">SOPORTE ORIGINAL (PDF)</h4>
+                            <p style="font-size:11px;"><strong>Proveedor:</strong> Tecnología y Nube S.A.S</p>
+                            <p style="font-size:11px;"><strong>Detalle:</strong> Cobro licencias mensuales masivas.</p>
+                            <p style="font-size:13px; font-weight:bold; margin-top:30px; text-align:right; color:#0B1442;">
+                                TOTAL SOLICITADO: $ 48,500,000 COP
+                            </p>
+                        </div>
+
+                        <div class="documento-simulado hidden" id="vistaPreparador" style="background:#0F172A; color:#22C55E; border: 2px solid #334155;">
+                            <div style="background:#1E293B; padding:5px; color:white; font-size:10px; margin:-20px -20px 15px -20px; font-family:monospace;">
+                                🖥️ portalempresas.bancolombia.com/transferencias/masivas_aprobacion
+                            </div>
+                            <h4 style="color:white; margin-top:0;">CAPTURA DE PORTAL BANCARIO (SCREEN DE CARGA)</h4>
+                            <p style="font-size:11px; color:#94A3B8;"><strong>Cuenta Débito Origen:</strong> 992-11234-22 (Cta Corriente)</p>
+                            <p style="font-size:11px; color:#94A3B8;"><strong>Tipo de Archivo:</strong> Layout de Dispersión Proveedores</p>
+                            <p style="font-size:11px; color:#94A3B8;"><strong>Registros Exitosos Cargados:</strong> 14 de 15</p>
+                            <div style="border: 1px dashed #22C55E; padding:10px; margin-top:20px; background:rgba(34,197,94,0.1);">
+                                <span style="font-size:11px; display:block;">[CONFIRMACIÓN DE LOTE EN PLATAFORMA]</span>
+                                <strong style="font-size:15px;">VALOR TOTAL A DISPERSAR EN BANCO: $ 45,230,000 COP</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div style="text-align: right; margin-top: 20px; border-top: 1px solid #E2E8F0; padding-top: 15px;">
+                <button class="btn btn-detalle" onclick="cerrarModal('modalDetalles')">Cerrar Expediente</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalReportes">
+        <div class="modal">
+            <h2>📊 Reporte de Productividad</h2>
+            <div class="form-group"><label>Fecha Inicial:</label><input type="date" class="form-control"></div>
+            <div class="form-group"><label>Fecha Final:</label><input type="date" class="form-control"></div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px;">
+                <button class="btn btn-detalle" onclick="cerrarModal('modalReportes')">Cancelar</button>
+                <button class="btn btn-reportes" onclick="cerrarModal('modalReportes')">Descargar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalRechazo">
+        <div class="modal">
+            <h2>✕ Rechazar Operación</h2>
+            <div class="form-group">
+                <label>Tipificación de Rechazo:</label>
+                <select class="form-control" id="motivoRechazo" onchange="verificarOtros()">
+                    <option value="">Seleccione causal...</option>
+                    <option value="cuenta">Cuenta Destino Invalida</option>
+                    <option value="otros">Otros (Especificar)</option>
+                </select>
+            </div>
+            <div class="form-group hidden" id="campoOtros">
+                <label>Detalle:</label>
+                <textarea class="form-control" rows="3"></textarea>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px;">
+                <button class="btn btn-detalle" onclick="cerrarModal('modalRechazo')">Cancelar</button>
+                <button class="btn btn-rechazar" onclick="ejecutarAccion('Rechazado')">Confirmar Rechazo</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalAprobar">
+        <div class="modal">
+            <h2>✓ Autorizar Operación</h2>
+            <p>Se guardará la traza histórica final.</p>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+                <button class="btn btn-detalle" onclick="cerrarModal('modalAprobar')">Cancelar</button>
+                <button class="btn btn-aprobar" onclick="ejecutarAccion('Aprobado')">Autorizar Pago</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function abrirModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function cerrarModal(id) { document.getElementById(id).style.display = 'none'; }
+        
+        function verificarOtros() {
+            const select = document.getElementById('motivoRechazo');
+            const campoOtros = document.getElementById('campoOtros');
+            if(select.value === 'otros') { campoOtros.classList.remove('hidden'); } 
+            else { campoOtros.classList.add('hidden'); }
+        }
+
+        // Abrir/Cerrar el panel de evidencias del costado derecho
+        function alternarVisor() {
+            const visor = document.getElementById('contenedorVisor');
+            visor.style.display = (visor.style.display === 'flex') ? 'none' : 'flex';
+        }
+
+        // Cambiar entre la factura y la captura de pantalla del banco
+        function cambiarPestana(origen) {
+            const tabSol = document.getElementById('tabSol');
+            const tabPrep = document.getElementById('tabPrep');
+            const vistaSol = document.getElementById('vistaSolicitante');
+            const vistaPrep = document.getElementById('vistaPreparador');
+
+            if(origen === 'solicitante') {
+                tabSol.classList.add('active');
+                tabPrep.classList.remove('active');
+                vistaSol.classList.remove('hidden');
+                vistaPrep.classList.add('hidden');
+            } else {
+                tabPrep.classList.add('active');
+                tabSol.classList.remove('active');
+                vistaPrep.classList.remove('hidden');
+                vistaSol.classList.add('hidden');
+            }
+        }
+
+        // Lógica de simulación de traza final
+        function ejecutarAccion(estado) {
+            const ahora = new Date();
+            const timestamp = ahora.toLocaleDateString() + ' - ' + ahora.toLocaleTimeString();
+            
+            const htmlTraza = `
+                <strong>3. CIERRE DE FLUJO (${estado.toUpperCase()}):</strong><br>
+                Procesado por: <span style="color:${estado === 'Aprobado' ? '#059669' : '#EF4444'}; font-weight:600;">Kate (Perfil Aprobador)</span><br>
+                <span style="font-size:11px; color:#64748B;">Fecha y Hora: ${timestamp}</span>
+            `;
+            document.getElementById('trazaAprobador').innerHTML = htmlTraza;
+            document.getElementById('trazaAprobador').style.background = estado === 'Aprobado' ? '#DCFCE7' : '#FEF2F2';
+
+            alert(`Operación registrada como ${estado}.\nLa traza histórica guardó tu marca de tiempo (${timestamp}).\nNotificación enviada al preparador.`);
+            
+            cerrarModal('modalAprobar');
+            cerrarModal('modalRechazo');
+            abrirModal('modalDetalles');
+        }
+    </script>
+</body>
+</html>
