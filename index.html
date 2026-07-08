@@ -5,11 +5,14 @@
     <title>Login - Operaciones Bold</title>
     <link rel="stylesheet" href="css/estilos.css">
     <style>
-        body { justify-content: center; align-items: center; background-color: #0b1442; }
+        body { justify-content: center; align-items: center; background-color: #0b1442; display: flex; height: 100vh; margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         .login-caja { background: white; padding: 40px; border-radius: 12px; width: 100%; max-width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         .login-logo { font-size: 32px; font-weight: 900; color: #0b1442; text-align: center; margin-bottom: 20px; letter-spacing: -1px; }
-        .btn-ingresar { background-color: #4f46e5; color: white; width: 100%; padding: 12px; font-size: 16px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; margin-top: 15px; }
+        .btn-ingresar { background-color: #4f46e5; color: white; width: 100%; padding: 12px; font-size: 16px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; margin-top: 15px; transition: 0.3s; }
         .btn-ingresar:hover { background-color: #3730a3; }
+        .form-group { margin-bottom: 15px; width: 100%; }
+        .form-group label { display: block; font-size: 13px; font-weight: bold; color: #0b1442; margin-bottom: 5px; }
+        .form-group input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; }
     </style>
 </head>
 <body>
@@ -17,19 +20,17 @@
         <div class="login-logo">bold</div>
         <h2 style="font-size: 16px; text-align: center; margin-bottom: 20px; color: #475569;">Acceso Operaciones</h2>
         
-        <div class="fila" style="flex-direction: column; gap: 15px;">
-            <div style="width: 100%;">
-                <label>Correo electrónico</label>
-                <input type="email" id="login-email" placeholder="ejemplo@bold.co" style="background-color: white; border: 1px solid #cbd5e1;">
-            </div>
-            <div style="width: 100%;">
-                <label>Contraseña</label>
-                <input type="password" id="login-pass" placeholder="***" style="background-color: white; border: 1px solid #cbd5e1;">
-            </div>
+        <div class="form-group">
+            <label>Correo electrónico</label>
+            <input type="email" id="login-email" placeholder="ejemplo@bold.co">
+        </div>
+        <div class="form-group">
+            <label>Contraseña</label>
+            <input type="password" id="login-pass" placeholder="***">
         </div>
         
-        <button class="btn-ingresar" onclick="iniciarSesion()">Iniciar Sesión</button>
-        <p id="login-error" style="color: #EF4444; font-size: 12px; text-align: center; margin-top: 15px; display: none; font-weight: bold;">Credenciales incorrectas.</p>
+        <button class="btn-ingresar" onclick="fuerzaLogin()">Iniciar Sesión</button>
+        <p id="login-error" style="color: #EF4444; font-size: 12px; text-align: center; margin-top: 15px; display: none; font-weight: bold;">❌ Credenciales incorrectas.</p>
         
         <div style="margin-top: 20px; font-size: 11px; color: #94a3b8; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 15px;">
             <strong>Credenciales de Prueba (Clave: 12)</strong><br>
@@ -37,6 +38,40 @@
         </div>
     </div>
 
-    <script src="js/logica-comun.js"></script>
+    <!-- Script en línea para evitar bloqueos de caché -->
+    <script>
+        function fuerzaLogin() {
+            const email = document.getElementById('login-email').value.toLowerCase().trim();
+            const pass = document.getElementById('login-pass').value;
+            const errorMsg = document.getElementById('login-error');
+
+            // 1. Validar que no estén vacíos
+            if (!email || !pass) {
+                alert("⚠️ Por favor, ingresa tu correo y tu contraseña.");
+                return;
+            }
+
+            // 2. Base de datos de prueba
+            const usuariosPrueba = {
+                "lau@bold.co": { rol: "solicitante", url: "solicitante.html", nombre: "Laura (Solicitante)" },
+                "mar@bold.co": { rol: "validador", url: "validador.html", nombre: "María (Validador)" },
+                "kat@bold.co": { rol: "aprobador", url: "aprobador.html", nombre: "Kate (Aprobador)" },
+                "fel@bold.co": { rol: "preparador", url: "preparador.html", nombre: "Felipe (Preparador)" }
+            };
+
+            // 3. Comprobar acceso
+            if (usuariosPrueba[email] && pass === "12") {
+                const usuario = usuariosPrueba[email];
+                alert("✅ ¡Ingreso exitoso! Hola, " + usuario.nombre + ".\nTe estamos redirigiendo a tu bandeja...");
+                
+                // Guardar la sesión y saltar de página
+                sessionStorage.setItem('usuarioLogueado', JSON.stringify(usuario));
+                window.location.href = usuario.url;
+            } else {
+                errorMsg.style.display = 'block';
+                alert("❌ Correo o contraseña incorrectos. Revisa e intenta nuevamente.");
+            }
+        }
+    </script>
 </body>
 </html>
