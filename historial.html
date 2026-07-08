@@ -1,35 +1,50 @@
-<div class="tabla-container">
-    <table class="tabla-bold">
-        <thead>
-            <tr>
-                <th>ID Operación</th>
-                <th>Fecha Carga</th>
-                <th>Compañía</th>
-                <th>Tipo de Pago</th>
-                <th>Valor Total</th>
-                <th>Estado</th>
-                <th>Comprobante</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><strong style="color: #673ab7;">OP-1042</strong></td>
-                <td>24/06/2026</td>
-                <td>Bold CO</td>
-                <td>Nómina</td>
-                <td>$45,000,000.00</td>
-                <td><span class="badge aprobado">✓ Aprobada</span></td>
-                <td><button class="btn-tabla seco">⬇ Descargar PDF</button></td>
-            </tr>
-            <tr>
-                <td><strong style="color: #673ab7;">OP-1043</strong></td>
-                <td>24/06/2026</td>
-                <td>Bold CF</td>
-                <td>Traslados</td>
-                <td>$150,000,000.00</td>
-                <td><span class="badge pendiente">⏳ Pendiente</span></td>
-                <td style="color: #94a3b8; font-style: italic; font-size: 13px;">En proceso...</td>
-            </tr>
-        </tbody>
-    </table>
-</div>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Historial de Operaciones - Bold</title>
+    <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+    <header class="topbar">
+        <a href="solicitante.html" class="logo">bold</a>
+        <div class="topbar-derecha">
+            <select id="simulador-rol" onchange="cambiarRol(this.value)" style="padding: 5px 10px; border-radius: 5px; font-weight: bold; border: 1px solid #cbd5e1; background: #f8f9fa; cursor: pointer;">
+                <option value="">Cambiar rol temporal...</option>
+                <option value="solicitante.html" selected>Rol: Solicitante</option>
+                <option value="validador.html">🛡️ Rol: Validador</option>
+                <option value="aprobador.html">Rol: Aprobador</option>
+                <option value="preparador.html">Rol: Preparador</option>
+            </select>
+            <span style="font-size: 14px; font-weight: bold; margin-left: 15px;">🇨🇴 Bold</span>
+            <div class="avatar"></div>
+        </div>
+    </header>
+    <div class="contenedor-principal">
+        <aside class="sidebar">
+            <div class="menu-categoria">Operaciones</div>
+            <a href="solicitante.html" class="menu-item">Carga de Operaciones</a>
+            <a href="historial.html" class="menu-item activo">Historial de Cargas</a>
+            <div class="menu-categoria">Validación y Aprobación</div>
+            <a href="validador.html" class="menu-item">Validación (Compliance)</a>
+            <a href="aprobador.html" class="menu-item">Bandeja de Aprobador</a>
+            <div class="menu-categoria">Ejecución</div>
+            <a href="preparador.html" class="menu-item">Ejecución Banco</a>
+        </aside>
+        <main class="contenido">
+            <h1 class="titulo-seccion">Historial de Operaciones</h1>
+            <p class="subtitulo">Consulta el estado de las solicitudes procesadas y descarga sus comprobantes oficiales.</p>
+            <div class="tabla-container">
+                <table class="tabla-bold">
+                    <thead><tr><th>ID</th><th>Fecha Carga</th><th>Compañía</th><th>Tipo</th><th>Valor Total</th><th>Estado</th><th>Comprobante</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong style="color: #673ab7;">OP-1042</strong></td><td>24/06/2026</td><td>Bold CO</td><td>Nómina</td><td>$45,000,000.00</td><td><span class="badge aprobado">✓ Aprobada</span></td><td><button class="btn-tabla seco">⬇ Descargar PDF</button></td></tr>
+                        <tr><td><strong style="color: #673ab7;">OP-1043</strong></td><td>24/06/2026</td><td>Bold CF</td><td>Traslados</td><td>$150,000,000.00</td><td><span class="badge pendiente">⏳ Pendiente</span></td><td style="color: #94a3b8; font-style: italic; font-size: 13px;">En proceso...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+    <script src="js/logica-comun.js"></script>
+</body>
+</html>

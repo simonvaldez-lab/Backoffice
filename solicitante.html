@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Carga de Operaciones - Bold</title>
+    <link rel="stylesheet" href="css/estilos.css">
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+    <header class="topbar">
+        <a href="solicitante.html" class="logo">bold</a>
+        <div class="topbar-derecha">
+            <select id="simulador-rol" onchange="cambiarRol(this.value)" style="padding: 5px 10px; border-radius: 5px; font-weight: bold; border: 1px solid #cbd5e1; background: #f8f9fa; cursor: pointer;">
+                <option value="">Cambiar rol temporal...</option>
+                <option value="solicitante.html" selected>Rol: Solicitante</option>
+                <option value="validador.html">🛡️ Rol: Validador</option>
+                <option value="aprobador.html">Rol: Aprobador</option>
+                <option value="preparador.html">Rol: Preparador</option>
+            </select>
+            <span style="font-size: 14px; font-weight: bold; margin-left: 15px;">🇨🇴 Bold</span>
+            <div class="avatar"></div>
+        </div>
+    </header>
+    <div class="contenedor-principal">
+        <aside class="sidebar">
+            <div class="menu-categoria">Operaciones</div>
+            <a href="solicitante.html" class="menu-item activo">Carga de Operaciones</a>
+            <a href="historial.html" class="menu-item">Historial de Cargas</a>
+            <div class="menu-categoria">Validación y Aprobación</div>
+            <a href="validador.html" class="menu-item">Validación (Compliance)</a>
+            <a href="aprobador.html" class="menu-item">Bandeja de Aprobador</a>
+            <div class="menu-categoria">Ejecución</div>
+            <a href="preparador.html" class="menu-item">Ejecución Banco</a>
+        </aside>
+        <main class="contenido">
+            <h1 class="titulo-seccion">&lt; Carga de Operaciones</h1>
+            <p class="subtitulo">Completa el asistente paso a paso para cargar nuevas operaciones masivas.</p>
+            <div id="lista-formularios"></div>
+            <button class="btn btn-agregar" onclick="agregarFormulario()">+ Agregar otra operación</button>
+            <button class="btn btn-enviar" onclick="alert('Enviado con éxito a validación')">🚀 Enviar Operaciones</button>
+        </main>
+    </div>
+    <script src="js/logica-comun.js"></script>
+    <script>
+        let contador = 0;
+        function agregarFormulario(datos = null) {
+            contador++; const id = contador; const div = document.createElement('div'); div.className = 'caja-solicitud'; div.id = `solicitud-${id}`;
+            div.innerHTML = `
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 20px;">
+                    <h3 style="margin: 0;">Operación #${id}</h3>
+                    <button onclick="document.getElementById('solicitud-${id}').remove()" style="background: none; border: none; color: #F44336; cursor: pointer; font-weight: bold;">✕ Eliminar</button>
+                </div>
+                <div id="fase-1-${id}">
+                    <div class="fila">
+                        <div class="columna"><label>Correo *</label><input type="email" class="val-correo" required></div>
+                        <div class="columna"><label>Tipo de Pago *</label><select class="val-tipo" onchange="actualizarSubtipos(${id})" required><option value="">Seleccione...</option><option value="Nómina">Nómina</option><option value="Proveedores">Proveedores</option><option value="Traslados">Traslados</option></select></div>
+                    </div>
+                    <div class="fila">
+                        <div class="columna"><label>Compañía *</label><select class="val-compania" onchange="actualizarCuentas(${id})" required><option value="">Seleccione...</option><option value="Bold CO">Bold CO</option><option value="Bold CF">Bold CF</option></select></div>
+                        <div class="columna"><label>Cuenta Origen *</label><select class="val-origen" required><option value="">Elija Compañía</option></select></div>
+                    </div>
+                    <div style="text-align: right;"><button type="button" class="btn btn-enviar" style="width:auto;" onclick="document.getElementById('fase-1-${id}').classList.add('oculto'); document.getElementById('fase-2-${id}').classList.remove('oculto');">Siguiente Paso ➔</button></div>
+                </div>
+                <div id="fase-2-${id}" class="oculto">
+                    <div class="fila">
+                        <div class="columna"><label>Adjuntar Excel</label><input type="file" accept=".xlsx, .xls"></div>
+                        <div class="columna"><label>Valor Total *</label><input type="number" class="val-valor" required></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-top: 20px;"><button type="button" class="btn btn-agregar" style="width:auto; margin:0;" onclick="document.getElementById('fase-2-${id}').classList.add('oculto'); document.getElementById('fase-1-${id}').classList.remove('oculto');">⬅ Atrás</button></div>
+                </div>`;
+            document.getElementById('lista-formularios').appendChild(div);
+        }
+        function actualizarSubtipos(id) {} function actualizarCuentas(id) {}
+        window.onload = () => agregarFormulario();
+    </script>
+</body>
+</html>

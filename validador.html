@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Ejecución Bancaria - Bold</title>
+    <title>Validación de Operaciones - Bold</title>
     <link rel="stylesheet" href="css/estilos.css">
 </head>
 <body>
@@ -12,9 +12,9 @@
             <select id="simulador-rol" onchange="cambiarRol(this.value)" style="padding: 5px 10px; border-radius: 5px; font-weight: bold; border: 1px solid #cbd5e1; background: #f8f9fa; cursor: pointer;">
                 <option value="">Cambiar rol temporal...</option>
                 <option value="solicitante.html">Rol: Solicitante</option>
-                <option value="validador.html">🛡️ Rol: Validador</option>
+                <option value="validador.html" selected>🛡️ Rol: Validador</option>
                 <option value="aprobador.html">Rol: Aprobador</option>
-                <option value="preparador.html" selected>Rol: Preparador</option>
+                <option value="preparador.html">Rol: Preparador</option>
             </select>
             <span style="font-size: 14px; font-weight: bold; margin-left: 15px;">🇨🇴 Bold</span>
             <div class="avatar"></div>
@@ -26,20 +26,20 @@
             <a href="solicitante.html" class="menu-item">Carga de Operaciones</a>
             <a href="historial.html" class="menu-item">Historial de Cargas</a>
             <div class="menu-categoria">Validación y Aprobación</div>
-            <a href="validador.html" class="menu-item">Validación (Compliance)</a>
+            <a href="validador.html" class="menu-item activo">Validación (Compliance)</a>
             <a href="aprobador.html" class="menu-item">Bandeja de Aprobador</a>
             <div class="menu-categoria">Ejecución</div>
-            <a href="preparador.html" class="menu-item activo">Ejecución Banco</a>
+            <a href="preparador.html" class="menu-item">Ejecución Banco</a>
         </aside>
         <main class="contenido">
-            <h1 class="titulo-seccion">Operaciones Listas para Banco (CUD)</h1>
-            <p class="subtitulo">Descarga los archivos validados y márcalos una vez se complete la transferencia.</p>
+            <h1 class="titulo-seccion">Validación de Operaciones (Compliance)</h1>
+            <p class="subtitulo">Revisa que los soportes adjuntos coincidan con los montos antes de enviarlos a aprobación.</p>
             <div class="tabla-container">
                 <table class="tabla-bold">
-                    <thead><tr><th>ID</th><th>Compañía</th><th>Tipo de Pago</th><th>Valor a Transferir</th><th>Estructura Banco</th><th>Acción</th></tr></thead>
+                    <thead><tr><th>ID Operación</th><th>Solicitante</th><th>Tipo de Pago</th><th>Valor Total</th><th>Soportes</th><th>Acciones</th></tr></thead>
                     <tbody>
-                        <tr><td><strong style="color: #673ab7;">#1042</strong></td><td>Bold CO</td><td>Nómina Quincenal</td><td>$540,000,000.00</td><td><a href="#" style="color: #673ab7; font-weight: 700; text-decoration: none;">⬇ nomina_final.xlsx</a></td><td><button class="btn-tabla primario" style="background-color: #4CAF50;">✓ Cumplida</button></td></tr>
-                        <tr><td><strong style="color: #673ab7;">#1045</strong></td><td>Bold CO</td><td>Traslados</td><td>$147,894,651.00</td><td><a href="#" style="color: #673ab7; font-weight: 700; text-decoration: none;">⬇ archivo_traslados.xlsx</a></td><td><button class="btn-tabla primario" style="background-color: #4CAF50;">✓ Cumplida</button></td></tr>
+                        <tr><td><strong style="color: #673ab7;">#1045</strong></td><td>juan@bold.co</td><td>Traslados</td><td>$147,894,651.00</td><td><a href="#" style="color: #4f46e5; font-weight: bold;">📄 soportes.zip</a></td><td><button class="btn-tabla primario" style="margin-right: 5px;">Validar</button><button class="btn-tabla peligro">Devolver</button></td></tr>
+                        <tr><td><strong style="color: #673ab7;">#1046</strong></td><td>ana@bold.co</td><td>Proveedores</td><td>$25,300,000.00</td><td><a href="#" style="color: #4f46e5; font-weight: bold;">📄 facturas.pdf</a></td><td><button class="btn-tabla primario" style="margin-right: 5px;">Validar</button><button class="btn-tabla peligro">Devolver</button></td></tr>
                     </tbody>
                 </table>
             </div>
