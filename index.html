@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Login - Operaciones Bold</title>
+    <link rel="stylesheet" href="css/estilos.css">
+    <style>
+        body { justify-content: center; align-items: center; background-color: #0b1442; }
+        .login-caja { background: white; padding: 40px; border-radius: 12px; width: 100%; max-width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .login-logo { font-size: 32px; font-weight: 900; color: #0b1442; text-align: center; margin-bottom: 20px; letter-spacing: -1px; }
+        .btn-ingresar { background-color: #4f46e5; color: white; width: 100%; padding: 12px; font-size: 16px; border-radius: 8px; border: none; cursor: pointer; font-weight: bold; margin-top: 15px; }
+        .btn-ingresar:hover { background-color: #3730a3; }
+    </style>
+</head>
+<body>
+    <div class="login-caja">
+        <div class="login-logo">bold</div>
+        <h2 style="font-size: 16px; text-align: center; margin-bottom: 20px; color: #475569;">Acceso Operaciones</h2>
+        
+        <div class="fila" style="flex-direction: column; gap: 15px;">
+            <div style="width: 100%;">
+                <label>Correo electrónico</label>
+                <input type="email" id="login-email" placeholder="ejemplo@bold.co" style="background-color: white; border: 1px solid #cbd5e1;">
+            </div>
+            <div style="width: 100%;">
+                <label>Contraseña</label>
+                <input type="password" id="login-pass" placeholder="***" style="background-color: white; border: 1px solid #cbd5e1;">
+            </div>
+        </div>
+        
+        <button class="btn-ingresar" onclick="iniciarSesion()">Iniciar Sesión</button>
+        <p id="login-error" style="color: #EF4444; font-size: 12px; text-align: center; margin-top: 15px; display: none; font-weight: bold;">Credenciales incorrectas.</p>
+        
+        <div style="margin-top: 20px; font-size: 11px; color: #94a3b8; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 15px;">
+            <strong>Credenciales de Prueba (Clave: 12)</strong><br>
+            lau@bold.co (Solicitante)<br>mar@bold.co (Validador)<br>kat@bold.co (Aprobador)<br>fel@bold.co (Preparador)
+        </div>
+    </div>
+
+    <script src="js/logica-comun.js"></script>
+</body>
+</html>
