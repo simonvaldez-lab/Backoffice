@@ -185,3 +185,131 @@ function cambiarPestana(origen) {
 }
 
 function cerrarModal(id) { document.getElementById(id).style.display = 'none'; }
+
+// ==========================================
+// MÓDULO RELACIONAL DE OPERACIONES (ÁRBOL EN CASCADA CORREGIDO)
+// ==========================================
+const arbolOperaciones = {
+  "Traslados": {
+    "Traslados CUD": {
+      "Adelanto adquirencia doméstica": {
+        "Bold CF": {
+          "Bold CF: BanRep - 62108160 CUD COP": {
+            "Bold CO": [
+              "Bold. CO: Bold CF 170011844070 PO´S ACH - QR Agregador",
+              "Bold. CO: Bold CF 000008024755 Deposito COP"
+            ]
+          }
+        }
+      },
+      "Traslado adquirencia doméstica": {
+        "Bold CF": {
+          "Bold. CF: Citibank COL 0090923021 Corriente COP (link CUD)": {
+            "Bold CO": [
+              "Bold. CO: Citibank COL 0089550017 Corriente COP",
+              "Bold. CO: Bold CF 170011844070 PO´S ACH - QR Agregador",
+              "Bold. CO: Bold CF 000008024755 Deposito COP"
+            ]
+          },
+          "Bold CF: BanRep - 62108160 CUD COP": {
+            "Bold CO": [
+              "Bold. CO: Bold CF 170011844070 PO´S ACH - QR Agregador",
+              "Bold. CO: Bold CF 000008024755 Deposito COP"
+            ]
+          }
+        }
+      },
+      "Traslado recursos": {
+        "Bold CF": {
+          "Bold CF: BanRep - 62108160 CUD COP": {
+            "Bold CF": [
+              "Bold. CF: Sebra CUD 62010707 Portafolio 25 COD 102 Bancolombia",
+              "Bold. CF: Citibank COL 0090923021 Corriente COP (link CUD)"
+            ]
+          },
+          "Bold. CF: Citibank COL 0090923021 Corriente COP (link CUD)": {
+            "Bold CF": ["Bold CF: BanRep - 62108160 CUD COP"]
+          },
+          "Bold. CF: Citibank COL 0090923013 Corriente COP": {
+            "Bold CF": ["Bold CF: BanRep - 62108160 CUD COP"]
+          },
+          "Bold. CF: Bancolombia 04000002167 Ahorros COP": {
+            "Bold CF": ["Bold CF: BanRep - 62108160 CUD COP"]
+          }
+        }
+      }
+    },
+    "Traslados entre cuentas": {
+      "Bancolombia": {
+        "Bold CO": {
+          "Bold. CO: Bancolombia 04000000126 Ahorros COP - Co SAS Payouts": {
+            "Bold CO": [
+              "Bold. CO: Bancolombia 04000029802 Ahorros COP - Co SAS Main Treasury",
+              "Bold. CO: Bancolombia 04000005928 Ahorros COP - Co SAS Loans n Referrals",
+              "Bold. CO: Bancolombia 04000004981 Ahorros COP - Co SAS Payroll",
+              "Bold. CO: Bancolombia 04000000573 Ahorros COP - Co SAS mPos Testing",
+              "Bold. CO: Bancolombia 04000001617 Ahorros COP - Co SAS Human Talent",
+              "Bold. CO: Bancolombia 04000006579 Corriente COP",
+              "Bold. CO: Bancolombia 65200002824 Ahorros COP"
+            ]
+          },
+          "Bold. CO: Bancolombia 04000029802 Ahorros COP - Co SAS Main Treasury": {
+            "Bold CO": [
+              "Bold. CO: Bancolombia 04000000126 Ahorros COP - Co SAS Payouts",
+              "Bold. CO: Bancolombia 04000005928 Ahorros COP - Co SAS Loans n Referrals",
+              "Bold. CO: Bancolombia 04000004981 Ahorros COP - Co SAS Payroll",
+              "Bold. CO: Bancolombia 04000000573 Ahorros COP - Co SAS mPos Testing",
+              "Bold. CO: Bancolombia 04000001617 Ahorros COP - Co SAS Human Talent",
+              "Bold. CO: Bancolombia 04000006579 Corriente COP",
+              "Bold. CO: Bancolombia 65200002824 Ahorros COP"
+            ]
+          },
+          "Bold. CO: Bancolombia 04000005928 Ahorros COP - Co SAS Loans n Referrals": {
+            "Bold CO": [
+              "Bold. CO: Bancolombia 04000000126 Ahorros COP - Co SAS Payouts",
+              "Bold. CO: Bancolombia 04000029802 Ahorros COP - Co SAS Main Treasury",
+              "Bold. CO: Bancolombia 04000004981 Ahorros COP - Co SAS Payroll",
+              "Bold. CO: Bancolombia 04000000573 Ahorros COP - Co SAS mPos Testing",
+              "Bold. CO: Bancolombia 04000001617 Ahorros COP - Co SAS Human Talent",
+              "Bold. CO: Bancolombia 04000006579 Corriente COP",
+              "Bold. CO: Bancolombia 65200002824 Ahorros COP"
+            ],
+            "Bold CF": ["Bold. CF: Bancolombia 04000002167 Ahorros COP - Bold CF SA"]
+          },
+          "Bold. CO: Bancolombia 04000004981 Ahorros COP - Co SAS Payroll": {
+            "Bold CO": [
+              "Bold. CO: Bancolombia 04000000126 Ahorros COP - Co SAS Payouts",
+              "Bold. CO: Bancolombia 04000005928 Ahorros COP - Co SAS Loans n Referrals",
+              "Bold. CO: Bancolombia 04000000573 Ahorros COP - Co SAS mPos Testing",
+              "Bold. CO: Bancolombia 04000001617 Ahorros COP - Co SAS Human Talent",
+              "Bold. CO: Bancolombia 04000006579 Corriente COP",
+              "Bold. CO: Bancolombia 65200002824 Ahorros COP"
+            ]
+          },
+          "Bold. CO: Bancolombia 04000000573 Ahorros COP - Co SAS mPos Testing": {
+            "Bold CO": [
+              "Bold. CO: Bancolombia 04000000126 Ahorros COP - Co SAS Payouts",
+              "Bold. CO: Bancolombia 04000029802 Ahorros COP - Co SAS Main Treasury",
+              "Bold. CO: Bancolombia 04000005928 Ahorros COP - Co SAS Loans n Referrals",
+              "Bold. CO: Bancolombia 04000004981 Ahorros COP - Co SAS Payroll",
+              "Bold. CO: Bancolombia 04000001617 Ahorros COP - Co SAS Human Talent",
+              "Bold. CO: Bancolombia 04000006579 Corriente COP",
+              "Bold. CO: Bancolombia 65200002824 Ahorros COP"
+            ]
+          }
+        },
+        "Bold CF": { "Bold. CF: Bancolombia 04000002167 Ahorros COP": { "Bold CF": ["Bold. CF: Bancolombia 04000002167 Ahorros COP - Main"] } },
+        "Bold Capital": { "Bold Capital: Bancolombia 04000009999 Ahorros COP": { "Bold Capital": ["Bold Capital: Bancolombia 04000009999 Ahorros COP - Treasury"] } }
+      },
+      "Citi": {
+        "Bold CO": { "Bold. CO: Citibank COL 0089550017 Corriente COP": { "Bold CO": ["Bold. CO: Citibank COL 0089550017 Corriente COP - Payouts"] } },
+        "Bold CF": { "Bold. CF: Citibank COL 0090923021 Corriente COP": { "Bold CF": ["Bold. CF: Citibank COL 0090923021 Corriente COP - Main"] } }
+      },
+      "ACH": {
+        "Bold CO": { "Bold. CO: ACH Dispersión 001": { "Bold CO": ["Bold. CO: ACH Recepción 001"] } },
+        "Bold CF": { "Bold. CF: ACH Dispersión 002": { "Bold CF": ["Bold. CF: ACH Recepción 002"] } },
+        "Bold Capital": { "Bold Capital: ACH Dispersión 003": { "Bold Capital": ["Bold Capital: ACH Recepción 003"] } }
+      }
+    }
+  }
+};
