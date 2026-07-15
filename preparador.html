@@ -1,50 +1,56 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Ejecución Bancaria - Bold</title>
-    <link rel="stylesheet" href="css/estilos.css">
-</head>
+<head><meta charset="UTF-8"><title>Ejecución Banco - Bold</title><link rel="stylesheet" href="css/estilos.css"></head>
 <body>
-    <header class="topbar">
-        <a href="solicitante.html" class="logo">bold</a>
-        <div class="topbar-derecha">
-            <select id="simulador-rol" onchange="cambiarRol(this.value)" style="padding: 5px 10px; border-radius: 5px; font-weight: bold; border: 1px solid #cbd5e1; background: #f8f9fa; cursor: pointer;">
-                <option value="">Cambiar rol temporal...</option>
-                <option value="solicitante.html">Rol: Solicitante</option>
-                <option value="validador.html">🛡️ Rol: Validador</option>
-                <option value="aprobador.html">Rol: Aprobador</option>
-                <option value="preparador.html" selected>Rol: Preparador</option>
-            </select>
-            <span style="font-size: 14px; font-weight: bold; margin-left: 15px;">🇨🇴 Bold</span>
-            <div class="avatar"></div>
-        </div>
-    </header>
+    <header class="topbar"><a href="solicitante.html" class="logo">bold</a><div class="topbar-derecha"></div></header>
     <div class="contenedor-principal">
         <aside class="sidebar">
-            <div class="menu-categoria">Operaciones</div>
-            <a href="solicitante.html" class="menu-item">Carga de Operaciones</a>
-            <a href="historial.html" class="menu-item">Historial de Cargas</a>
-            <div class="menu-categoria">Validación y Aprobación</div>
-            <a href="validador.html" class="menu-item">Validación (Compliance)</a>
-            <a href="aprobador.html" class="menu-item">Bandeja de Aprobador</a>
-            <div class="menu-categoria">Ejecución</div>
-            <a href="preparador.html" class="menu-item activo">Ejecución Banco</a>
+            <div class="menu-categoria">Operaciones</div><a href="solicitante.html" class="menu-item">Carga de Operaciones</a><a href="historial.html" class="menu-item">Historial y Expedientes</a>
+            <div class="menu-categoria">Validación y Aprobación</div><a href="validador.html" class="menu-item">Validación (Compliance)</a><a href="aprobador.html" class="menu-item">Bandeja de Aprobador</a>
+            <div class="menu-categoria">Ejecución</div><a href="preparador.html" class="menu-item activo">Ejecución Banco</a>
         </aside>
         <main class="contenido">
-            <h1 class="titulo-seccion">Operaciones Listas para Banco (CUD)</h1>
-            <p class="subtitulo">Descarga los archivos validados y márcalos una vez se complete la transferencia.</p>
-            <div class="tabla-container">
-                <table class="tabla-bold">
-                    <thead><tr><th>ID</th><th>Compañía</th><th>Tipo de Pago</th><th>Valor a Transferir</th><th>Estructura Banco</th><th>Acción</th></tr></thead>
-                    <tbody>
-                        <tr><td><strong style="color: #673ab7;">#1042</strong></td><td>Bold CO</td><td>Nómina Quincenal</td><td>$540,000,000.00</td><td><a href="#" style="color: #673ab7; font-weight: 700; text-decoration: none;">⬇ nomina_final.xlsx</a></td><td><button class="btn-tabla primario" style="background-color: #4CAF50;">✓ Cumplida</button></td></tr>
-                        <tr><td><strong style="color: #673ab7;">#1045</strong></td><td>Bold CO</td><td>Traslados</td><td>$147,894,651.00</td><td><a href="#" style="color: #673ab7; font-weight: 700; text-decoration: none;">⬇ archivo_traslados.xlsx</a></td><td><button class="btn-tabla primario" style="background-color: #4CAF50;">✓ Cumplida</button></td></tr>
-                    </tbody>
+            <h1 class="titulo-seccion">Dispersión en Portal Bancario (CUD)</h1>
+            <p class="subtitulo">Descarga layout de pagos autorizados, sube el screen del banco y marca como transferido.</p>
+            <div class="tabla-contenedor">
+                <table>
+                    <thead><tr><th>Control ANS / Radicado</th><th>Compañía & Gasto</th><th>Valor a Transferir</th><th>Registros</th><th>Soporte Banco</th><th>Acción Banco</th></tr></thead>
+                    <tbody id="tabla-preparador"></tbody>
                 </table>
             </div>
         </main>
     </div>
+    <!-- Modal Compartido -->
+    <div class="modal-overlay" id="modalDetalles"><div class="modal modal-grande"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;"><h2 id="mod-radicado-titulo" style="margin:0; border:none; padding:0;">Módulo de Auditoría</h2><button class="btn" style="background:#3B82F6; color:white;" onclick="alternarVisor()">👁 Visor Dual</button></div><div class="modal-layout-split"><div class="seccion-datos"><div class="grid-detalles"><div class="dato-grupo"><span class="dato-label">Compañía</span><span class="dato-valor" id="mod-origen"></span></div><div class="dato-grupo"><span class="dato-label">Moneda</span><span class="dato-valor" id="mod-moneda"></span></div><div class="dato-grupo"><span class="dato-label">Valor Solicitado</span><span class="dato-valor" id="mod-val-sol"></span><div class="auditor-data auditor-alerta" id="mod-val-prep"></div></div><div class="dato-grupo"><span class="dato-label">Registros</span><span class="dato-valor" id="mod-regs"></span></div></div><div class="timeline" id="mod-timeline"></div></div><div class="seccion-visor" id="contenedorVisor"><div class="tab-container"><button class="tab active" id="tabSol" onclick="cambiarPestana('solicitante')">📄 Factura</button><button class="tab" id="tabPrep" onclick="cambiarPestana('preparador')">🖼 Screen Banco</button></div><div class="marco-visor"><div class="documento-simulado" id="vistaSolicitante"><h4>SOPORTE ORIGINAL</h4><p>Proveedor: <strong id="vis-sol-prov"></strong></p><p style="margin-top:40px; text-align:right; font-weight:bold;" id="vis-sol-total"></p></div><div class="documento-simulado hidden" id="vistaPreparador" style="background:#0F172A; color:#22C55E;"><h4>PORTAL BANCARIO</h4><p style="margin-top:40px; text-align:right; font-weight:bold; font-size:15px;" id="vis-prep-total"></p></div></div></div></div><div style="text-align: right; margin-top: 20px; border-top: 1px solid #E2E8F0; padding-top: 15px;"><button class="btn btn-detalle" onclick="cerrarModal('modalDetalles')">Cerrar</button></div></div></div>
     <script src="js/logica-comun.js"></script>
+    <script>
+        function renderizarTabla() {
+            const ops = obtenerOperaciones().filter(o => o.estado === "Listo para Banco");
+            const tb = document.getElementById('tabla-preparador');
+            tb.innerHTML = '';
+            if(ops.length === 0) { tb.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#64748B;">No hay dispersiones pendientes para banco.</td></tr>'; return; }
+            ops.forEach(o => {
+                tb.innerHTML += `<tr>
+                    <td><strong>${o.radicado}</strong></td>
+                    <td>${o.empresa}<br><span class="badge badge-opex" style="margin-top:3px;">${o.tipo}</span></td>
+                    <td><strong>$ ${o.montoPrep.toLocaleString()}</strong> <span class="badge badge-moneda">${o.moneda}</span></td>
+                    <td>${o.registros}</td>
+                    <td><button class="btn btn-detalle" onclick="auditarRadicado('${o.radicado}')">📄 Subir Screen Banco</button></td>
+                    <td><button class="btn btn-primario" style="background:#15803D;" onclick="cambiarEstado('${o.radicado}', 'Dispersado en Banco')">🚀 Confirmar Transferencia</button></td>
+                </tr>`;
+            });
+        }
+        function cambiarEstado(rad, est) {
+            const ops = obtenerOperaciones();
+            const op = ops.find(o => o.radicado === rad);
+            if(op) {
+                op.estado = est;
+                op.historial.push({ fecha: new Date().toLocaleDateString() + " - 14:00 PM", paso: "4. DISPERSIÓN BANCARIA COMPLETE", detalle: "Transferencia CUD ejecutada con éxito por Felipe (Preparador)." });
+                guardarOperaciones(ops);
+                alert("¡Lote dispersado con éxito! Registro completado.");
+                renderizarTabla();
+            }
+        }
+    </script>
 </body>
 </html>

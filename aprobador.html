@@ -1,49 +1,61 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Bandeja Aprobador - Bold</title>
-    <link rel="stylesheet" href="css/estilos.css">
-</head>
+<head><meta charset="UTF-8"><title>Bandeja Aprobador - Bold</title><link rel="stylesheet" href="css/estilos.css"></head>
 <body>
-    <header class="topbar">
-        <a href="solicitante.html" class="logo">bold</a>
-        <div class="topbar-derecha">
-            <select id="simulador-rol" onchange="cambiarRol(this.value)" style="padding: 5px 10px; border-radius: 5px; font-weight: bold; border: 1px solid #cbd5e1; background: #f8f9fa; cursor: pointer;">
-                <option value="">Cambiar rol temporal...</option>
-                <option value="solicitante.html">Rol: Solicitante</option>
-                <option value="validador.html">🛡️ Rol: Validador</option>
-                <option value="aprobador.html" selected>Rol: Aprobador</option>
-                <option value="preparador.html">Rol: Preparador</option>
-            </select>
-            <span style="font-size: 14px; font-weight: bold; margin-left: 15px;">🇨🇴 Bold</span>
-            <div class="avatar"></div>
-        </div>
-    </header>
+    <header class="topbar"><a href="solicitante.html" class="logo">bold</a><div class="topbar-derecha"></div></header>
     <div class="contenedor-principal">
         <aside class="sidebar">
-            <div class="menu-categoria">Operaciones</div>
-            <a href="solicitante.html" class="menu-item">Carga de Operaciones</a>
-            <a href="historial.html" class="menu-item">Historial de Cargas</a>
-            <div class="menu-categoria">Validación y Aprobación</div>
-            <a href="validador.html" class="menu-item">Validación (Compliance)</a>
-            <a href="aprobador.html" class="menu-item activo">Bandeja de Aprobador</a>
-            <div class="menu-categoria">Ejecución</div>
-            <a href="preparador.html" class="menu-item">Ejecución Banco</a>
+            <div class="menu-categoria">Operaciones</div><a href="solicitante.html" class="menu-item">Carga de Operaciones</a><a href="historial.html" class="menu-item">Historial y Expedientes</a>
+            <div class="menu-categoria">Validación y Aprobación</div><a href="validador.html" class="menu-item">Validación (Compliance)</a><a href="aprobador.html" class="menu-item activo">Bandeja de Aprobador</a>
+            <div class="menu-categoria">Ejecución</div><a href="preparador.html" class="menu-item">Ejecución Banco</a>
         </aside>
         <main class="contenido">
-            <h1 class="titulo-seccion">Bandeja de Aprobaciones</h1>
-            <p class="subtitulo">Revisa las solicitudes de los solicitantes y autoriza su dispersión.</p>
-            <div class="tabla-container">
-                <table class="tabla-bold">
-                    <thead><tr><th>ID Operación</th><th>Solicitante</th><th>Compañía</th><th>Tipo de Pago</th><th>Valor Total</th><th>Estado</th><th>Acciones</th></tr></thead>
-                    <tbody>
-                        <tr><td><strong style="color: #673ab7;">#1045</strong></td><td>juan@bold.co</td><td>Bold CO</td><td>Traslados</td><td>$147,894,651.00</td><td><span class="badge pendiente">⏳ Pendiente</span></td><td><button class="btn-tabla primario" style="margin-right: 5px;" onclick="alert('Operación Aprobada')">Aprobar</button><button class="btn-tabla peligro" onclick="alert('Operación Rechazada')">Rechazar</button></td></tr>
-                    </tbody>
+            <h1 class="titulo-seccion">Bandeja de Aprobador</h1>
+            <p class="subtitulo">Auditoría cruzada: Contraste visual de soportes originales vs capturas de pantalla de la operación.</p>
+            <div class="header-acciones"><div class="controles"><input type="text" class="input-busqueda" placeholder="Buscar por N° Radicado..."></div><button class="btn btn-reportes" onclick="alert('Generando reporte Excel...')">📊 Reporte de Productividad</button></div>
+            <div class="tabla-contenedor">
+                <table>
+                    <thead><tr><th>Control ANS / Radicado</th><th>Compañía & Operación[cite: 2]</th><th>Solicitante[cite: 2]</th><th>Valor Auditado[cite: 2]</th><th>Registros[cite: 2]</th><th>Acciones[cite: 2]</th></tr></thead>
+                    <tbody id="tabla-aprobador"></tbody>
                 </table>
             </div>
         </main>
     </div>
+    <!-- Modal Compartido -->
+    <div class="modal-overlay" id="modalDetalles"><div class="modal modal-grande"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;"><h2 id="mod-radicado-titulo" style="margin:0; border:none; padding:0;">Módulo de Auditoría</h2><button class="btn" style="background:#3B82F6; color:white;" onclick="alternarVisor()">👁 Visor Dual</button></div><div class="modal-layout-split"><div class="seccion-datos"><div class="grid-detalles"><div class="dato-grupo"><span class="dato-label">Compañía</span><span class="dato-valor" id="mod-origen"></span></div><div class="dato-grupo"><span class="dato-label">Moneda</span><span class="dato-valor" id="mod-moneda"></span></div><div class="dato-grupo"><span class="dato-label">Valor Solicitado</span><span class="dato-valor" id="mod-val-sol"></span><div class="auditor-data auditor-alerta" id="mod-val-prep"></div></div><div class="dato-grupo"><span class="dato-label">Registros</span><span class="dato-valor" id="mod-regs"></span></div></div><div class="timeline" id="mod-timeline"></div></div><div class="seccion-visor" id="contenedorVisor"><div class="tab-container"><button class="tab active" id="tabSol" onclick="cambiarPestana('solicitante')">📄 Factura</button><button class="tab" id="tabPrep" onclick="cambiarPestana('preparador')">🖼 Screen Banco</button></div><div class="marco-visor"><div class="documento-simulado" id="vistaSolicitante"><h4>SOPORTE ORIGINAL</h4><p>Proveedor: <strong id="vis-sol-prov"></strong></p><p style="margin-top:40px; text-align:right; font-weight:bold;" id="vis-sol-total"></p></div><div class="documento-simulado hidden" id="vistaPreparador" style="background:#0F172A; color:#22C55E;"><h4>PORTAL BANCARIO</h4><p style="margin-top:40px; text-align:right; font-weight:bold; font-size:15px;" id="vis-prep-total"></p></div></div></div></div><div style="text-align: right; margin-top: 20px; border-top: 1px solid #E2E8F0; padding-top: 15px;"><button class="btn btn-detalle" onclick="cerrarModal('modalDetalles')">Cerrar</button></div></div></div>
     <script src="js/logica-comun.js"></script>
+    <script>
+        function renderizarTabla() {
+            const ops = obtenerOperaciones().filter(o => o.estado === "En Aprobación");
+            const tb = document.getElementById('tabla-aprobador');
+            tb.innerHTML = '';
+            if(ops.length === 0) { tb.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#64748B;">No hay radicados en cola de aprobación.</td></tr>'; return; }
+            ops.forEach(o => {
+                tb.innerHTML += `<tr>
+                    <td><div class="semaforo-caja"><span class="luz"></span> ANS: ${o.ans}[cite: 2]</div><br><strong>${o.radicado}</strong>[cite: 2]</td>
+                    <td>${o.empresa}[cite: 2]<br><span class="badge badge-opex" style="margin-top:4px;">${o.tipo}[cite: 2]</span></td>
+                    <td>${o.solicitante}[cite: 2]</td>
+                    <td><strong>$ ${o.montoPrep.toLocaleString()}</strong>[cite: 2] <span class="badge badge-moneda">${o.moneda}[cite: 2]</span></td>
+                    <td>${o.registros}[cite: 2]</td>
+                    <td style="display: flex; gap: 8px;">
+                        <button class="btn btn-detalle" onclick="auditarRadicado('${o.radicado}')">🔍 Auditar Expediente[cite: 2]</button>
+                        <button class="btn btn-aprobar" onclick="cambiarEstado('${o.radicado}', 'Listo para Banco')">✓[cite: 2]</button>
+                        <button class="btn btn-rechazar" onclick="cambiarEstado('${o.radicado}', 'Rechazado')">✕[cite: 2]</button>
+                    </td>
+                </tr>`;
+            });
+        }
+        function cambiarEstado(rad, est) {
+            const ops = obtenerOperaciones();
+            const op = ops.find(o => o.radicado === rad);
+            if(op) {
+                op.estado = est;
+                op.historial.push({ fecha: new Date().toLocaleDateString() + " - 11:30 AM", paso: "3. CIERRE DEFINITIVO (" + est.toUpperCase() + ")", detalle: "Autorizado por Kate (Aprobador)." });
+                guardarOperaciones(ops);
+                alert("Radicado " + rad + " autorizado. Pasa a Felipe (Banco).");
+                renderizarTabla();
+            }
+        }
+    </script>
 </body>
 </html>

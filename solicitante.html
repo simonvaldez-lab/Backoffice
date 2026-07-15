@@ -1,31 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Carga de Operaciones - Bold</title>
-    <link rel="stylesheet" href="css/estilos.css">
-    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-</head>
+<head><meta charset="UTF-8"><title>Carga Operaciones - Bold</title><link rel="stylesheet" href="css/estilos.css"></head>
 <body>
-    <header class="topbar">
-        <a href="solicitante.html" class="logo">bold</a>
-        <div class="topbar-derecha">
-            <select id="simulador-rol" onchange="cambiarRol(this.value)" style="padding: 5px 10px; border-radius: 5px; font-weight: bold; border: 1px solid #cbd5e1; background: #f8f9fa; cursor: pointer;">
-                <option value="">Cambiar rol temporal...</option>
-                <option value="solicitante.html" selected>Rol: Solicitante</option>
-                <option value="validador.html">🛡️ Rol: Validador</option>
-                <option value="aprobador.html">Rol: Aprobador</option>
-                <option value="preparador.html">Rol: Preparador</option>
-            </select>
-            <span style="font-size: 14px; font-weight: bold; margin-left: 15px;">🇨🇴 Bold</span>
-            <div class="avatar"></div>
-        </div>
-    </header>
+    <header class="topbar"><a href="solicitante.html" class="logo">bold</a><div class="topbar-derecha"></div></header>
     <div class="contenedor-principal">
         <aside class="sidebar">
             <div class="menu-categoria">Operaciones</div>
             <a href="solicitante.html" class="menu-item activo">Carga de Operaciones</a>
-            <a href="historial.html" class="menu-item">Historial de Cargas</a>
+            <a href="historial.html" class="menu-item">Historial y Expedientes</a>
             <div class="menu-categoria">Validación y Aprobación</div>
             <a href="validador.html" class="menu-item">Validación (Compliance)</a>
             <a href="aprobador.html" class="menu-item">Bandeja de Aprobador</a>
@@ -33,45 +15,66 @@
             <a href="preparador.html" class="menu-item">Ejecución Banco</a>
         </aside>
         <main class="contenido">
-            <h1 class="titulo-seccion">&lt; Carga de Operaciones</h1>
-            <p class="subtitulo">Completa el asistente paso a paso para cargar nuevas operaciones masivas.</p>
-            <div id="lista-formularios"></div>
-            <button class="btn btn-agregar" onclick="agregarFormulario()">+ Agregar otra operación</button>
-            <button class="btn btn-enviar" onclick="alert('Enviado con éxito a validación')">🚀 Enviar Operaciones</button>
+            <h1 class="titulo-seccion">Radicar Nueva Operación</h1>
+            <p class="subtitulo">Ingresa los datos para generar un Radicado oficial sujeto a auditoría.</p>
+            <div style="background: white; padding: 25px; border-radius: 8px; border: 1px solid #E2E8F0; margin-bottom: 30px;">
+                <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                    <div style="flex:1;"><label class="dato-label">Compañía</label><select id="sol-comp" class="form-control"><option value="Bold CO">Bold CO</option><option value="Empresa Matriz S.A.">Empresa Matriz S.A.</option></select></div>
+                    <div style="flex:1;"><label class="dato-label">Tipo de Gasto</label><select id="sol-tipo" class="form-control"><option value="OPEX">OPEX</option><option value="Nómina">Nómina</option><option value="Proveedores">Proveedores</option></select></div>
+                    <div style="flex:1;"><label class="dato-label">Moneda</label><select id="sol-moneda" class="form-control"><option value="COP">COP</option><option value="USD">USD</option></select></div>
+                </div>
+                <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                    <div style="flex:1;"><label class="dato-label">Valor Total Solicitado</label><input type="number" id="sol-monto" class="form-control" placeholder="Ej. 50000000"></div>
+                    <div style="flex:1;"><label class="dato-label">Cantidad de Registros</label><input type="number" id="sol-regs" class="form-control" placeholder="Ej. 15"></div>
+                </div>
+                <button class="btn btn-primario" onclick="crearOperacion()">🚀 Generar Radicado y Enviar a Validación</button>
+            </div>
+            <h2 class="titulo-seccion" style="font-size: 18px;">Mis Radicaciones Recientes</h2>
+            <div class="tabla-contenedor">
+                <table>
+                    <thead><tr><th>Radicado</th><th>Compañía & Tipo</th><th>Monto Solicitado</th><th>Registros</th><th>Estado</th><th>Auditoría</th></tr></thead>
+                    <tbody id="tabla-solicitante"></tbody>
+                </table>
+            </div>
         </main>
     </div>
+    <!-- Modal Compartido -->
+    <div class="modal-overlay" id="modalDetalles"><div class="modal modal-grande"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;"><h2 id="mod-radicado-titulo" style="margin:0; border:none; padding:0;">Módulo de Auditoría</h2><button class="btn" style="background:#3B82F6; color:white;" onclick="alternarVisor()">👁 Visor Dual</button></div><div class="modal-layout-split"><div class="seccion-datos"><div class="grid-detalles"><div class="dato-grupo"><span class="dato-label">Compañía</span><span class="dato-valor" id="mod-origen"></span></div><div class="dato-grupo"><span class="dato-label">Moneda</span><span class="dato-valor" id="mod-moneda"></span></div><div class="dato-grupo"><span class="dato-label">Valor Solicitado</span><span class="dato-valor" id="mod-val-sol"></span><div class="auditor-data auditor-alerta" id="mod-val-prep"></div></div><div class="dato-grupo"><span class="dato-label">Registros</span><span class="dato-valor" id="mod-regs"></span></div></div><div class="timeline" id="mod-timeline"></div></div><div class="seccion-visor" id="contenedorVisor"><div class="tab-container"><button class="tab active" id="tabSol" onclick="cambiarPestana('solicitante')">📄 Factura</button><button class="tab" id="tabPrep" onclick="cambiarPestana('preparador')">🖼 Screen Banco</button></div><div class="marco-visor"><div class="documento-simulado" id="vistaSolicitante"><h4>SOPORTE ORIGINAL</h4><p>Proveedor: <strong id="vis-sol-prov"></strong></p><p style="margin-top:40px; text-align:right; font-weight:bold;" id="vis-sol-total"></p></div><div class="documento-simulado hidden" id="vistaPreparador" style="background:#0F172A; color:#22C55E;"><h4>PORTAL BANCARIO</h4><p style="margin-top:40px; text-align:right; font-weight:bold; font-size:15px;" id="vis-prep-total"></p></div></div></div></div><div style="text-align: right; margin-top: 20px; border-top: 1px solid #E2E8F0; padding-top: 15px;"><button class="btn btn-detalle" onclick="cerrarModal('modalDetalles')">Cerrar</button></div></div></div>
     <script src="js/logica-comun.js"></script>
     <script>
-        let contador = 0;
-        function agregarFormulario(datos = null) {
-            contador++; const id = contador; const div = document.createElement('div'); div.className = 'caja-solicitud'; div.id = `solicitud-${id}`;
-            div.innerHTML = `
-                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 20px;">
-                    <h3 style="margin: 0;">Operación #${id}</h3>
-                    <button onclick="document.getElementById('solicitud-${id}').remove()" style="background: none; border: none; color: #F44336; cursor: pointer; font-weight: bold;">✕ Eliminar</button>
-                </div>
-                <div id="fase-1-${id}">
-                    <div class="fila">
-                        <div class="columna"><label>Correo *</label><input type="email" class="val-correo" required></div>
-                        <div class="columna"><label>Tipo de Pago *</label><select class="val-tipo" onchange="actualizarSubtipos(${id})" required><option value="">Seleccione...</option><option value="Nómina">Nómina</option><option value="Proveedores">Proveedores</option><option value="Traslados">Traslados</option></select></div>
-                    </div>
-                    <div class="fila">
-                        <div class="columna"><label>Compañía *</label><select class="val-compania" onchange="actualizarCuentas(${id})" required><option value="">Seleccione...</option><option value="Bold CO">Bold CO</option><option value="Bold CF">Bold CF</option></select></div>
-                        <div class="columna"><label>Cuenta Origen *</label><select class="val-origen" required><option value="">Elija Compañía</option></select></div>
-                    </div>
-                    <div style="text-align: right;"><button type="button" class="btn btn-enviar" style="width:auto;" onclick="document.getElementById('fase-1-${id}').classList.add('oculto'); document.getElementById('fase-2-${id}').classList.remove('oculto');">Siguiente Paso ➔</button></div>
-                </div>
-                <div id="fase-2-${id}" class="oculto">
-                    <div class="fila">
-                        <div class="columna"><label>Adjuntar Excel</label><input type="file" accept=".xlsx, .xls"></div>
-                        <div class="columna"><label>Valor Total *</label><input type="number" class="val-valor" required></div>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-top: 20px;"><button type="button" class="btn btn-agregar" style="width:auto; margin:0;" onclick="document.getElementById('fase-2-${id}').classList.add('oculto'); document.getElementById('fase-1-${id}').classList.remove('oculto');">⬅ Atrás</button></div>
-                </div>`;
-            document.getElementById('lista-formularios').appendChild(div);
+        function renderizarTabla() {
+            const ops = obtenerOperaciones();
+            const tb = document.getElementById('tabla-solicitante');
+            tb.innerHTML = '';
+            ops.forEach(o => {
+                tb.innerHTML += `<tr>
+                    <td><strong>${o.radicado}</strong></td>
+                    <td>${o.empresa}<br><span class="badge badge-opex" style="margin-top:3px;">${o.tipo}</span></td>
+                    <td><strong>$ ${o.montoSol.toLocaleString()}</strong> <span class="badge badge-moneda">${o.moneda}</span></td>
+                    <td>${o.registros}</td>
+                    <td><span class="badge badge-estado-pendiente">${o.estado}</span></td>
+                    <td><button class="btn btn-detalle" onclick="auditarRadicado('${o.radicado}')">🔍 Expediente</button></td>
+                </tr>`;
+            });
         }
-        function actualizarSubtipos(id) {} function actualizarCuentas(id) {}
-        window.onload = () => agregarFormulario();
+        function crearOperacion() {
+            const num = Math.floor(1000 + Math.random() * 9000);
+            const rad = `RAD-2026-${num}`;
+            const monto = parseFloat(document.getElementById('sol-monto').value);
+            const regs = parseInt(document.getElementById('sol-regs').value);
+            if(!monto || !regs) return alert("Ingresa monto y registros válidos.");
+
+            const ops = obtenerOperaciones();
+            ops.unshift({
+                radicado: rad, empresa: document.getElementById('sol-comp').value, tipo: document.getElementById('sol-tipo').value,
+                solicitante: "lau@bold.co", montoSol: monto, montoPrep: monto, moneda: document.getElementById('sol-moneda').value,
+                registros: regs, ans: "3 Horas", estado: "Pendiente Validación",
+                historial: [{ fecha: new Date().toLocaleDateString() + " - 09:00 AM", paso: "1. RADICACIÓN", detalle: "Cargado por Solicitante." }]
+            });
+            guardarOperaciones(ops);
+            alert("✅ Radicado " + rad + " generado y enviado a María (Compliance).");
+            renderizarTabla();
+        }
     </script>
 </body>
 </html>
