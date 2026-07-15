@@ -5,33 +5,28 @@
     <header class="topbar"><a href="solicitante.html" class="logo">bold</a><div class="topbar-derecha"></div></header>
     <div class="contenedor-principal">
         <aside class="sidebar">
-            <div class="menu-categoria">Operaciones</div>
-            <a href="solicitante.html" class="menu-item activo">Carga de Operaciones</a>
-            <a href="historial.html" class="menu-item">Historial y Expedientes</a>
-            <div class="menu-categoria">Validación y Aprobación</div>
-            <a href="validador.html" class="menu-item">Validación (Compliance)</a>
-            <a href="aprobador.html" class="menu-item">Bandeja de Aprobador</a>
-            <div class="menu-categoria">Ejecución</div>
-            <a href="preparador.html" class="menu-item">Ejecución Banco</a>
+            <div class="menu-categoria">Operaciones</div><a href="solicitante.html" class="menu-item activo">Carga de Operaciones</a><a href="historial.html" class="menu-item">Historial y Expedientes</a>
+            <div class="menu-categoria">Validación y Aprobación</div><a href="validador.html" class="menu-item">Validación (Compliance)</a><a href="aprobador.html" class="menu-item">Bandeja de Aprobador</a>
+            <div class="menu-categoria">Ejecución</div><a href="preparador.html" class="menu-item">Ejecución Banco</a>
         </aside>
         <main class="contenido">
             <h1 class="titulo-seccion">Radicar Nueva Operación</h1>
-            <p class="subtitulo">Ingresa los datos para generar un Radicado oficial sujeto a auditoría.</p>
+            <p class="subtitulo">Ingresa los datos para generar un Radicado oficial en la jurisdicción activa.</p>
             <div style="background: white; padding: 25px; border-radius: 8px; border: 1px solid #E2E8F0; margin-bottom: 30px;">
                 <div style="display: flex; gap: 15px; margin-bottom: 15px;">
-                    <!-- Campo autocompletado de solo lectura -->
-                    <div style="flex:1.2;"><label class="dato-label">Correo Solicitante (Autocompletado)</label><input type="email" id="sol-correo" class="form-control" readonly style="background-color: #F1F5F9; color: #475569; cursor: not-allowed; font-weight: 700; border-color: #CBD5E1;" title="El correo se asigna automáticamente según tu sesión"></div>
-                    <div style="flex:1;"><label class="dato-label">Compañía</label><select id="sol-comp" class="form-control"><option value="Bold CO">Bold CO</option><option value="Empresa Matriz S.A.">Empresa Matriz S.A.</option></select></div>
-                    <div style="flex:1;"><label class="dato-label">Tipo de Gasto</label><select id="sol-tipo" class="form-control"><option value="OPEX">OPEX</option><option value="Nómina">Nómina</option><option value="Proveedores">Proveedores</option></select></div>
+                    <div style="flex:1.2;"><label class="dato-label">Correo Solicitante</label><input type="email" id="sol-correo" class="form-control" readonly style="background-color: #F1F5F9; color: #475569; cursor: not-allowed; font-weight: 700;"></div>
+                    <div style="flex:1;"><label class="dato-label">Compañía</label><select id="sol-comp" class="form-control"></select></div>
+                    <div style="flex:1;"><label class="dato-label">Tipo de Gasto</label><select id="sol-tipo" class="form-control"><option value="OPEX">OPEX</option><option value="Nómina">Nómina</option><option value="Proveedores">Proveedores</option><option value="Traslados">Traslados</option></select></div>
                 </div>
                 <div style="display: flex; gap: 15px; margin-bottom: 20px;">
-                    <div style="flex:0.8;"><label class="dato-label">Moneda</label><select id="sol-moneda" class="form-control"><option value="COP">COP</option><option value="USD">USD</option></select></div>
+                    <!-- Monedas independientes de la jurisdicción elegida -->
+                    <div style="flex:0.8;"><label class="dato-label">Moneda de la Operación</label><select id="sol-moneda" class="form-control"><option value="COP">COP (Pesos)</option><option value="PEN">PEN (Soles)</option><option value="USD">USD (Dólares)</option><option value="EUR">EUR (Euros)</option></select></div>
                     <div style="flex:1.2;"><label class="dato-label">Valor Total Solicitado</label><input type="number" id="sol-monto" class="form-control" placeholder="Ej. 50000000"></div>
                     <div style="flex:1;"><label class="dato-label">Cantidad de Registros</label><input type="number" id="sol-regs" class="form-control" placeholder="Ej. 15"></div>
                 </div>
                 <button class="btn btn-primario" onclick="crearOperacion()">🚀 Generar Radicado y Enviar a Validación</button>
             </div>
-            <h2 class="titulo-seccion" style="font-size: 18px;">Mis Radicaciones Recientes</h2>
+            <h2 class="titulo-seccion" style="font-size: 18px;">Mis Radicaciones en Jurisdicción</h2>
             <div class="tabla-contenedor">
                 <table>
                     <thead><tr><th>Radicado</th><th>Compañía & Tipo</th><th>Monto Solicitado</th><th>Registros</th><th>Estado</th><th>Auditoría</th></tr></thead>
@@ -45,19 +40,25 @@
     <script src="js/logica-comun.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Asignar automáticamente el correo del usuario logueado en el input
             const usrData = sessionStorage.getItem('usuarioLogueado');
             if (usrData) {
                 const usr = JSON.parse(usrData);
-                const inputCorreo = document.getElementById('sol-correo');
-                if (inputCorreo && usr.correo) {
-                    inputCorreo.value = usr.correo;
+                document.getElementById('sol-correo').value = usr.correo || "lau@bold.co";
+
+                // El país solo divide operaciones y ajusta las empresas locales, sin bloquear divisas
+                const selComp = document.getElementById('sol-comp');
+                selComp.innerHTML = '';
+
+                if (usr.pais === 'Perú') {
+                    selComp.innerHTML = '<option value="Bold Perú S.A.C.">Bold Perú S.A.C.</option><option value="Empresa Matriz Perú">Empresa Matriz Perú</option>';
+                } else {
+                    selComp.innerHTML = '<option value="Bold CO">Bold CO</option><option value="Empresa Matriz S.A.">Empresa Matriz S.A.</option>';
                 }
             }
         });
 
         function renderizarTabla() {
-            const ops = obtenerOperaciones();
+            const ops = obtenerOperacionesActivas();
             const tb = document.getElementById('tabla-solicitante');
             tb.innerHTML = '';
             ops.forEach(o => {
@@ -77,26 +78,20 @@
             const rad = `RAD-2026-${num}`;
             const monto = parseFloat(document.getElementById('sol-monto').value);
             const regs = parseInt(document.getElementById('sol-regs').value);
-            const correoAutor = document.getElementById('sol-correo').value || "lau@bold.co";
+            const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado'));
 
             if(!monto || !regs) return alert("⚠️ Ingresa monto y registros válidos.");
 
             const ops = obtenerOperaciones();
             ops.unshift({
-                radicado: rad, 
-                empresa: document.getElementById('sol-comp').value, 
-                tipo: document.getElementById('sol-tipo').value,
-                solicitante: correoAutor, 
-                montoSol: monto, 
-                montoPrep: monto, 
-                moneda: document.getElementById('sol-moneda').value,
-                registros: regs, 
-                ans: "3 Horas", 
-                estado: "Pendiente Validación",
-                historial: [{ fecha: new Date().toLocaleDateString() + " - " + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), paso: "1. RADICACIÓN", detalle: `Cargado en sistema por el usuario: ${correoAutor}.` }]
+                radicado: rad, pais: usr.pais, empresa: document.getElementById('sol-comp').value,
+                tipo: document.getElementById('sol-tipo').value, solicitante: usr.correo,
+                montoSol: monto, montoPrep: monto, moneda: document.getElementById('sol-moneda').value,
+                registros: regs, ans: "3 Horas", estado: "Pendiente Validación",
+                historial: [{ fecha: new Date().toLocaleDateString() + " - " + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), paso: "1. RADICACIÓN", detalle: `Cargado en jurisdicción ${usr.pais} por: ${usr.correo}.` }]
             });
             guardarOperaciones(ops);
-            alert("✅ Radicado " + rad + " generado por (" + correoAutor + ") y enviado a Compliance.");
+            alert("✅ Radicado " + rad + " (" + usr.pais + ") generado exitosamente.");
             renderizarTabla();
         }
     </script>
