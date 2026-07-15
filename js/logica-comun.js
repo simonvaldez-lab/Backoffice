@@ -4,7 +4,6 @@
 function obtenerOperaciones() {
     let bd = localStorage.getItem('bold_operaciones_bd');
     if (!bd) {
-        // Semillas iniciales si la BD está vacía
         const iniciales = [
             {
                 radicado: "RAD-2026-0891",
@@ -66,13 +65,14 @@ function guardarOperaciones(lista) {
 }
 
 // ==========================================
-// 2. SEGURIDAD Y BLOQUEO DE RUTAS
+// 2. SEGURIDAD, PERMISOS ESTRICTOS Y USUARIO MAESTRO
 // ==========================================
 const usuariosPrueba = {
-    "lau@bold.co": { rol: "solicitante", url: "solicitante.html", nombre: "Laura (Solicitante)" },
-    "mar@bold.co": { rol: "validador", url: "validador.html", nombre: "María (Validador)" },
-    "kat@bold.co": { rol: "aprobador", url: "aprobador.html", nombre: "Kate (Aprobador)" },
-    "fel@bold.co": { rol: "preparador", url: "preparador.html", nombre: "Felipe (Preparador)" }
+    "simo@bold.co": { rol: "maestro", url: "historial.html", nombre: "👑 Simon (Usuario Maestro)" },
+    "lau@bold.co": { rol: "solicitante", url: "solicitante.html", nombre: "👋 Laura (Solicitante)" },
+    "mar@bold.co": { rol: "validador", url: "validador.html", nombre: "👋 María (Validador)" },
+    "kat@bold.co": { rol: "aprobador", url: "aprobador.html", nombre: "👋 Kate (Aprobador)" },
+    "fel@bold.co": { rol: "preparador", url: "preparador.html", nombre: "👋 Felipe (Preparador)" }
 };
 
 function iniciarSesion() {
@@ -97,31 +97,40 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!dataUsuario) { window.location.href = "index.html"; return; }
         const usuario = JSON.parse(dataUsuario);
 
+        // MATRIZ ESTRICTA: El Maestro ve todo; los demás SOLO su interfaz y el historial universal
         const permisos = {
+            "maestro": ["solicitante.html", "validador.html", "aprobador.html", "preparador.html", "historial.html"],
             "solicitante": ["solicitante.html", "historial.html"],
             "validador": ["validador.html", "historial.html"],
             "aprobador": ["aprobador.html", "historial.html"],
             "preparador": ["preparador.html", "historial.html"]
         };
 
+        // Bloqueo de URL para evitar accesos no autorizados
         if (!permisos[usuario.rol].includes(rutaActual)) {
-            alert("⛔ Acceso denegado a esta vista para el perfil: " + usuario.rol.toUpperCase());
+            alert("⛔ Acceso denegado. Tu perfil (" + usuario.rol.toUpperCase() + ") solo tiene acceso a sus funciones específicas.");
             window.location.href = permisos[usuario.rol][0];
             return;
         }
 
+        // Renderizar barra superior con el nombre del rol o corona de Maestro
         const topbarDerecha = document.querySelector('.topbar-derecha');
         if (topbarDerecha) {
             topbarDerecha.innerHTML = `
-                <span style="font-size: 13px; font-weight: bold; color: #0B1442; margin-right: 15px;">👋 ${usuario.nombre}</span>
+                <span style="font-size: 13px; font-weight: bold; color: #0B1442; margin-right: 15px;">${usuario.nombre}</span>
                 <button onclick="cerrarSesion()" style="background: white; border: 1px solid #EF4444; color: #EF4444; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 11px;">Salir</button>
             `;
         }
 
+        // Filtrado estricto del menú lateral
         document.querySelectorAll('.menu-item').forEach(item => {
             const enlace = item.getAttribute('href');
-            if (enlace && !permisos[usuario.rol].includes(enlace)) item.style.display = 'none';
+            if (enlace && !permisos[usuario.rol].includes(enlace)) {
+                item.style.display = 'none'; // Desaparece la opción para roles comunes
+            }
         });
+
+        // Limpiar encabezados de categoría que se queden vacíos por el filtrado
         document.querySelectorAll('.menu-categoria').forEach(cat => {
             let next = cat.nextElementSibling, visible = false;
             while (next && !next.classList.contains('menu-categoria')) {
@@ -131,7 +140,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!visible) cat.style.display = 'none';
         });
 
-        // Disparar el renderizado de la tabla según la vista
         if (typeof renderizarTabla === 'function') renderizarTabla();
     }
 });
@@ -151,7 +159,6 @@ function auditarRadicado(radicado) {
     document.getElementById('mod-val-prep').innerText = `Screen Banco: $ ${op.montoPrep.toLocaleString()} ${op.moneda}`;
     document.getElementById('mod-regs').innerText = `${op.registros} Transacciones`;
 
-    // Armar Traza
     const divTraza = document.getElementById('mod-timeline');
     divTraza.innerHTML = '';
     op.historial.forEach(h => {
@@ -165,7 +172,6 @@ function auditarRadicado(radicado) {
             </div>`;
     });
 
-    // Vista Soportes Simulado
     document.getElementById('vis-sol-prov').innerText = op.empresa;
     document.getElementById('vis-sol-total').innerText = `$ ${op.montoSol.toLocaleString()} ${op.moneda}`;
     document.getElementById('vis-prep-total').innerText = `$ ${op.montoPrep.toLocaleString()} ${op.moneda}`;
