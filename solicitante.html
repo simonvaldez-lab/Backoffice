@@ -19,12 +19,14 @@
             <p class="subtitulo">Ingresa los datos para generar un Radicado oficial sujeto a auditoría.</p>
             <div style="background: white; padding: 25px; border-radius: 8px; border: 1px solid #E2E8F0; margin-bottom: 30px;">
                 <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                    <!-- Campo autocompletado de solo lectura -->
+                    <div style="flex:1.2;"><label class="dato-label">Correo Solicitante (Autocompletado)</label><input type="email" id="sol-correo" class="form-control" readonly style="background-color: #F1F5F9; color: #475569; cursor: not-allowed; font-weight: 700; border-color: #CBD5E1;" title="El correo se asigna automáticamente según tu sesión"></div>
                     <div style="flex:1;"><label class="dato-label">Compañía</label><select id="sol-comp" class="form-control"><option value="Bold CO">Bold CO</option><option value="Empresa Matriz S.A.">Empresa Matriz S.A.</option></select></div>
                     <div style="flex:1;"><label class="dato-label">Tipo de Gasto</label><select id="sol-tipo" class="form-control"><option value="OPEX">OPEX</option><option value="Nómina">Nómina</option><option value="Proveedores">Proveedores</option></select></div>
-                    <div style="flex:1;"><label class="dato-label">Moneda</label><select id="sol-moneda" class="form-control"><option value="COP">COP</option><option value="USD">USD</option></select></div>
                 </div>
                 <div style="display: flex; gap: 15px; margin-bottom: 20px;">
-                    <div style="flex:1;"><label class="dato-label">Valor Total Solicitado</label><input type="number" id="sol-monto" class="form-control" placeholder="Ej. 50000000"></div>
+                    <div style="flex:0.8;"><label class="dato-label">Moneda</label><select id="sol-moneda" class="form-control"><option value="COP">COP</option><option value="USD">USD</option></select></div>
+                    <div style="flex:1.2;"><label class="dato-label">Valor Total Solicitado</label><input type="number" id="sol-monto" class="form-control" placeholder="Ej. 50000000"></div>
                     <div style="flex:1;"><label class="dato-label">Cantidad de Registros</label><input type="number" id="sol-regs" class="form-control" placeholder="Ej. 15"></div>
                 </div>
                 <button class="btn btn-primario" onclick="crearOperacion()">🚀 Generar Radicado y Enviar a Validación</button>
@@ -42,6 +44,18 @@
     <div class="modal-overlay" id="modalDetalles"><div class="modal modal-grande"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;"><h2 id="mod-radicado-titulo" style="margin:0; border:none; padding:0;">Módulo de Auditoría</h2><button class="btn" style="background:#3B82F6; color:white;" onclick="alternarVisor()">👁 Visor Dual</button></div><div class="modal-layout-split"><div class="seccion-datos"><div class="grid-detalles"><div class="dato-grupo"><span class="dato-label">Compañía</span><span class="dato-valor" id="mod-origen"></span></div><div class="dato-grupo"><span class="dato-label">Moneda</span><span class="dato-valor" id="mod-moneda"></span></div><div class="dato-grupo"><span class="dato-label">Valor Solicitado</span><span class="dato-valor" id="mod-val-sol"></span><div class="auditor-data auditor-alerta" id="mod-val-prep"></div></div><div class="dato-grupo"><span class="dato-label">Registros</span><span class="dato-valor" id="mod-regs"></span></div></div><div class="timeline" id="mod-timeline"></div></div><div class="seccion-visor" id="contenedorVisor"><div class="tab-container"><button class="tab active" id="tabSol" onclick="cambiarPestana('solicitante')">📄 Factura</button><button class="tab" id="tabPrep" onclick="cambiarPestana('preparador')">🖼 Screen Banco</button></div><div class="marco-visor"><div class="documento-simulado" id="vistaSolicitante"><h4>SOPORTE ORIGINAL</h4><p>Proveedor: <strong id="vis-sol-prov"></strong></p><p style="margin-top:40px; text-align:right; font-weight:bold;" id="vis-sol-total"></p></div><div class="documento-simulado hidden" id="vistaPreparador" style="background:#0F172A; color:#22C55E;"><h4>PORTAL BANCARIO</h4><p style="margin-top:40px; text-align:right; font-weight:bold; font-size:15px;" id="vis-prep-total"></p></div></div></div></div><div style="text-align: right; margin-top: 20px; border-top: 1px solid #E2E8F0; padding-top: 15px;"><button class="btn btn-detalle" onclick="cerrarModal('modalDetalles')">Cerrar</button></div></div></div>
     <script src="js/logica-comun.js"></script>
     <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Asignar automáticamente el correo del usuario logueado en el input
+            const usrData = sessionStorage.getItem('usuarioLogueado');
+            if (usrData) {
+                const usr = JSON.parse(usrData);
+                const inputCorreo = document.getElementById('sol-correo');
+                if (inputCorreo && usr.correo) {
+                    inputCorreo.value = usr.correo;
+                }
+            }
+        });
+
         function renderizarTabla() {
             const ops = obtenerOperaciones();
             const tb = document.getElementById('tabla-solicitante');
@@ -57,22 +71,32 @@
                 </tr>`;
             });
         }
+
         function crearOperacion() {
             const num = Math.floor(1000 + Math.random() * 9000);
             const rad = `RAD-2026-${num}`;
             const monto = parseFloat(document.getElementById('sol-monto').value);
             const regs = parseInt(document.getElementById('sol-regs').value);
-            if(!monto || !regs) return alert("Ingresa monto y registros válidos.");
+            const correoAutor = document.getElementById('sol-correo').value || "lau@bold.co";
+
+            if(!monto || !regs) return alert("⚠️ Ingresa monto y registros válidos.");
 
             const ops = obtenerOperaciones();
             ops.unshift({
-                radicado: rad, empresa: document.getElementById('sol-comp').value, tipo: document.getElementById('sol-tipo').value,
-                solicitante: "lau@bold.co", montoSol: monto, montoPrep: monto, moneda: document.getElementById('sol-moneda').value,
-                registros: regs, ans: "3 Horas", estado: "Pendiente Validación",
-                historial: [{ fecha: new Date().toLocaleDateString() + " - 09:00 AM", paso: "1. RADICACIÓN", detalle: "Cargado por Solicitante." }]
+                radicado: rad, 
+                empresa: document.getElementById('sol-comp').value, 
+                tipo: document.getElementById('sol-tipo').value,
+                solicitante: correoAutor, 
+                montoSol: monto, 
+                montoPrep: monto, 
+                moneda: document.getElementById('sol-moneda').value,
+                registros: regs, 
+                ans: "3 Horas", 
+                estado: "Pendiente Validación",
+                historial: [{ fecha: new Date().toLocaleDateString() + " - " + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), paso: "1. RADICACIÓN", detalle: `Cargado en sistema por el usuario: ${correoAutor}.` }]
             });
             guardarOperaciones(ops);
-            alert("✅ Radicado " + rad + " generado y enviado a María (Compliance).");
+            alert("✅ Radicado " + rad + " generado por (" + correoAutor + ") y enviado a Compliance.");
             renderizarTabla();
         }
     </script>

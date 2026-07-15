@@ -68,11 +68,11 @@ function guardarOperaciones(lista) {
 // 2. SEGURIDAD, PERMISOS ESTRICTOS Y USUARIO MAESTRO
 // ==========================================
 const usuariosPrueba = {
-    "simo@bold.co": { rol: "maestro", url: "historial.html", nombre: "👑 Simon (Usuario Maestro)" },
-    "lau@bold.co": { rol: "solicitante", url: "solicitante.html", nombre: "👋 Laura (Solicitante)" },
-    "mar@bold.co": { rol: "validador", url: "validador.html", nombre: "👋 María (Validador)" },
-    "kat@bold.co": { rol: "aprobador", url: "aprobador.html", nombre: "👋 Kate (Aprobador)" },
-    "fel@bold.co": { rol: "preparador", url: "preparador.html", nombre: "👋 Felipe (Preparador)" }
+    "simo@bold.co": { rol: "maestro", url: "historial.html", nombre: "👑 Simon (Usuario Maestro)", correo: "simo@bold.co" },
+    "lau@bold.co": { rol: "solicitante", url: "solicitante.html", nombre: "👋 Laura (Solicitante)", correo: "lau@bold.co" },
+    "mar@bold.co": { rol: "validador", url: "validador.html", nombre: "👋 María (Validador)", correo: "mar@bold.co" },
+    "kat@bold.co": { rol: "aprobador", url: "aprobador.html", nombre: "👋 Kate (Aprobador)", correo: "kat@bold.co" },
+    "fel@bold.co": { rol: "preparador", url: "preparador.html", nombre: "👋 Felipe (Preparador)", correo: "fel@bold.co" }
 };
 
 function iniciarSesion() {
@@ -97,7 +97,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!dataUsuario) { window.location.href = "index.html"; return; }
         const usuario = JSON.parse(dataUsuario);
 
-        // MATRIZ ESTRICTA: El Maestro ve todo; los demás SOLO su interfaz y el historial universal
         const permisos = {
             "maestro": ["solicitante.html", "validador.html", "aprobador.html", "preparador.html", "historial.html"],
             "solicitante": ["solicitante.html", "historial.html"],
@@ -106,14 +105,12 @@ document.addEventListener('DOMContentLoaded', () => {
             "preparador": ["preparador.html", "historial.html"]
         };
 
-        // Bloqueo de URL para evitar accesos no autorizados
         if (!permisos[usuario.rol].includes(rutaActual)) {
             alert("⛔ Acceso denegado. Tu perfil (" + usuario.rol.toUpperCase() + ") solo tiene acceso a sus funciones específicas.");
             window.location.href = permisos[usuario.rol][0];
             return;
         }
 
-        // Renderizar barra superior con el nombre del rol o corona de Maestro
         const topbarDerecha = document.querySelector('.topbar-derecha');
         if (topbarDerecha) {
             topbarDerecha.innerHTML = `
@@ -122,15 +119,11 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }
 
-        // Filtrado estricto del menú lateral
         document.querySelectorAll('.menu-item').forEach(item => {
             const enlace = item.getAttribute('href');
-            if (enlace && !permisos[usuario.rol].includes(enlace)) {
-                item.style.display = 'none'; // Desaparece la opción para roles comunes
-            }
+            if (enlace && !permisos[usuario.rol].includes(enlace)) item.style.display = 'none';
         });
 
-        // Limpiar encabezados de categoría que se queden vacíos por el filtrado
         document.querySelectorAll('.menu-categoria').forEach(cat => {
             let next = cat.nextElementSibling, visible = false;
             while (next && !next.classList.contains('menu-categoria')) {
