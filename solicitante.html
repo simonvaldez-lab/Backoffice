@@ -11,9 +11,21 @@
         </aside>
         <main class="contenido">
             <h1 class="titulo-seccion">Radicar Operación (Mapeo Relacional)</h1>
-            <p class="subtitulo">Selecciona en cascada los datos bancarios. Las opciones siguientes dependen estrictamente del paso anterior.</p>
+            <p class="subtitulo">Selecciona en cascada los datos o carga una de tus plantillas guardadas para agilizar el proceso.</p>
             
-            <div style="background: white; padding: 25px; border-radius: 8px; border: 1px solid #E2E8F0; margin-bottom: 30px;">
+            <div style="background: white; padding: 25px; border-radius: 8px; border: 1px solid #E2E8F0; margin-bottom: 30px; position: relative;">
+                
+                <!-- GESTOR DE PLANTILLAS (Cargar) -->
+                <div style="background: #EEF2FF; padding: 15px; border-radius: 6px; border: 1px dashed #A5B4FC; margin-bottom: 20px; display: flex; gap: 15px; align-items: flex-end;">
+                    <div style="flex: 1;">
+                        <label class="dato-label" style="color: #4F46E5;">⚡ Cargar Plantilla Frecuente</label>
+                        <select id="select-plantilla" class="form-control" style="border-color: #C7D2FE; background: white;"><option value="">Selecciona una plantilla guardada...</option></select>
+                    </div>
+                    <div>
+                        <button class="btn btn-primario" style="background: #4F46E5; height: 38px;" onclick="aplicarPlantilla()">⬇ Autocompletar Formulario</button>
+                    </div>
+                </div>
+
                 <!-- Fila 1: Datos Generales -->
                 <div style="display: flex; gap: 15px; margin-bottom: 15px;">
                     <div style="flex:1.2;"><label class="dato-label">Correo Solicitante</label><input type="email" id="sol-correo" class="form-control" readonly style="background-color: #F1F5F9; color: #475569; font-weight: 700;"></div>
@@ -36,7 +48,15 @@
                     <div style="flex:1;"><label class="dato-label">Monto Solicitado</label><input type="number" id="f-monto" class="form-control" placeholder="Ej. 15000000"></div>
                 </div>
 
-                <button class="btn btn-primario" onclick="crearOperacionRelacional()">🚀 Radicar Operación en Cascada</button>
+                <!-- BOTONES DE ACCIÓN Y GUARDADO DE PLANTILLAS -->
+                <div style="display: flex; gap: 15px; align-items: center; border-top: 1px solid #E2E8F0; padding-top: 20px;">
+                    <button class="btn btn-primario" onclick="crearOperacionRelacional()" style="font-size: 14px; padding: 10px 20px;">🚀 Radicar Operación en Cascada</button>
+                    
+                    <div style="width: 1px; height: 35px; background: #CBD5E1; margin: 0 10px;"></div>
+                    
+                    <input type="text" id="nombre-plantilla" class="form-control" style="width: 220px;" placeholder="Ej. Nómina Quincenal Citi...">
+                    <button class="btn btn-detalle" style="background: white; border-color: #10B981; color: #15803D;" onclick="guardarPlantilla()">💾 Guardar Modelo</button>
+                </div>
             </div>
 
             <h2 class="titulo-seccion" style="font-size: 18px;">Mis Radicaciones en Jurisdicción</h2>
@@ -45,17 +65,95 @@
             </div>
         </main>
     </div>
-    <!-- Modal Compartido -->
+    
+    <!-- Modal Compartido de Auditoría -->
     <div class="modal-overlay" id="modalDetalles"><div class="modal modal-grande"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;"><h2 id="mod-radicado-titulo" style="margin:0; border:none; padding:0;">Módulo de Auditoría</h2><button class="btn" style="background:#3B82F6; color:white;" onclick="alternarVisor()">👁 Visor Dual</button></div><div class="modal-layout-split"><div class="seccion-datos"><div class="grid-detalles"><div class="dato-grupo"><span class="dato-label">Compañía</span><span class="dato-valor" id="mod-origen"></span></div><div class="dato-grupo"><span class="dato-label">Moneda</span><span class="dato-valor" id="mod-moneda"></span></div><div class="dato-grupo"><span class="dato-label">Valor Solicitado</span><span class="dato-valor" id="mod-val-sol"></span><div class="auditor-data auditor-alerta" id="mod-val-prep"></div></div><div class="dato-grupo"><span class="dato-label">Registros</span><span class="dato-valor" id="mod-regs"></span></div></div><div class="timeline" id="mod-timeline"></div></div><div class="seccion-visor" id="contenedorVisor"><div class="tab-container"><button class="tab active" id="tabSol" onclick="cambiarPestana('solicitante')">📄 Factura</button><button class="tab" id="tabPrep" onclick="cambiarPestana('preparador')">🖼 Screen Banco</button></div><div class="marco-visor"><div class="documento-simulado" id="vistaSolicitante"><h4>SOPORTE ORIGINAL</h4><p>Proveedor: <strong id="vis-sol-prov"></strong></p><p style="margin-top:40px; text-align:right; font-weight:bold;" id="vis-sol-total"></p></div><div class="documento-simulado hidden" id="vistaPreparador" style="background:#0F172A; color:#22C55E;"><h4>PORTAL BANCARIO</h4><p style="margin-top:40px; text-align:right; font-weight:bold; font-size:15px;" id="vis-prep-total"></p></div></div></div></div><div style="text-align: right; margin-top: 20px; border-top: 1px solid #E2E8F0; padding-top: 15px;"><button class="btn btn-detalle" onclick="cerrarModal('modalDetalles')">Cerrar</button></div></div></div>
+    
     <script src="js/logica-comun.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const usrData = sessionStorage.getItem('usuarioLogueado');
             if (usrData) document.getElementById('sol-correo').value = JSON.parse(usrData).correo || "lau@bold.co";
             cascada(1);
+            cargarPlantillasUI(); // Cargar plantillas al iniciar
         });
 
+        // ==========================================
+        // GESTOR DE PLANTILLAS MODELO
+        // ==========================================
+        function cargarPlantillasUI() {
+            const select = document.getElementById('select-plantilla');
+            select.innerHTML = '<option value="">Selecciona una plantilla guardada...</option>';
+            const plantillas = JSON.parse(localStorage.getItem('bold_plantillas') || '{}');
+            const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}');
+            
+            // Filtramos solo las plantillas creadas por este correo
+            const misPlantillas = plantillas[usr.correo] || {};
+            Object.keys(misPlantillas).forEach(nombre => {
+                select.innerHTML += `<option value="${nombre}">📄 ${nombre}</option>`;
+            });
+        }
+
+        function guardarPlantilla() {
+            const nombre = document.getElementById('nombre-plantilla').value.trim();
+            if(!nombre) return alert("⚠️ Escribe un nombre para guardar la plantilla (Ej: Traslado Citi Principal).");
+
+            const datos = {
+                op: document.getElementById('f-op').value,
+                tipo: document.getElementById('f-tipo').value,
+                det: document.getElementById('f-det').value,
+                corig: document.getElementById('f-corig').value,
+                ctaorig: document.getElementById('f-ctaorig').value,
+                cdest: document.getElementById('f-cdest').value,
+                ctadest: document.getElementById('f-ctadest').value,
+                moneda: document.getElementById('f-mon').value
+            };
+
+            // Validar que la cascada esté llena antes de guardar
+            if(!datos.tipo || !datos.det || !datos.ctaorig || !datos.ctadest) {
+                return alert("⚠️ Llena completamente la ruta de la operación (hasta la Cuenta Destino) antes de guardarla como modelo.");
+            }
+
+            const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}');
+            const plantillas = JSON.parse(localStorage.getItem('bold_plantillas') || '{}');
+            
+            if(!plantillas[usr.correo]) plantillas[usr.correo] = {};
+            plantillas[usr.correo][nombre] = datos;
+            
+            localStorage.setItem('bold_plantillas', JSON.stringify(plantillas));
+            
+            alert(`✅ Plantilla "${nombre}" guardada con éxito en tu cuenta.`);
+            document.getElementById('nombre-plantilla').value = "";
+            cargarPlantillasUI(); // Refrescar el menú desplegable
+        }
+
+        function aplicarPlantilla() {
+            const nombre = document.getElementById('select-plantilla').value;
+            if(!nombre) return alert("⚠️ Selecciona una plantilla del menú primero.");
+
+            const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}');
+            const plantillas = JSON.parse(localStorage.getItem('bold_plantillas') || '{}');
+            const datos = plantillas[usr.correo]?.[nombre];
+
+            if(!datos) return alert("Error al cargar la plantilla.");
+
+            // El truco maestro: Simular los clics en orden para que la cascada se arme sola
+            document.getElementById('f-op').value = datos.op; cascada(1);
+            document.getElementById('f-tipo').value = datos.tipo; cascada(2);
+            document.getElementById('f-det').value = datos.det; cascada(3);
+            document.getElementById('f-corig').value = datos.corig; cascada(4);
+            document.getElementById('f-ctaorig').value = datos.ctaorig; cascada(5);
+            document.getElementById('f-cdest').value = datos.cdest; cascada(6);
+            document.getElementById('f-ctadest').value = datos.ctadest;
+            document.getElementById('f-mon').value = datos.moneda;
+            
+            alert(`🔄 Plantilla "${nombre}" aplicada. Solo falta ingresar el monto.`);
+            document.getElementById('f-monto').focus(); // Enviar el cursor directo al monto
+        }
+
+        // ==========================================
         // MOTOR DE CASCADA RELACIONAL
+        // ==========================================
         function cascada(nivel) {
             const op = document.getElementById('f-op').value;
             const tipo = document.getElementById('f-tipo');
