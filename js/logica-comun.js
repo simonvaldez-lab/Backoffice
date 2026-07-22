@@ -8,34 +8,33 @@ function obtenerOperaciones() {
     if (!bd) {
         const iniciales = [
             {
-                radicado: "RAD-2026-0891", pais: "Colombia", empresa: "Bold CO", compDestino: "Bold CO",
+                radicado: "TRAS-22/07-26-0003", pais: "Colombia", empresa: "Bold CO", compDestino: "Bold CO",
                 tipo: "Traslados entre cuentas", detalle: "Bancolombia", 
                 ctaOrigen: "Bold. CO: Bancolombia 04000000126 Ahorros COP - Co SAS Payouts", ctaDestino: "Bold. CO: Bancolombia 04000029802 Ahorros COP - Co SAS Main Treasury",
                 solicitante: "lau@bold.co", montoSol: 85000000, montoPrep: 85000000, moneda: "COP",
                 registros: 1, ans: "1 Hora", estado: "Pendiente Validación", prioridad: 1, fechaRadicacion: hoy,
-                historial: [{ fecha: hoy + " - 08:30 AM", paso: "1. RADICACIÓN", detalle: "Traslado urgente de fondos de Payouts a Main Treasury (Prioridad 1 - Alta)." }]
+                historial: [{ fecha: hoy + " - 08:30 AM", paso: "1. RADICACIÓN", detalle: "Traslado urgente de fondos (Prioridad 1 - Alta). Registro histórico #0003." }]
             },
             {
-                radicado: "RAD-2026-0892", pais: "Colombia", empresa: "Bold CF", compDestino: "Bold CO",
+                radicado: "TRAS-22/07-26-0002", pais: "Colombia", empresa: "Bold CF", compDestino: "Bold CO",
                 tipo: "Traslados CUD", detalle: "Adelanto adquirencia doméstica",
                 ctaOrigen: "Bold CF: BanRep - 62108160 CUD COP", ctaDestino: "Bold. CO: Bold CF 170011844070 PO´S ACH - QR Agregador",
                 solicitante: "lau@bold.co", montoSol: 15000000, montoPrep: 15000000, moneda: "COP",
                 registros: 1, ans: "4 Horas", estado: "Pendiente Validación", prioridad: 3, fechaRadicacion: hoy,
-                historial: [{ fecha: hoy + " - 09:15 AM", paso: "1. RADICACIÓN", detalle: "Adelanto adquirencia doméstica (Prioridad 3 - Baja)." }]
+                historial: [{ fecha: hoy + " - 09:15 AM", paso: "1. RADICACIÓN", detalle: "Adelanto adquirencia doméstica (Prioridad 3 - Baja). Registro histórico #0002." }]
             },
             {
-                radicado: "RAD-2026-0880", pais: "Colombia", empresa: "Empresa Matriz S.A.", compDestino: "Bold CO",
+                radicado: "OPEX-20/06-26-0001", pais: "Colombia", empresa: "Empresa Matriz S.A.", compDestino: "Bold CO",
                 tipo: "OPEX", detalle: "Facturación Mensual",
                 solicitante: "juan.solicitante@bold.co", montoSol: 48500000, montoPrep: 45230000, moneda: "COP",
                 registros: 14, ans: "2 Horas", estado: "En Aprobación", prioridad: 2, fechaRadicacion: "20/06/2026",
-                historial: [{ fecha: "20/06/2026 - 11:00 AM", paso: "1. RADICACIÓN", detalle: "Documento cargado: Facturas_Junio.pdf (Prioridad 2 - Media)." }]
+                historial: [{ fecha: "20/06/2026 - 11:00 AM", paso: "1. RADICACIÓN", detalle: "Documento cargado: Facturas_Junio.pdf (Prioridad 2 - Media). Registro histórico #0001." }]
             }
         ];
         localStorage.setItem('bold_operaciones_bd', JSON.stringify(iniciales));
         return iniciales;
     }
     
-    // Migración silenciosa: Si hay operaciones de pruebas anteriores, les asigna prioridad y fecha
     const ops = JSON.parse(bd);
     let modificado = false;
     ops.forEach((o, i) => {
@@ -118,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================
-// 3. AUDITORÍA UNIVERSAL (EXPEDIENTE DUAL POR RADICADO)
+// 3. AUDITORÍA UNIVERSAL
 // ==========================================
 function auditarRadicado(radicado) {
     const ops = obtenerOperaciones();
@@ -167,7 +166,7 @@ function cambiarPestana(origen) {
 function cerrarModal(id) { document.getElementById(id).style.display = 'none'; }
 
 // ==========================================
-// 4. ÁRBOL RELACIONAL CORREGIDO (100% EXCEL)
+// 4. ÁRBOL RELACIONAL CORREGIDO
 // ==========================================
 const arbolOperaciones = {
   "Traslados": {

@@ -43,7 +43,7 @@
                 <!-- Fila 3: Destino, Moneda, Prioridad (#8) y Monto -->
                 <div style="display: flex; gap: 15px; margin-bottom: 20px;">
                     <div style="flex:0.8;"><label class="dato-label">6. Compañía Destino</label><select id="f-cdest" class="form-control" onchange="cascada(6)"><option value="">Seleccione...</option></select></div>
-                    <div style="flex:1.4;"><label class="dato-label">7. Cuenta Destino</label><select id="f-ctadest" class="form-control"><option value="">Seleccione...</option></select></div>
+                    <div style="flex:1.4;"><label class="dato-label">7. Cuenta Destino</label><select id="f-ctadest" class="form-control" onchange="cascada(7)"><option value="">Seleccione...</option></select></div>
                     <div style="flex:0.5;"><label class="dato-label">Moneda</label><select id="f-mon" class="form-control"><option value="COP">COP</option><option value="PEN">PEN</option><option value="USD">USD</option></select></div>
                     <div style="flex:0.9;"><label class="dato-label" style="color:#0B1442;">8. Prioridad Pago</label><select id="f-prio" class="form-control" style="font-weight:bold; border-color:#0B1442;"><option value="1">🔥 1 - Alta</option><option value="2" selected>⚡ 2 - Media</option><option value="3">☕ 3 - Baja</option></select></div>
                     <div style="flex:1;"><label class="dato-label">Monto Solicitado</label><input type="number" id="f-monto" class="form-control" placeholder="Ej. 15000000"></div>
@@ -191,12 +191,10 @@
             }
         }
 
-        // MOTOR DE FILTRADO Y ORDENAMIENTO (Carga de Operaciones: Solo Hoy + Orden 1 ➔ 3)
         function renderizarTabla() {
             const ops = typeof obtenerOperacionesActivas === 'function' ? obtenerOperacionesActivas() : obtenerOperaciones();
             const hoy = new Date().toLocaleDateString();
             
-            // Filtrar solo las creadas HOY y ordenar numéricamente por Prioridad (1 -> 2 -> 3)
             const opsDelDia = ops.filter(o => {
                 const fechaOp = o.fechaRadicacion || (o.historial && o.historial[0] ? o.historial[0].fecha.split(' - ')[0] : '');
                 return fechaOp === hoy;
@@ -227,8 +225,26 @@
             });
         }
 
+        // ==========================================
+        // GENERADOR CON CONTADOR HISTÓRICO SECUENCIAL
+        // ==========================================
         function crearOperacionRelacional() {
-            const rad = `RAD-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+            const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : [];
+            
+            const opNombre = document.getElementById('f-op').value || "OPER";
+            const pref = opNombre.normalize("NFD").replace(/[\u0300-\u036f]/g, "").substring(0, 4).toUpperCase();
+            
+            const hoyObj = new Date();
+            const dd = String(hoyObj.getDate()).padStart(2, '0');
+            const mm = String(hoyObj.getMonth() + 1).padStart(2, '0');
+            const yy = String(hoyObj.getFullYear()).slice(-2);
+            
+            // Consecutivo histórico basado en el total de operaciones registradas en el sistema
+            const numRegistro = String(ops.length + 1).padStart(4, '0');
+            
+            // Formato final: TRAS-22/07-26-0004
+            const rad = `${pref}-${dd}/${mm}-${yy}-${numRegistro}`;
+            
             const tipo = document.getElementById('f-tipo').value;
             const det = document.getElementById('f-det').value;
             const corig = document.getElementById('f-corig').value;
@@ -244,17 +260,16 @@
 
             if(!tipo || !det || !ctaorig || !ctadest || !monto) return alert("⚠️ Selecciona toda la ruta relacional (Origen ➔ Destino) y un monto válido.");
 
-            const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : [];
             ops.unshift({
                 radicado: rad, pais: usr.pais, empresa: corig, compDestino: cdest,
                 tipo: tipo, detalle: det, ctaOrigen: ctaorig, ctaDestino: ctadest,
                 solicitante: usr.correo, montoSol: monto, montoPrep: monto, moneda: document.getElementById('f-mon').value,
                 registros: 1, ans: prio === 1 ? "1 Hora" : prio === 3 ? "4 Horas" : "2 Horas", 
                 estado: "Pendiente Validación", prioridad: prio, fechaRadicacion: hoy,
-                historial: [{ fecha: hoy + " - " + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), paso: "1. RADICACIÓN RELACIONAL", detalle: `Ruta: ${corig} ➔ ${cdest} (${det}). Prioridad asignada: ${prio}.` }]
+                historial: [{ fecha: hoy + " - " + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), paso: "1. RADICACIÓN RELACIONAL", detalle: `Ruta: ${corig} ➔ ${cdest} (${det}). Prioridad asignada: ${prio}. Registro histórico #${numRegistro}.` }]
             });
             if (typeof guardarOperaciones === 'function') guardarOperaciones(ops);
-            alert(`✅ Radicado Relacional ${rad} creado exitosamente con Prioridad ${prio}.`);
+            alert(`✅ Radicado ${rad} creado exitosamente con Prioridad ${prio}.`);
             renderizarTabla();
         }
     </script>
