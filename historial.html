@@ -10,11 +10,14 @@
             <div class="menu-categoria">Ejecución</div><a href="preparador.html" class="menu-item">Ejecución Banco</a>
         </aside>
         <main class="contenido">
-            <h1 class="titulo-seccion">Expedientes y Trazabilidad de Operaciones</h1>
-            <p class="subtitulo">Consulta el histórico general y audita el expediente cruzado de cualquier N° de Radicado.</p>
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                <h1 class="titulo-seccion">Expedientes y Trazabilidad Transversal</h1>
+                <span style="font-size:12px; background:#E0E7FF; color:#3730A3; padding:6px 12px; border-radius:12px; font-weight:800;">📚 Muestra 100% del Histórico (Sin Filtro Diario)</span>
+            </div>
+            <p class="subtitulo">Consulta el histórico general de todas las fechas y audita el expediente cruzado de cualquier N° de Radicado.</p>
             <div class="tabla-contenedor">
                 <table>
-                    <thead><tr><th>N° Radicado</th><th>Compañía</th><th>Tipo</th><th>Solicitante</th><th>Valor Final</th><th>Estado Actual</th><th>Auditoría Dual</th></tr></thead>
+                    <thead><tr><th>Radicado & Prioridad</th><th>Compañía ➔ Destino</th><th>Tipo & Detalle</th><th>Solicitante</th><th>Valor Final</th><th>Estado Actual</th><th>Auditoría Dual</th></tr></thead>
                     <tbody id="tabla-historial"></tbody>
                 </table>
             </div>
@@ -25,18 +28,28 @@
     <script src="js/logica-comun.js"></script>
     <script>
         function renderizarTabla() {
-            const ops = obtenerOperaciones();
+            const ops = typeof obtenerOperacionesActivas === 'function' ? obtenerOperacionesActivas() : obtenerOperaciones();
             const tb = document.getElementById('tabla-historial');
             tb.innerHTML = '';
+            if(ops.length === 0) {
+                tb.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#64748B; padding:30px;">No hay expedientes registrados en el sistema.</td></tr>';
+                return;
+            }
             ops.forEach(o => {
                 let badgeClass = "badge-estado-pendiente";
-                if(o.estado.includes("Banco") || o.estado.includes("Dispersado")) badgeClass = "badge-estado-aprobado";
+                if(o.estado.includes("Banco") || o.estado.includes("Dispersado") || o.estado.includes("Autorizado")) badgeClass = "badge-estado-aprobado";
                 if(o.estado.includes("Rechazado")) badgeClass = "badge-estado-rechazado";
 
+                const prioBadge = o.prioridad === 1 
+                    ? '<span class="badge" style="background:#FEE2E2; color:#991B1B; border:1px solid #FECACA;">🔥 1 - Alta</span>' 
+                    : o.prioridad === 3 
+                    ? '<span class="badge" style="background:#F1F5F9; color:#475569; border:1px solid #CBD5E1;">☕ 3 - Baja</span>' 
+                    : '<span class="badge" style="background:#FEF3C7; color:#92400E; border:1px solid #FDE68A;">⚡ 2 - Media</span>';
+
                 tb.innerHTML += `<tr>
-                    <td><strong>${o.radicado}</strong></td>
-                    <td>${o.empresa}</td>
-                    <td><span class="badge badge-opex">${o.tipo}</span></td>
+                    <td><strong>${o.radicado}</strong><br>${prioBadge}</td>
+                    <td>${o.empresa}<br><span style="font-size:11px; color:#64748B;">➔ ${o.compDestino || 'N/A'}</span></td>
+                    <td><span class="badge badge-opex">${o.tipo}</span><br><span style="font-size:11px;">${o.detalle || ''}</span></td>
                     <td>${o.solicitante}</td>
                     <td><strong>$ ${o.montoPrep.toLocaleString()}</strong> <span class="badge badge-moneda">${o.moneda}</span></td>
                     <td><span class="badge ${badgeClass}">${o.estado}</span></td>

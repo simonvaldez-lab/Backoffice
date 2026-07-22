@@ -11,11 +11,11 @@
         </aside>
         <main class="contenido">
             <h1 class="titulo-seccion">Radicar Operación (Mapeo Relacional)</h1>
-            <p class="subtitulo">Selecciona en cascada los datos o carga una de tus plantillas guardadas para agilizar el proceso.</p>
+            <p class="subtitulo">Selecciona en cascada los datos bancarios o carga una plantilla. Define la prioridad del pago antes de enviar.</p>
             
             <div style="background: white; padding: 25px; border-radius: 8px; border: 1px solid #E2E8F0; margin-bottom: 30px; position: relative;">
                 
-                <!-- GESTOR DE PLANTILLAS (Cargar) -->
+                <!-- GESTOR DE PLANTILLAS -->
                 <div style="background: #EEF2FF; padding: 15px; border-radius: 6px; border: 1px dashed #A5B4FC; margin-bottom: 20px; display: flex; gap: 15px; align-items: flex-end;">
                     <div style="flex: 1;">
                         <label class="dato-label" style="color: #4F46E5;">⚡ Cargar Plantilla Frecuente</label>
@@ -40,33 +40,36 @@
                     <div style="flex:1.5;"><label class="dato-label">5. Cuenta Origen</label><select id="f-ctaorig" class="form-control" onchange="cascada(5)"><option value="">Seleccione...</option></select></div>
                 </div>
 
-                <!-- Fila 3: Destino y Monto -->
+                <!-- Fila 3: Destino, Moneda, Prioridad (#8) y Monto -->
                 <div style="display: flex; gap: 15px; margin-bottom: 20px;">
                     <div style="flex:0.8;"><label class="dato-label">6. Compañía Destino</label><select id="f-cdest" class="form-control" onchange="cascada(6)"><option value="">Seleccione...</option></select></div>
-                    <div style="flex:1.5;"><label class="dato-label">7. Cuenta Destino</label><select id="f-ctadest" class="form-control"><option value="">Seleccione...</option></select></div>
-                    <div style="flex:0.6;"><label class="dato-label">Moneda</label><select id="f-mon" class="form-control"><option value="COP">COP</option><option value="PEN">PEN</option><option value="USD">USD</option></select></div>
+                    <div style="flex:1.4;"><label class="dato-label">7. Cuenta Destino</label><select id="f-ctadest" class="form-control"><option value="">Seleccione...</option></select></div>
+                    <div style="flex:0.5;"><label class="dato-label">Moneda</label><select id="f-mon" class="form-control"><option value="COP">COP</option><option value="PEN">PEN</option><option value="USD">USD</option></select></div>
+                    <div style="flex:0.9;"><label class="dato-label" style="color:#0B1442;">8. Prioridad Pago</label><select id="f-prio" class="form-control" style="font-weight:bold; border-color:#0B1442;"><option value="1">🔥 1 - Alta</option><option value="2" selected>⚡ 2 - Media</option><option value="3">☕ 3 - Baja</option></select></div>
                     <div style="flex:1;"><label class="dato-label">Monto Solicitado</label><input type="number" id="f-monto" class="form-control" placeholder="Ej. 15000000"></div>
                 </div>
 
                 <!-- BOTONES DE ACCIÓN Y GUARDADO DE PLANTILLAS -->
                 <div style="display: flex; gap: 15px; align-items: center; border-top: 1px solid #E2E8F0; padding-top: 20px;">
                     <button class="btn btn-primario" onclick="crearOperacionRelacional()" style="font-size: 14px; padding: 10px 20px;">🚀 Radicar Operación en Cascada</button>
-                    
                     <div style="width: 1px; height: 35px; background: #CBD5E1; margin: 0 10px;"></div>
-                    
                     <input type="text" id="nombre-plantilla" class="form-control" style="width: 220px;" placeholder="Ej. Nómina Quincenal Citi...">
                     <button class="btn btn-detalle" style="background: white; border-color: #10B981; color: #15803D;" onclick="guardarPlantilla()">💾 Guardar Modelo</button>
                 </div>
             </div>
 
-            <h2 class="titulo-seccion" style="font-size: 18px;">Mis Radicaciones en Jurisdicción</h2>
-            <div class="tabla-contenedor">
-                <table><thead><tr><th>Radicado</th><th>Operación & Tipo</th><th>Origen -> Destino</th><th>Monto Solicitado</th><th>Estado</th><th>Auditoría</th></tr></thead><tbody id="tabla-solicitante"></tbody></table>
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                <h2 class="titulo-seccion" style="font-size: 18px;">Radicaciones de Hoy (Orden de Prioridad 1 ➔ 3)</h2>
+                <span style="font-size:12px; color:#64748B; font-weight:bold;">🕒 Solo muestra operaciones del día. Ver todas en Historial.</span>
+            </div>
+            
+            <div class="tabla-contenedor" style="margin-top: 10px;">
+                <table><thead><tr><th>Radicado & Prioridad</th><th>Operación & Tipo</th><th>Origen -> Destino</th><th>Monto Solicitado</th><th>Estado</th><th>Auditoría</th></tr></thead><tbody id="tabla-solicitante"></tbody></table>
             </div>
         </main>
     </div>
     
-    <!-- Modal Compartido de Auditoría -->
+    <!-- Modal Compartido -->
     <div class="modal-overlay" id="modalDetalles"><div class="modal modal-grande"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;"><h2 id="mod-radicado-titulo" style="margin:0; border:none; padding:0;">Módulo de Auditoría</h2><button class="btn" style="background:#3B82F6; color:white;" onclick="alternarVisor()">👁 Visor Dual</button></div><div class="modal-layout-split"><div class="seccion-datos"><div class="grid-detalles"><div class="dato-grupo"><span class="dato-label">Compañía</span><span class="dato-valor" id="mod-origen"></span></div><div class="dato-grupo"><span class="dato-label">Moneda</span><span class="dato-valor" id="mod-moneda"></span></div><div class="dato-grupo"><span class="dato-label">Valor Solicitado</span><span class="dato-valor" id="mod-val-sol"></span><div class="auditor-data auditor-alerta" id="mod-val-prep"></div></div><div class="dato-grupo"><span class="dato-label">Registros</span><span class="dato-valor" id="mod-regs"></span></div></div><div class="timeline" id="mod-timeline"></div></div><div class="seccion-visor" id="contenedorVisor"><div class="tab-container"><button class="tab active" id="tabSol" onclick="cambiarPestana('solicitante')">📄 Factura</button><button class="tab" id="tabPrep" onclick="cambiarPestana('preparador')">🖼 Screen Banco</button></div><div class="marco-visor"><div class="documento-simulado" id="vistaSolicitante"><h4>SOPORTE ORIGINAL</h4><p>Proveedor: <strong id="vis-sol-prov"></strong></p><p style="margin-top:40px; text-align:right; font-weight:bold;" id="vis-sol-total"></p></div><div class="documento-simulado hidden" id="vistaPreparador" style="background:#0F172A; color:#22C55E;"><h4>PORTAL BANCARIO</h4><p style="margin-top:40px; text-align:right; font-weight:bold; font-size:15px;" id="vis-prep-total"></p></div></div></div></div><div style="text-align: right; margin-top: 20px; border-top: 1px solid #E2E8F0; padding-top: 15px;"><button class="btn btn-detalle" onclick="cerrarModal('modalDetalles')">Cerrar</button></div></div></div>
     
     <script src="js/logica-comun.js"></script>
@@ -75,23 +78,16 @@
             const usrData = sessionStorage.getItem('usuarioLogueado');
             if (usrData) document.getElementById('sol-correo').value = JSON.parse(usrData).correo || "lau@bold.co";
             cascada(1);
-            cargarPlantillasUI(); // Cargar plantillas al iniciar
+            cargarPlantillasUI();
         });
 
-        // ==========================================
-        // GESTOR DE PLANTILLAS MODELO
-        // ==========================================
         function cargarPlantillasUI() {
             const select = document.getElementById('select-plantilla');
             select.innerHTML = '<option value="">Selecciona una plantilla guardada...</option>';
             const plantillas = JSON.parse(localStorage.getItem('bold_plantillas') || '{}');
             const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}');
-            
-            // Filtramos solo las plantillas creadas por este correo
             const misPlantillas = plantillas[usr.correo] || {};
-            Object.keys(misPlantillas).forEach(nombre => {
-                select.innerHTML += `<option value="${nombre}">📄 ${nombre}</option>`;
-            });
+            Object.keys(misPlantillas).forEach(nombre => { select.innerHTML += `<option value="${nombre}">📄 ${nombre}</option>`; });
         }
 
         function guardarPlantilla() {
@@ -106,25 +102,23 @@
                 ctaorig: document.getElementById('f-ctaorig').value,
                 cdest: document.getElementById('f-cdest').value,
                 ctadest: document.getElementById('f-ctadest').value,
-                moneda: document.getElementById('f-mon').value
+                moneda: document.getElementById('f-mon').value,
+                prio: document.getElementById('f-prio').value
             };
 
-            // Validar que la cascada esté llena antes de guardar
             if(!datos.tipo || !datos.det || !datos.ctaorig || !datos.ctadest) {
-                return alert("⚠️ Llena completamente la ruta de la operación (hasta la Cuenta Destino) antes de guardarla como modelo.");
+                return alert("⚠️ Llena completamente la ruta de la operación antes de guardarla como modelo.");
             }
 
             const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}');
             const plantillas = JSON.parse(localStorage.getItem('bold_plantillas') || '{}');
-            
             if(!plantillas[usr.correo]) plantillas[usr.correo] = {};
             plantillas[usr.correo][nombre] = datos;
-            
             localStorage.setItem('bold_plantillas', JSON.stringify(plantillas));
             
-            alert(`✅ Plantilla "${nombre}" guardada con éxito en tu cuenta.`);
+            alert(`✅ Plantilla "${nombre}" guardada con éxito.`);
             document.getElementById('nombre-plantilla').value = "";
-            cargarPlantillasUI(); // Refrescar el menú desplegable
+            cargarPlantillasUI();
         }
 
         function aplicarPlantilla() {
@@ -134,10 +128,8 @@
             const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}');
             const plantillas = JSON.parse(localStorage.getItem('bold_plantillas') || '{}');
             const datos = plantillas[usr.correo]?.[nombre];
-
             if(!datos) return alert("Error al cargar la plantilla.");
 
-            // El truco maestro: Simular los clics en orden para que la cascada se arme sola
             document.getElementById('f-op').value = datos.op; cascada(1);
             document.getElementById('f-tipo').value = datos.tipo; cascada(2);
             document.getElementById('f-det').value = datos.det; cascada(3);
@@ -146,14 +138,12 @@
             document.getElementById('f-cdest').value = datos.cdest; cascada(6);
             document.getElementById('f-ctadest').value = datos.ctadest;
             document.getElementById('f-mon').value = datos.moneda;
+            if(datos.prio) document.getElementById('f-prio').value = datos.prio;
             
-            alert(`🔄 Plantilla "${nombre}" aplicada. Solo falta ingresar el monto.`);
-            document.getElementById('f-monto').focus(); // Enviar el cursor directo al monto
+            alert(`🔄 Plantilla "${nombre}" aplicada. Ingresa el monto.`);
+            document.getElementById('f-monto').focus();
         }
 
-        // ==========================================
-        // MOTOR DE CASCADA RELACIONAL
-        // ==========================================
         function cascada(nivel) {
             const op = document.getElementById('f-op').value;
             const tipo = document.getElementById('f-tipo');
@@ -201,13 +191,33 @@
             }
         }
 
+        // MOTOR DE FILTRADO Y ORDENAMIENTO (Carga de Operaciones: Solo Hoy + Orden 1 ➔ 3)
         function renderizarTabla() {
             const ops = typeof obtenerOperacionesActivas === 'function' ? obtenerOperacionesActivas() : obtenerOperaciones();
+            const hoy = new Date().toLocaleDateString();
+            
+            // Filtrar solo las creadas HOY y ordenar numéricamente por Prioridad (1 -> 2 -> 3)
+            const opsDelDia = ops.filter(o => {
+                const fechaOp = o.fechaRadicacion || (o.historial && o.historial[0] ? o.historial[0].fecha.split(' - ')[0] : '');
+                return fechaOp === hoy;
+            }).sort((a, b) => (a.prioridad || 2) - (b.prioridad || 2));
+
             const tb = document.getElementById('tabla-solicitante');
             tb.innerHTML = '';
-            ops.forEach(o => {
+            if(opsDelDia.length === 0) {
+                tb.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#64748B; padding: 30px;">No hay radicaciones registradas el día de hoy (${hoy}). Ve a <strong>Historial y Expedientes</strong> para consultar días anteriores.</td></tr>`;
+                return;
+            }
+            
+            opsDelDia.forEach(o => {
+                const prioBadge = o.prioridad === 1 
+                    ? '<span class="badge" style="background:#FEE2E2; color:#991B1B; border:1px solid #FECACA;">🔥 1 - Alta</span>' 
+                    : o.prioridad === 3 
+                    ? '<span class="badge" style="background:#F1F5F9; color:#475569; border:1px solid #CBD5E1;">☕ 3 - Baja</span>' 
+                    : '<span class="badge" style="background:#FEF3C7; color:#92400E; border:1px solid #FDE68A;">⚡ 2 - Media</span>';
+
                 tb.innerHTML += `<tr>
-                    <td><strong>${o.radicado}</strong></td>
+                    <td><strong>${o.radicado}</strong><br>${prioBadge}</td>
                     <td>${o.tipo}<br><span class="badge badge-opex" style="margin-top:3px;">${o.detalle || 'General'}</span></td>
                     <td style="font-size:11px;">${o.empresa} ➔ ${o.compDestino || 'N/A'}<br><span style="color:#64748B;">Cta Dest: ${(o.ctaDestino||'').substring(0,25)}...</span></td>
                     <td><strong>$ ${o.montoSol.toLocaleString()}</strong> <span class="badge badge-moneda">${o.moneda}</span></td>
@@ -226,6 +236,9 @@
             const cdest = document.getElementById('f-cdest').value;
             const ctadest = document.getElementById('f-ctadest').value;
             const monto = parseFloat(document.getElementById('f-monto').value);
+            const prio = parseInt(document.getElementById('f-prio').value || 2);
+            const hoy = new Date().toLocaleDateString();
+            
             const usrData = sessionStorage.getItem('usuarioLogueado');
             const usr = usrData ? JSON.parse(usrData) : { pais: "Colombia", correo: "lau@bold.co" };
 
@@ -236,11 +249,12 @@
                 radicado: rad, pais: usr.pais, empresa: corig, compDestino: cdest,
                 tipo: tipo, detalle: det, ctaOrigen: ctaorig, ctaDestino: ctadest,
                 solicitante: usr.correo, montoSol: monto, montoPrep: monto, moneda: document.getElementById('f-mon').value,
-                registros: 1, ans: "2 Horas", estado: "Pendiente Validación",
-                historial: [{ fecha: new Date().toLocaleDateString() + " - " + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), paso: "1. RADICACIÓN RELACIONAL", detalle: `Ruta: ${corig} ➔ ${cdest} (${det}). Cta Origen: ${ctaorig}.` }]
+                registros: 1, ans: prio === 1 ? "1 Hora" : prio === 3 ? "4 Horas" : "2 Horas", 
+                estado: "Pendiente Validación", prioridad: prio, fechaRadicacion: hoy,
+                historial: [{ fecha: hoy + " - " + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), paso: "1. RADICACIÓN RELACIONAL", detalle: `Ruta: ${corig} ➔ ${cdest} (${det}). Prioridad asignada: ${prio}.` }]
             });
             if (typeof guardarOperaciones === 'function') guardarOperaciones(ops);
-            alert("✅ Radicado Relacional " + rad + " creado siguiendo el árbol autorizado.");
+            alert(`✅ Radicado Relacional ${rad} creado exitosamente con Prioridad ${prio}.`);
             renderizarTabla();
         }
     </script>

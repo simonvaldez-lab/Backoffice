@@ -1,63 +1,60 @@
 // ==========================================
-// 1. BASE DE DATOS OPERATIVA (LOCALSTORAGE POR RADICADOS)
+// 1. BASE DE DATOS OPERATIVA BI-NACIONAL
 // ==========================================
 function obtenerOperaciones() {
     let bd = localStorage.getItem('bold_operaciones_bd');
+    const hoy = new Date().toLocaleDateString();
+    
     if (!bd) {
         const iniciales = [
             {
-                radicado: "RAD-2026-0891",
-                empresa: "Empresa Matriz S.A.",
-                tipo: "OPEX",
-                solicitante: "juan.solicitante@bold.co",
-                montoSol: 48500000,
-                montoPrep: 45230000,
-                moneda: "COP",
-                registros: 14,
-                ans: "2 Horas",
-                estado: "En Aprobación",
-                historial: [
-                    { fecha: "23 Jun 2026 - 11:00 AM", paso: "1. RADICACIÓN (Solicitante)", detalle: "Documento cargado: Facturas_Junio.pdf (Monto original: $48.5M)" },
-                    { fecha: "23 Jun 2026 - 11:15 AM", paso: "2. PREPARACIÓN (Mesa Control)", detalle: "Se eliminó el registro N° 5 por rebote bancario. Monto real en banco: $45,230,000 COP.", alerta: true }
-                ]
+                radicado: "RAD-2026-0891", pais: "Colombia", empresa: "Bold CO", compDestino: "Bold CO",
+                tipo: "Traslados entre cuentas", detalle: "Bancolombia", 
+                ctaOrigen: "Bold. CO: Bancolombia 04000000126 Ahorros COP - Co SAS Payouts", ctaDestino: "Bold. CO: Bancolombia 04000029802 Ahorros COP - Co SAS Main Treasury",
+                solicitante: "lau@bold.co", montoSol: 85000000, montoPrep: 85000000, moneda: "COP",
+                registros: 1, ans: "1 Hora", estado: "Pendiente Validación", prioridad: 1, fechaRadicacion: hoy,
+                historial: [{ fecha: hoy + " - 08:30 AM", paso: "1. RADICACIÓN", detalle: "Traslado urgente de fondos de Payouts a Main Treasury (Prioridad 1 - Alta)." }]
             },
             {
-                radicado: "RAD-2026-0892",
-                empresa: "Bold CO",
-                tipo: "Nómina",
-                solicitante: "lau@bold.co",
-                montoSol: 150000000,
-                montoPrep: 150000000,
-                moneda: "COP",
-                registros: 45,
-                ans: "4 Horas",
-                estado: "Pendiente Validación",
-                historial: [
-                    { fecha: "24 Jun 2026 - 08:30 AM", paso: "1. RADICACIÓN (Solicitante)", detalle: "Lote de nómina quincenal cargado por Laura." }
-                ]
+                radicado: "RAD-2026-0892", pais: "Colombia", empresa: "Bold CF", compDestino: "Bold CO",
+                tipo: "Traslados CUD", detalle: "Adelanto adquirencia doméstica",
+                ctaOrigen: "Bold CF: BanRep - 62108160 CUD COP", ctaDestino: "Bold. CO: Bold CF 170011844070 PO´S ACH - QR Agregador",
+                solicitante: "lau@bold.co", montoSol: 15000000, montoPrep: 15000000, moneda: "COP",
+                registros: 1, ans: "4 Horas", estado: "Pendiente Validación", prioridad: 3, fechaRadicacion: hoy,
+                historial: [{ fecha: hoy + " - 09:15 AM", paso: "1. RADICACIÓN", detalle: "Adelanto adquirencia doméstica (Prioridad 3 - Baja)." }]
             },
             {
-                radicado: "RAD-2026-0893",
-                empresa: "Bold CF",
-                tipo: "Traslados",
-                solicitante: "carlos@bold.co",
-                montoSol: 32000000,
-                montoPrep: 32000000,
-                moneda: "USD",
-                registros: 5,
-                ans: "1 Hora",
-                estado: "Listo para Banco",
-                historial: [
-                    { fecha: "24 Jun 2026 - 09:00 AM", paso: "1. RADICACIÓN", detalle: "Traslado internacional." },
-                    { fecha: "24 Jun 2026 - 09:45 AM", paso: "2. VALIDADO COMPLIANCE", detalle: "Soportes KYC verificados por María." },
-                    { fecha: "24 Jun 2026 - 10:10 AM", paso: "3. AUTORIZADO", detalle: "Aprobado por Kate (Aprobador)." }
-                ]
+                radicado: "RAD-2026-0880", pais: "Colombia", empresa: "Empresa Matriz S.A.", compDestino: "Bold CO",
+                tipo: "OPEX", detalle: "Facturación Mensual",
+                solicitante: "juan.solicitante@bold.co", montoSol: 48500000, montoPrep: 45230000, moneda: "COP",
+                registros: 14, ans: "2 Horas", estado: "En Aprobación", prioridad: 2, fechaRadicacion: "20/06/2026",
+                historial: [{ fecha: "20/06/2026 - 11:00 AM", paso: "1. RADICACIÓN", detalle: "Documento cargado: Facturas_Junio.pdf (Prioridad 2 - Media)." }]
             }
         ];
         localStorage.setItem('bold_operaciones_bd', JSON.stringify(iniciales));
         return iniciales;
     }
-    return JSON.parse(bd);
+    
+    // Migración silenciosa: Si hay operaciones de pruebas anteriores, les asigna prioridad y fecha
+    const ops = JSON.parse(bd);
+    let modificado = false;
+    ops.forEach((o, i) => {
+        if (!o.prioridad) { o.prioridad = (i % 3) + 1; modificado = true; }
+        if (!o.fechaRadicacion) {
+            o.fechaRadicacion = (o.historial && o.historial[0]) ? o.historial[0].fecha.split(' - ')[0] : hoy;
+            modificado = true;
+        }
+    });
+    if (modificado) localStorage.setItem('bold_operaciones_bd', JSON.stringify(ops));
+    return ops;
+}
+
+function obtenerOperacionesActivas() {
+    const ops = obtenerOperaciones();
+    const dataUsuario = sessionStorage.getItem('usuarioLogueado');
+    if (!dataUsuario) return ops;
+    const usr = JSON.parse(dataUsuario);
+    return ops.filter(o => !o.pais || o.pais === usr.pais);
 }
 
 function guardarOperaciones(lista) {
@@ -65,26 +62,8 @@ function guardarOperaciones(lista) {
 }
 
 // ==========================================
-// 2. SEGURIDAD, PERMISOS ESTRICTOS Y USUARIO MAESTRO
+// 2. SEGURIDAD Y PERMISOS
 // ==========================================
-const usuariosPrueba = {
-    "simo@bold.co": { rol: "maestro", url: "historial.html", nombre: "👑 Simon (Usuario Maestro)", correo: "simo@bold.co" },
-    "lau@bold.co": { rol: "solicitante", url: "solicitante.html", nombre: "👋 Laura (Solicitante)", correo: "lau@bold.co" },
-    "mar@bold.co": { rol: "validador", url: "validador.html", nombre: "👋 María (Validador)", correo: "mar@bold.co" },
-    "kat@bold.co": { rol: "aprobador", url: "aprobador.html", nombre: "👋 Kate (Aprobador)", correo: "kat@bold.co" },
-    "fel@bold.co": { rol: "preparador", url: "preparador.html", nombre: "👋 Felipe (Preparador)", correo: "fel@bold.co" }
-};
-
-function iniciarSesion() {
-    const email = document.getElementById('login-email').value.toLowerCase().trim();
-    const pass = document.getElementById('login-pass').value;
-    const errorMsg = document.getElementById('login-error');
-    if (usuariosPrueba[email] && pass === "12") {
-        sessionStorage.setItem('usuarioLogueado', JSON.stringify(usuariosPrueba[email]));
-        window.location.href = usuariosPrueba[email].url;
-    } else if(errorMsg) { errorMsg.style.display = 'block'; }
-}
-
 function cerrarSesion() {
     sessionStorage.removeItem('usuarioLogueado');
     window.location.href = "index.html";
@@ -114,6 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const topbarDerecha = document.querySelector('.topbar-derecha');
         if (topbarDerecha) {
             topbarDerecha.innerHTML = `
+                <span style="background: #F1F5F9; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 800; color: #0B1442; border: 1px solid #CBD5E1; margin-right: 10px;">${usuario.bandera || '🌍'} ${usuario.pais || 'General'}</span>
                 <span style="font-size: 13px; font-weight: bold; color: #0B1442; margin-right: 15px;">${usuario.nombre}</span>
                 <button onclick="cerrarSesion()" style="background: white; border: 1px solid #EF4444; color: #EF4444; padding: 6px 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 11px;">Salir</button>
             `;
@@ -145,7 +125,7 @@ function auditarRadicado(radicado) {
     const op = ops.find(o => o.radicado === radicado);
     if (!op) return alert("No se encontró el Radicado: " + radicado);
 
-    document.getElementById('mod-radicado-titulo').innerText = `Módulo de Auditoría de Soportes: ${op.radicado}`;
+    document.getElementById('mod-radicado-titulo').innerText = `Módulo de Auditoría (${op.pais || 'Colombia'}): ${op.radicado}`;
     document.getElementById('mod-origen').innerText = op.empresa;
     document.getElementById('mod-moneda').innerText = op.moneda;
     document.getElementById('mod-val-sol').innerText = `$ ${op.montoSol.toLocaleString()} ${op.moneda}`;
@@ -187,116 +167,37 @@ function cambiarPestana(origen) {
 function cerrarModal(id) { document.getElementById(id).style.display = 'none'; }
 
 // ==========================================
-// MÓDULO RELACIONAL DE OPERACIONES (ÁRBOL EN CASCADA CORREGIDO)
+// 4. ÁRBOL RELACIONAL CORREGIDO (100% EXCEL)
 // ==========================================
 const arbolOperaciones = {
   "Traslados": {
     "Traslados CUD": {
       "Adelanto adquirencia doméstica": {
-        "Bold CF": {
-          "Bold CF: BanRep - 62108160 CUD COP": {
-            "Bold CO": [
-              "Bold. CO: Bold CF 170011844070 PO´S ACH - QR Agregador",
-              "Bold. CO: Bold CF 000008024755 Deposito COP"
-            ]
-          }
-        }
+        "Bold CF": { "Bold CF: BanRep - 62108160 CUD COP": { "Bold CO": ["Bold. CO: Bold CF 170011844070 PO´S ACH - QR Agregador", "Bold. CO: Bold CF 000008024755 Deposito COP"] } }
       },
       "Traslado adquirencia doméstica": {
         "Bold CF": {
-          "Bold. CF: Citibank COL 0090923021 Corriente COP (link CUD)": {
-            "Bold CO": [
-              "Bold. CO: Citibank COL 0089550017 Corriente COP",
-              "Bold. CO: Bold CF 170011844070 PO´S ACH - QR Agregador",
-              "Bold. CO: Bold CF 000008024755 Deposito COP"
-            ]
-          },
-          "Bold CF: BanRep - 62108160 CUD COP": {
-            "Bold CO": [
-              "Bold. CO: Bold CF 170011844070 PO´S ACH - QR Agregador",
-              "Bold. CO: Bold CF 000008024755 Deposito COP"
-            ]
-          }
+          "Bold. CF: Citibank COL 0090923021 Corriente COP (link CUD)": { "Bold CO": ["Bold. CO: Citibank COL 0089550017 Corriente COP", "Bold. CO: Bold CF 170011844070 PO´S ACH - QR Agregador", "Bold. CO: Bold CF 000008024755 Deposito COP"] },
+          "Bold CF: BanRep - 62108160 CUD COP": { "Bold CO": ["Bold. CO: Bold CF 170011844070 PO´S ACH - QR Agregador", "Bold. CO: Bold CF 000008024755 Deposito COP"] }
         }
       },
       "Traslado recursos": {
         "Bold CF": {
-          "Bold CF: BanRep - 62108160 CUD COP": {
-            "Bold CF": [
-              "Bold. CF: Sebra CUD 62010707 Portafolio 25 COD 102 Bancolombia",
-              "Bold. CF: Citibank COL 0090923021 Corriente COP (link CUD)"
-            ]
-          },
-          "Bold. CF: Citibank COL 0090923021 Corriente COP (link CUD)": {
-            "Bold CF": ["Bold CF: BanRep - 62108160 CUD COP"]
-          },
-          "Bold. CF: Citibank COL 0090923013 Corriente COP": {
-            "Bold CF": ["Bold CF: BanRep - 62108160 CUD COP"]
-          },
-          "Bold. CF: Bancolombia 04000002167 Ahorros COP": {
-            "Bold CF": ["Bold CF: BanRep - 62108160 CUD COP"]
-          }
+          "Bold CF: BanRep - 62108160 CUD COP": { "Bold CF": ["Bold. CF: Sebra CUD 62010707 Portafolio 25 COD 102 Bancolombia", "Bold. CF: Citibank COL 0090923021 Corriente COP (link CUD)"] },
+          "Bold. CF: Citibank COL 0090923021 Corriente COP (link CUD)": { "Bold CF": ["Bold CF: BanRep - 62108160 CUD COP"] },
+          "Bold. CF: Citibank COL 0090923013 Corriente COP": { "Bold CF": ["Bold CF: BanRep - 62108160 CUD COP"] },
+          "Bold. CF: Bancolombia 04000002167 Ahorros COP": { "Bold CF": ["Bold CF: BanRep - 62108160 CUD COP"] }
         }
       }
     },
     "Traslados entre cuentas": {
       "Bancolombia": {
         "Bold CO": {
-          "Bold. CO: Bancolombia 04000000126 Ahorros COP - Co SAS Payouts": {
-            "Bold CO": [
-              "Bold. CO: Bancolombia 04000029802 Ahorros COP - Co SAS Main Treasury",
-              "Bold. CO: Bancolombia 04000005928 Ahorros COP - Co SAS Loans n Referrals",
-              "Bold. CO: Bancolombia 04000004981 Ahorros COP - Co SAS Payroll",
-              "Bold. CO: Bancolombia 04000000573 Ahorros COP - Co SAS mPos Testing",
-              "Bold. CO: Bancolombia 04000001617 Ahorros COP - Co SAS Human Talent",
-              "Bold. CO: Bancolombia 04000006579 Corriente COP",
-              "Bold. CO: Bancolombia 65200002824 Ahorros COP"
-            ]
-          },
-          "Bold. CO: Bancolombia 04000029802 Ahorros COP - Co SAS Main Treasury": {
-            "Bold CO": [
-              "Bold. CO: Bancolombia 04000000126 Ahorros COP - Co SAS Payouts",
-              "Bold. CO: Bancolombia 04000005928 Ahorros COP - Co SAS Loans n Referrals",
-              "Bold. CO: Bancolombia 04000004981 Ahorros COP - Co SAS Payroll",
-              "Bold. CO: Bancolombia 04000000573 Ahorros COP - Co SAS mPos Testing",
-              "Bold. CO: Bancolombia 04000001617 Ahorros COP - Co SAS Human Talent",
-              "Bold. CO: Bancolombia 04000006579 Corriente COP",
-              "Bold. CO: Bancolombia 65200002824 Ahorros COP"
-            ]
-          },
-          "Bold. CO: Bancolombia 04000005928 Ahorros COP - Co SAS Loans n Referrals": {
-            "Bold CO": [
-              "Bold. CO: Bancolombia 04000000126 Ahorros COP - Co SAS Payouts",
-              "Bold. CO: Bancolombia 04000029802 Ahorros COP - Co SAS Main Treasury",
-              "Bold. CO: Bancolombia 04000004981 Ahorros COP - Co SAS Payroll",
-              "Bold. CO: Bancolombia 04000000573 Ahorros COP - Co SAS mPos Testing",
-              "Bold. CO: Bancolombia 04000001617 Ahorros COP - Co SAS Human Talent",
-              "Bold. CO: Bancolombia 04000006579 Corriente COP",
-              "Bold. CO: Bancolombia 65200002824 Ahorros COP"
-            ],
-            "Bold CF": ["Bold. CF: Bancolombia 04000002167 Ahorros COP - Bold CF SA"]
-          },
-          "Bold. CO: Bancolombia 04000004981 Ahorros COP - Co SAS Payroll": {
-            "Bold CO": [
-              "Bold. CO: Bancolombia 04000000126 Ahorros COP - Co SAS Payouts",
-              "Bold. CO: Bancolombia 04000005928 Ahorros COP - Co SAS Loans n Referrals",
-              "Bold. CO: Bancolombia 04000000573 Ahorros COP - Co SAS mPos Testing",
-              "Bold. CO: Bancolombia 04000001617 Ahorros COP - Co SAS Human Talent",
-              "Bold. CO: Bancolombia 04000006579 Corriente COP",
-              "Bold. CO: Bancolombia 65200002824 Ahorros COP"
-            ]
-          },
-          "Bold. CO: Bancolombia 04000000573 Ahorros COP - Co SAS mPos Testing": {
-            "Bold CO": [
-              "Bold. CO: Bancolombia 04000000126 Ahorros COP - Co SAS Payouts",
-              "Bold. CO: Bancolombia 04000029802 Ahorros COP - Co SAS Main Treasury",
-              "Bold. CO: Bancolombia 04000005928 Ahorros COP - Co SAS Loans n Referrals",
-              "Bold. CO: Bancolombia 04000004981 Ahorros COP - Co SAS Payroll",
-              "Bold. CO: Bancolombia 04000001617 Ahorros COP - Co SAS Human Talent",
-              "Bold. CO: Bancolombia 04000006579 Corriente COP",
-              "Bold. CO: Bancolombia 65200002824 Ahorros COP"
-            ]
-          }
+          "Bold. CO: Bancolombia 04000000126 Ahorros COP - Co SAS Payouts": { "Bold CO": ["Bold. CO: Bancolombia 04000029802 Ahorros COP - Co SAS Main Treasury", "Bold. CO: Bancolombia 04000005928 Ahorros COP - Co SAS Loans n Referrals", "Bold. CO: Bancolombia 04000004981 Ahorros COP - Co SAS Payroll", "Bold. CO: Bancolombia 04000000573 Ahorros COP - Co SAS mPos Testing", "Bold. CO: Bancolombia 04000001617 Ahorros COP - Co SAS Human Talent", "Bold. CO: Bancolombia 04000006579 Corriente COP", "Bold. CO: Bancolombia 65200002824 Ahorros COP"] },
+          "Bold. CO: Bancolombia 04000029802 Ahorros COP - Co SAS Main Treasury": { "Bold CO": ["Bold. CO: Bancolombia 04000000126 Ahorros COP - Co SAS Payouts", "Bold. CO: Bancolombia 04000005928 Ahorros COP - Co SAS Loans n Referrals", "Bold. CO: Bancolombia 04000004981 Ahorros COP - Co SAS Payroll", "Bold. CO: Bancolombia 04000000573 Ahorros COP - Co SAS mPos Testing", "Bold. CO: Bancolombia 04000001617 Ahorros COP - Co SAS Human Talent", "Bold. CO: Bancolombia 04000006579 Corriente COP", "Bold. CO: Bancolombia 65200002824 Ahorros COP"] },
+          "Bold. CO: Bancolombia 04000005928 Ahorros COP - Co SAS Loans n Referrals": { "Bold CO": ["Bold. CO: Bancolombia 04000000126 Ahorros COP - Co SAS Payouts", "Bold. CO: Bancolombia 04000029802 Ahorros COP - Co SAS Main Treasury", "Bold. CO: Bancolombia 04000004981 Ahorros COP - Co SAS Payroll", "Bold. CO: Bancolombia 04000000573 Ahorros COP - Co SAS mPos Testing", "Bold. CO: Bancolombia 04000001617 Ahorros COP - Co SAS Human Talent", "Bold. CO: Bancolombia 04000006579 Corriente COP", "Bold. CO: Bancolombia 65200002824 Ahorros COP"], "Bold CF": ["Bold. CF: Bancolombia 04000002167 Ahorros COP - Bold CF SA"] },
+          "Bold. CO: Bancolombia 04000004981 Ahorros COP - Co SAS Payroll": { "Bold CO": ["Bold. CO: Bancolombia 04000000126 Ahorros COP - Co SAS Payouts", "Bold. CO: Bancolombia 04000005928 Ahorros COP - Co SAS Loans n Referrals", "Bold. CO: Bancolombia 04000000573 Ahorros COP - Co SAS mPos Testing", "Bold. CO: Bancolombia 04000001617 Ahorros COP - Co SAS Human Talent", "Bold. CO: Bancolombia 04000006579 Corriente COP", "Bold. CO: Bancolombia 65200002824 Ahorros COP"] },
+          "Bold. CO: Bancolombia 04000000573 Ahorros COP - Co SAS mPos Testing": { "Bold CO": ["Bold. CO: Bancolombia 04000000126 Ahorros COP - Co SAS Payouts", "Bold. CO: Bancolombia 04000029802 Ahorros COP - Co SAS Main Treasury", "Bold. CO: Bancolombia 04000005928 Ahorros COP - Co SAS Loans n Referrals", "Bold. CO: Bancolombia 04000004981 Ahorros COP - Co SAS Payroll", "Bold. CO: Bancolombia 04000001617 Ahorros COP - Co SAS Human Talent", "Bold. CO: Bancolombia 04000006579 Corriente COP", "Bold. CO: Bancolombia 65200002824 Ahorros COP"] }
         },
         "Bold CF": { "Bold. CF: Bancolombia 04000002167 Ahorros COP": { "Bold CF": ["Bold. CF: Bancolombia 04000002167 Ahorros COP - Main"] } },
         "Bold Capital": { "Bold Capital: Bancolombia 04000009999 Ahorros COP": { "Bold Capital": ["Bold Capital: Bancolombia 04000009999 Ahorros COP - Treasury"] } }
