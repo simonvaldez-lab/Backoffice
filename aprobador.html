@@ -12,10 +12,9 @@
         <main class="contenido">
             <h1 class="titulo-seccion">Bandeja de Aprobador</h1>
             <p class="subtitulo">Auditoría cruzada: Contraste visual de soportes originales vs capturas de pantalla de la operación.</p>
-            <div class="header-acciones"><div class="controles"><input type="text" class="input-busqueda" placeholder="Buscar por N° Radicado..."></div><button class="btn btn-reportes" onclick="alert('Generando reporte Excel...')">📊 Reporte de Productividad</button></div>
             <div class="tabla-contenedor">
                 <table>
-                    <thead><tr><th>Control ANS / Radicado</th><th>Compañía & Operación[cite: 2]</th><th>Solicitante[cite: 2]</th><th>Valor Auditado[cite: 2]</th><th>Registros[cite: 2]</th><th>Acciones[cite: 2]</th></tr></thead>
+                    <thead><tr><th>Control ANS / Radicado</th><th>Compañía & Operación</th><th>Solicitante</th><th>Valor Auditado</th><th>Registros</th><th>Acciones</th></tr></thead>
                     <tbody id="tabla-aprobador"></tbody>
                 </table>
             </div>
@@ -26,31 +25,33 @@
     <script src="js/logica-comun.js"></script>
     <script>
         function renderizarTabla() {
-            const ops = obtenerOperaciones().filter(o => o.estado === "En Aprobación");
+            const ops = typeof obtenerOperacionesActivas === 'function' ? obtenerOperacionesActivas() : obtenerOperaciones();
+            const cola = ops.filter(o => o.estado === "En Aprobación");
             const tb = document.getElementById('tabla-aprobador');
             tb.innerHTML = '';
-            if(ops.length === 0) { tb.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#64748B;">No hay radicados en cola de aprobación.</td></tr>'; return; }
-            ops.forEach(o => {
+            if(cola.length === 0) { tb.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#64748B; padding:30px;">No hay radicados en cola de aprobación.</td></tr>'; return; }
+            cola.forEach(o => {
+                const prioBadge = o.prioridad === 1 ? '<span class="badge" style="background:#FEE2E2; color:#991B1B;">🔥 1 - Alta</span>' : o.prioridad === 3 ? '<span class="badge" style="background:#F1F5F9; color:#475569;">☕ 3 - Baja</span>' : '<span class="badge" style="background:#FEF3C7; color:#92400E;">⚡ 2 - Media</span>';
                 tb.innerHTML += `<tr>
-                    <td><div class="semaforo-caja"><span class="luz"></span> ANS: ${o.ans}[cite: 2]</div><br><strong>${o.radicado}</strong>[cite: 2]</td>
-                    <td>${o.empresa}[cite: 2]<br><span class="badge badge-opex" style="margin-top:4px;">${o.tipo}[cite: 2]</span></td>
-                    <td>${o.solicitante}[cite: 2]</td>
-                    <td><strong>$ ${o.montoPrep.toLocaleString()}</strong>[cite: 2] <span class="badge badge-moneda">${o.moneda}[cite: 2]</span></td>
-                    <td>${o.registros}[cite: 2]</td>
+                    <td><div class="semaforo-caja"><span class="luz"></span> ANS: ${o.ans}</div><br><strong>${o.radicado}</strong><br>${prioBadge}</td>
+                    <td>${o.empresa}<br><span class="badge badge-opex" style="margin-top:4px;">${o.tipo}</span></td>
+                    <td>${o.solicitante}</td>
+                    <td><strong>$ ${o.montoPrep.toLocaleString()}</strong> <span class="badge badge-moneda">${o.moneda}</span></td>
+                    <td>${o.registros}</td>
                     <td style="display: flex; gap: 8px;">
-                        <button class="btn btn-detalle" onclick="auditarRadicado('${o.radicado}')">🔍 Auditar Expediente[cite: 2]</button>
-                        <button class="btn btn-aprobar" onclick="cambiarEstado('${o.radicado}', 'Listo para Banco')">✓[cite: 2]</button>
-                        <button class="btn btn-rechazar" onclick="cambiarEstado('${o.radicado}', 'Rechazado')">✕[cite: 2]</button>
+                        <button class="btn btn-detalle" onclick="auditarRadicado('${o.radicado}')">🔍 Auditar</button>
+                        <button class="btn btn-aprobar" onclick="cambiarEstado('${o.radicado}', 'Listo para Banco')">✓</button>
+                        <button class="btn btn-rechazar" onclick="cambiarEstado('${o.radicado}', 'Rechazado')">✕</button>
                     </td>
                 </tr>`;
             });
         }
         function cambiarEstado(rad, est) {
-            const ops = obtenerOperaciones();
+            const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : [];
             const op = ops.find(o => o.radicado === rad);
             if(op) {
                 op.estado = est;
-                op.historial.push({ fecha: new Date().toLocaleDateString() + " - 11:30 AM", paso: "3. CIERRE DEFINITIVO (" + est.toUpperCase() + ")", detalle: "Autorizado por Kate (Aprobador)." });
+                op.historial.push({ fecha: obtenerFechaHoraMilitar(), paso: "3. CIERRE DEFINITIVO (" + est.toUpperCase() + ")", detalle: "Autorizado en hora militar 24h por Kate (Aprobador)." });
                 guardarOperaciones(ops);
                 alert("Radicado " + rad + " autorizado. Pasa a Felipe (Banco).");
                 renderizarTabla();

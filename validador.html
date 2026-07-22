@@ -25,13 +25,15 @@
     <script src="js/logica-comun.js"></script>
     <script>
         function renderizarTabla() {
-            const ops = obtenerOperaciones().filter(o => o.estado === "Pendiente Validación");
+            const ops = typeof obtenerOperacionesActivas === 'function' ? obtenerOperacionesActivas() : obtenerOperaciones();
+            const pendientes = ops.filter(o => o.estado === "Pendiente Validación");
             const tb = document.getElementById('tabla-validador');
             tb.innerHTML = '';
-            if(ops.length === 0) { tb.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#64748B;">No hay radicados pendientes de validación.</td></tr>'; return; }
-            ops.forEach(o => {
+            if(pendientes.length === 0) { tb.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#64748B; padding:30px;">No hay radicados pendientes de validación.</td></tr>'; return; }
+            pendientes.forEach(o => {
+                const prioBadge = o.prioridad === 1 ? '<span class="badge" style="background:#FEE2E2; color:#991B1B;">🔥 1 - Alta</span>' : o.prioridad === 3 ? '<span class="badge" style="background:#F1F5F9; color:#475569;">☕ 3 - Baja</span>' : '<span class="badge" style="background:#FEF3C7; color:#92400E;">⚡ 2 - Media</span>';
                 tb.innerHTML += `<tr>
-                    <td><div class="semaforo-caja"><span class="luz alerta"></span> ANS: ${o.ans}</div><br><strong>${o.radicado}</strong></td>
+                    <td><div class="semaforo-caja"><span class="luz alerta"></span> ANS: ${o.ans}</div><br><strong>${o.radicado}</strong><br>${prioBadge}</td>
                     <td>${o.empresa}<br><span class="badge badge-opex" style="margin-top:3px;">${o.tipo}</span></td>
                     <td>${o.solicitante}</td>
                     <td><strong>$ ${o.montoSol.toLocaleString()}</strong> <span class="badge badge-moneda">${o.moneda}</span></td>
@@ -44,11 +46,11 @@
             });
         }
         function cambiarEstado(rad, est) {
-            const ops = obtenerOperaciones();
+            const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : [];
             const op = ops.find(o => o.radicado === rad);
             if(op) {
                 op.estado = est;
-                op.historial.push({ fecha: new Date().toLocaleDateString() + " - 10:15 AM", paso: "2. COMPLIANCE (" + est.toUpperCase() + ")", detalle: "Revisión KYC completada por María (Validador)." });
+                op.historial.push({ fecha: obtenerFechaHoraMilitar(), paso: "2. COMPLIANCE (" + est.toUpperCase() + ")", detalle: "Revisión KYC completada en formato militar 24h por María (Validador)." });
                 guardarOperaciones(ops);
                 alert("Radicado " + rad + " movido a: " + est);
                 renderizarTabla();

@@ -266,7 +266,7 @@
                 solicitante: usr.correo, montoSol: monto, montoPrep: monto, moneda: document.getElementById('f-mon').value,
                 registros: 1, ans: prio === 1 ? "1 Hora" : prio === 3 ? "4 Horas" : "2 Horas", 
                 estado: "Pendiente Validación", prioridad: prio, fechaRadicacion: hoy,
-                historial: [{ fecha: hoy + " - " + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), paso: "1. RADICACIÓN RELACIONAL", detalle: `Ruta: ${corig} ➔ ${cdest} (${det}). Prioridad asignada: ${prio}. Registro histórico #${numRegistro}.` }]
+                historial: [{ fecha: hoy + " - " + obtenerHoraMilitar(), paso: "1. RADICACIÓN RELACIONAL", detalle: `Ruta: ${corig} ➔ ${cdest} (${det}). Prioridad asignada: ${prio}. Registro histórico #${numRegistro}.` }]
             });
             if (typeof guardarOperaciones === 'function') guardarOperaciones(ops);
             alert(`✅ Radicado ${rad} creado exitosamente con Prioridad ${prio}.`);

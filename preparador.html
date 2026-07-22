@@ -25,27 +25,29 @@
     <script src="js/logica-comun.js"></script>
     <script>
         function renderizarTabla() {
-            const ops = obtenerOperaciones().filter(o => o.estado === "Listo para Banco");
+            const ops = typeof obtenerOperacionesActivas === 'function' ? obtenerOperacionesActivas() : obtenerOperaciones();
+            const listos = ops.filter(o => o.estado === "Listo para Banco");
             const tb = document.getElementById('tabla-preparador');
             tb.innerHTML = '';
-            if(ops.length === 0) { tb.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#64748B;">No hay dispersiones pendientes para banco.</td></tr>'; return; }
-            ops.forEach(o => {
+            if(listos.length === 0) { tb.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#64748B; padding:30px;">No hay dispersiones pendientes para banco.</td></tr>'; return; }
+            listos.forEach(o => {
+                const prioBadge = o.prioridad === 1 ? '<span class="badge" style="background:#FEE2E2; color:#991B1B;">🔥 1 - Alta</span>' : o.prioridad === 3 ? '<span class="badge" style="background:#F1F5F9; color:#475569;">☕ 3 - Baja</span>' : '<span class="badge" style="background:#FEF3C7; color:#92400E;">⚡ 2 - Media</span>';
                 tb.innerHTML += `<tr>
-                    <td><strong>${o.radicado}</strong></td>
+                    <td><strong>${o.radicado}</strong><br>${prioBadge}</td>
                     <td>${o.empresa}<br><span class="badge badge-opex" style="margin-top:3px;">${o.tipo}</span></td>
                     <td><strong>$ ${o.montoPrep.toLocaleString()}</strong> <span class="badge badge-moneda">${o.moneda}</span></td>
                     <td>${o.registros}</td>
-                    <td><button class="btn btn-detalle" onclick="auditarRadicado('${o.radicado}')">📄 Subir Screen Banco</button></td>
+                    <td><button class="btn btn-detalle" onclick="auditarRadicado('${o.radicado}')">📄 Subir Screen</button></td>
                     <td><button class="btn btn-primario" style="background:#15803D;" onclick="cambiarEstado('${o.radicado}', 'Dispersado en Banco')">🚀 Confirmar Transferencia</button></td>
                 </tr>`;
             });
         }
         function cambiarEstado(rad, est) {
-            const ops = obtenerOperaciones();
+            const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : [];
             const op = ops.find(o => o.radicado === rad);
             if(op) {
                 op.estado = est;
-                op.historial.push({ fecha: new Date().toLocaleDateString() + " - 14:00 PM", paso: "4. DISPERSIÓN BANCARIA COMPLETE", detalle: "Transferencia CUD ejecutada con éxito por Felipe (Preparador)." });
+                op.historial.push({ fecha: obtenerFechaHoraMilitar(), paso: "4. DISPERSIÓN BANCARIA COMPLETE", detalle: "Transferencia CUD ejecutada en hora militar 24h por Felipe (Preparador)." });
                 guardarOperaciones(ops);
                 alert("¡Lote dispersado con éxito! Registro completado.");
                 renderizarTabla();
