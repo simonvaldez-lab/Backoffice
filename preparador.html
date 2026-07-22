@@ -10,11 +10,21 @@
             <div class="menu-categoria">Ejecución</div><a href="preparador.html" class="menu-item activo">Ejecución Banco</a>
         </aside>
         <main class="contenido">
-            <h1 class="titulo-seccion">Dispersión en Portal Bancario (CUD)</h1>
-            <p class="subtitulo">Descarga layout de pagos autorizados, sube el screen del banco y marca como transferido.</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <div>
+                    <h1 class="titulo-seccion" style="margin: 0;">Dispersión en Portal Bancario (CUD)</h1>
+                    <p class="subtitulo" style="margin: 4px 0 0 0;">Descarga layout, sube soporte y confirma transferencias.</p>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center; background: white; padding: 6px 12px; border-radius: 8px; border: 1px solid #CBD5E1;">
+                    <label style="font-size: 12px; font-weight: bold; color: #0B1442; margin: 0;">📅 Filtrar por Fecha:</label>
+                    <input type="date" id="filtro-fecha" class="form-control" style="width: 140px; padding: 4px 8px; height: 32px;" onchange="renderizarTabla()">
+                    <button class="btn btn-detalle" onclick="limpiarFiltroFecha()" style="padding: 4px 10px; height: 32px;">Limpiar</button>
+                </div>
+            </div>
+            
             <div class="tabla-contenedor">
                 <table>
-                    <thead><tr><th>Control ANS / Radicado</th><th>Compañía & Gasto</th><th>Valor a Transferir</th><th>Registros</th><th>Soporte Banco</th><th>Acción Banco</th></tr></thead>
+                    <thead><tr><th>Control ANS / Radicado</th><th>Fecha</th><th>Compañía & Gasto</th><th>Valor a Transferir</th><th>Estado</th><th>Soporte Banco</th><th>Acción Banco</th></tr></thead>
                     <tbody id="tabla-preparador"></tbody>
                 </table>
             </div>
@@ -26,17 +36,18 @@
     <script>
         function renderizarTabla() {
             const ops = typeof obtenerOperacionesActivas === 'function' ? obtenerOperacionesActivas() : obtenerOperaciones();
-            const listos = ops.filter(o => o.estado === "Listo para Banco");
+            const listos = ops.filter(o => o.estado === "Listo para Banco" && coincideFechaFiltro(o));
             const tb = document.getElementById('tabla-preparador');
             tb.innerHTML = '';
-            if(listos.length === 0) { tb.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#64748B; padding:30px;">No hay dispersiones pendientes para banco.</td></tr>'; return; }
+            if(listos.length === 0) { tb.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#64748B; padding:30px;">No hay dispersiones pendientes para esta fecha.</td></tr>'; return; }
             listos.forEach(o => {
                 const prioBadge = o.prioridad === 1 ? '<span class="badge" style="background:#FEE2E2; color:#991B1B;">🔥 1 - Alta</span>' : o.prioridad === 3 ? '<span class="badge" style="background:#F1F5F9; color:#475569;">☕ 3 - Baja</span>' : '<span class="badge" style="background:#FEF3C7; color:#92400E;">⚡ 2 - Media</span>';
                 tb.innerHTML += `<tr>
                     <td><strong>${o.radicado}</strong><br>${prioBadge}</td>
+                    <td style="font-size:12px; font-weight:700; color:#475569;">📅 ${o.fechaRadicacion || ''}</td>
                     <td>${o.empresa}<br><span class="badge badge-opex" style="margin-top:3px;">${o.tipo}</span></td>
                     <td><strong>$ ${o.montoPrep.toLocaleString()}</strong> <span class="badge badge-moneda">${o.moneda}</span></td>
-                    <td>${o.registros}</td>
+                    <td>${obtenerBadgeEstado(o.estado)}</td>
                     <td><button class="btn btn-detalle" onclick="auditarRadicado('${o.radicado}')">📄 Subir Screen</button></td>
                     <td><button class="btn btn-primario" style="background:#15803D;" onclick="cambiarEstado('${o.radicado}', 'Dispersado en Banco')">🚀 Confirmar Transferencia</button></td>
                 </tr>`;
@@ -47,7 +58,7 @@
             const op = ops.find(o => o.radicado === rad);
             if(op) {
                 op.estado = est;
-                op.historial.push({ fecha: obtenerFechaHoraMilitar(), paso: "4. DISPERSIÓN BANCARIA COMPLETE", detalle: "Transferencia CUD ejecutada en hora militar 24h por Felipe (Preparador)." });
+                op.historial.push({ fecha: obtenerFechaHoraMilitar(), paso: "4. DISPERSIÓN BANCARIA COMPLETE", detalle: "Transferencia ejecutada en hora militar 24h por Felipe (Preparador)." });
                 guardarOperaciones(ops);
                 alert("¡Lote dispersado con éxito! Registro completado.");
                 renderizarTabla();

@@ -1,5 +1,5 @@
 // ==========================================
-// 0. GENERADOR GLOBAL DE HORA MILITAR (24H)
+// 0. GENERADORES DE FECHA Y HORA MILITAR (24H)
 // ==========================================
 function obtenerHoraMilitar() {
     return new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false });
@@ -12,12 +12,62 @@ function obtenerFechaHoraMilitar() {
     return `${fecha} - ${hora}`;
 }
 
+function obtenerFechaISO(fechaObj = new Date()) {
+    const yyyy = fechaObj.getFullYear();
+    const mm = String(fechaObj.getMonth() + 1).padStart(2, '0');
+    const dd = String(fechaObj.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+}
+
 // ==========================================
-// 1. BASE DE DATOS OPERATIVA BI-NACIONAL
+// 1. SEMÁFORO DE COLORES PARA ESTADOS
+// ==========================================
+function obtenerBadgeEstado(estado) {
+    let bg = "#FEF3C7", color = "#92400E", border = "#FDE68A"; // 🟡 Amarillo (Pendiente Validación)
+    if (estado.includes("Aprobación") || estado.includes("Aprobado") || estado.includes("Listo") || estado.includes("Dispersado") || estado.includes("Autorizado")) {
+        bg = "#DCFCE7"; color = "#15803D"; border = "#BBF7D0"; // 🟢 Verde (Estado Aprobación)
+    } else if (estado.includes("Rechazado") || estado.includes("Devuelto")) {
+        bg = "#FEE2E2"; color = "#991B1B"; border = "#FECACA"; // 🔴 Rojo (Rechazado)
+    }
+    return `<span class="badge" style="background:${bg}; color:${color}; border:1px solid ${border}; font-weight:800; padding: 5px 10px;">${estado}</span>`;
+}
+
+// ==========================================
+// 2. MOTOR DE FILTRADO POR FECHA
+// ==========================================
+function coincideFechaFiltro(op) {
+    const el = document.getElementById('filtro-fecha');
+    if (!el || !el.value) return true; // Si no hay filtro activo, mostrar todo
+    
+    // Comparación exacta por fechaISO
+    if (op.fechaISO && op.fechaISO === el.value) return true;
+    
+    // Fallback por si la fecha está en formato DD/MM/YYYY
+    const partes = el.value.split('-'); // [2026, 07, 22]
+    if (partes.length === 3 && op.fechaRadicacion) {
+        const fPartes = op.fechaRadicacion.split('/');
+        if (fPartes.length === 3) {
+            return parseInt(partes[2], 10) === parseInt(fPartes[0], 10) &&
+                   parseInt(partes[1], 10) === parseInt(fPartes[1], 10) &&
+                   partes[0] === fPartes[2];
+        }
+    }
+    return false;
+}
+
+function limpiarFiltroFecha() {
+    const el = document.getElementById('filtro-fecha');
+    if (el) el.value = '';
+    if (typeof renderizarTabla === 'function') renderizarTabla();
+}
+
+// ==========================================
+// 3. BASE DE DATOS OPERATIVA BI-NACIONAL
 // ==========================================
 function obtenerOperaciones() {
     let bd = localStorage.getItem('bold_operaciones_bd');
     const hoy = new Date().toLocaleDateString('es-CO');
+    const hoyISO = obtenerFechaISO();
     
     if (!bd) {
         const iniciales = [
@@ -26,7 +76,7 @@ function obtenerOperaciones() {
                 tipo: "Traslados entre cuentas", detalle: "Bancolombia", 
                 ctaOrigen: "Bold. CO: Bancolombia 04000000126 Ahorros COP - Co SAS Payouts", ctaDestino: "Bold. CO: Bancolombia 04000029802 Ahorros COP - Co SAS Main Treasury",
                 solicitante: "lau@bold.co", montoSol: 85000000, montoPrep: 85000000, moneda: "COP",
-                registros: 1, ans: "1 Hora", estado: "Pendiente Validación", prioridad: 1, fechaRadicacion: hoy,
+                registros: 1, ans: "1 Hora", estado: "Pendiente Validación", prioridad: 1, fechaRadicacion: hoy, fechaISO: hoyISO,
                 historial: [{ fecha: hoy + " - 08:30", paso: "1. RADICACIÓN", detalle: "Traslado urgente de fondos (Prioridad 1 - Alta). Registro histórico #0003." }]
             },
             {
@@ -34,14 +84,14 @@ function obtenerOperaciones() {
                 tipo: "Traslados CUD", detalle: "Adelanto adquirencia doméstica",
                 ctaOrigen: "Bold CF: BanRep - 62108160 CUD COP", ctaDestino: "Bold. CO: Bold CF 170011844070 PO´S ACH - QR Agregador",
                 solicitante: "lau@bold.co", montoSol: 15000000, montoPrep: 15000000, moneda: "COP",
-                registros: 1, ans: "4 Horas", estado: "Pendiente Validación", prioridad: 3, fechaRadicacion: hoy,
+                registros: 1, ans: "4 Horas", estado: "Pendiente Validación", prioridad: 3, fechaRadicacion: hoy, fechaISO: hoyISO,
                 historial: [{ fecha: hoy + " - 09:15", paso: "1. RADICACIÓN", detalle: "Adelanto adquirencia doméstica (Prioridad 3 - Baja). Registro histórico #0002." }]
             },
             {
                 radicado: "OPEX-20/06-26-0001", pais: "Colombia", empresa: "Empresa Matriz S.A.", compDestino: "Bold CO",
                 tipo: "OPEX", detalle: "Facturación Mensual",
                 solicitante: "juan.solicitante@bold.co", montoSol: 48500000, montoPrep: 45230000, moneda: "COP",
-                registros: 14, ans: "2 Horas", estado: "En Aprobación", prioridad: 2, fechaRadicacion: "20/06/2026",
+                registros: 14, ans: "2 Horas", estado: "En Aprobación", prioridad: 2, fechaRadicacion: "20/06/2026", fechaISO: "2026-06-20",
                 historial: [{ fecha: "20/06/2026 - 14:20", paso: "1. RADICACIÓN", detalle: "Documento cargado: Facturas_Junio.pdf (Prioridad 2 - Media). Registro histórico #0001." }]
             }
         ];
@@ -57,7 +107,7 @@ function obtenerOperaciones() {
             o.fechaRadicacion = (o.historial && o.historial[0]) ? o.historial[0].fecha.split(' - ')[0] : hoy;
             modificado = true;
         }
-        // Limpiar AM/PM si quedó en la memoria local antigua
+        if (!o.fechaISO) { o.fechaISO = hoyISO; modificado = true; }
         if (o.historial) {
             o.historial.forEach(h => {
                 if (h.fecha && (h.fecha.includes('AM') || h.fecha.includes('PM'))) {
@@ -84,7 +134,7 @@ function guardarOperaciones(lista) {
 }
 
 // ==========================================
-// 2. SEGURIDAD Y PERMISOS
+// 4. SEGURIDAD Y PERMISOS
 // ==========================================
 function cerrarSesion() {
     sessionStorage.removeItem('usuarioLogueado');
@@ -140,7 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================
-// 3. AUDITORÍA UNIVERSAL
+// 5. AUDITORÍA UNIVERSAL
 // ==========================================
 function auditarRadicado(radicado) {
     const ops = obtenerOperaciones();
@@ -189,14 +239,12 @@ function cambiarPestana(origen) {
 function cerrarModal(id) { document.getElementById(id).style.display = 'none'; }
 
 // ==========================================
-// 4. ÁRBOL RELACIONAL CORREGIDO
+// 6. ÁRBOL RELACIONAL CORREGIDO
 // ==========================================
 const arbolOperaciones = {
   "Traslados": {
     "Traslados CUD": {
-      "Adelanto adquirencia doméstica": {
-        "Bold CF": { "Bold CF: BanRep - 62108160 CUD COP": { "Bold CO": ["Bold. CO: Bold CF 170011844070 PO´S ACH - QR Agregador", "Bold. CO: Bold CF 000008024755 Deposito COP"] } }
-      },
+      "Adelanto adquirencia doméstica": { "Bold CF": { "Bold CF: BanRep - 62108160 CUD COP": { "Bold CO": ["Bold. CO: Bold CF 170011844070 PO´S ACH - QR Agregador", "Bold. CO: Bold CF 000008024755 Deposito COP"] } } },
       "Traslado adquirencia doméstica": {
         "Bold CF": {
           "Bold. CF: Citibank COL 0090923021 Corriente COP (link CUD)": { "Bold CO": ["Bold. CO: Citibank COL 0089550017 Corriente COP", "Bold. CO: Bold CF 170011844070 PO´S ACH - QR Agregador", "Bold. CO: Bold CF 000008024755 Deposito COP"] },

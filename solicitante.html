@@ -14,33 +14,23 @@
             <p class="subtitulo">Selecciona en cascada los datos bancarios o carga una plantilla. Define la prioridad del pago antes de enviar.</p>
             
             <div style="background: white; padding: 25px; border-radius: 8px; border: 1px solid #E2E8F0; margin-bottom: 30px; position: relative;">
-                
-                <!-- GESTOR DE PLANTILLAS -->
                 <div style="background: #EEF2FF; padding: 15px; border-radius: 6px; border: 1px dashed #A5B4FC; margin-bottom: 20px; display: flex; gap: 15px; align-items: flex-end;">
-                    <div style="flex: 1;">
-                        <label class="dato-label" style="color: #4F46E5;">⚡ Cargar Plantilla Frecuente</label>
-                        <select id="select-plantilla" class="form-control" style="border-color: #C7D2FE; background: white;"><option value="">Selecciona una plantilla guardada...</option></select>
-                    </div>
-                    <div>
-                        <button class="btn btn-primario" style="background: #4F46E5; height: 38px;" onclick="aplicarPlantilla()">⬇ Autocompletar Formulario</button>
-                    </div>
+                    <div style="flex: 1;"><label class="dato-label" style="color: #4F46E5;">⚡ Cargar Plantilla Frecuente</label><select id="select-plantilla" class="form-control" style="border-color: #C7D2FE; background: white;"><option value="">Selecciona una plantilla guardada...</option></select></div>
+                    <div><button class="btn btn-primario" style="background: #4F46E5; height: 38px;" onclick="aplicarPlantilla()">⬇ Autocompletar Formulario</button></div>
                 </div>
 
-                <!-- Fila 1: Datos Generales -->
                 <div style="display: flex; gap: 15px; margin-bottom: 15px;">
                     <div style="flex:1.2;"><label class="dato-label">Correo Solicitante</label><input type="email" id="sol-correo" class="form-control" readonly style="background-color: #F1F5F9; color: #475569; font-weight: 700;"></div>
                     <div style="flex:1;"><label class="dato-label">1. Operación</label><select id="f-op" class="form-control" onchange="cascada(1)"><option value="Traslados">Traslados</option></select></div>
                     <div style="flex:1;"><label class="dato-label">2. Tipo de Operación</label><select id="f-tipo" class="form-control" onchange="cascada(2)"><option value="">Seleccione...</option></select></div>
                 </div>
 
-                <!-- Fila 2: Origen de Fondos -->
                 <div style="display: flex; gap: 15px; margin-bottom: 15px;">
                     <div style="flex:1;"><label class="dato-label">3. Detalle Operación</label><select id="f-det" class="form-control" onchange="cascada(3)"><option value="">Seleccione...</option></select></div>
                     <div style="flex:0.8;"><label class="dato-label">4. Compañía Origen</label><select id="f-corig" class="form-control" onchange="cascada(4)"><option value="">Seleccione...</option></select></div>
                     <div style="flex:1.5;"><label class="dato-label">5. Cuenta Origen</label><select id="f-ctaorig" class="form-control" onchange="cascada(5)"><option value="">Seleccione...</option></select></div>
                 </div>
 
-                <!-- Fila 3: Destino, Moneda, Prioridad (#8) y Monto -->
                 <div style="display: flex; gap: 15px; margin-bottom: 20px;">
                     <div style="flex:0.8;"><label class="dato-label">6. Compañía Destino</label><select id="f-cdest" class="form-control" onchange="cascada(6)"><option value="">Seleccione...</option></select></div>
                     <div style="flex:1.4;"><label class="dato-label">7. Cuenta Destino</label><select id="f-ctadest" class="form-control" onchange="cascada(7)"><option value="">Seleccione...</option></select></div>
@@ -49,7 +39,6 @@
                     <div style="flex:1;"><label class="dato-label">Monto Solicitado</label><input type="number" id="f-monto" class="form-control" placeholder="Ej. 15000000"></div>
                 </div>
 
-                <!-- BOTONES DE ACCIÓN Y GUARDADO DE PLANTILLAS -->
                 <div style="display: flex; gap: 15px; align-items: center; border-top: 1px solid #E2E8F0; padding-top: 20px;">
                     <button class="btn btn-primario" onclick="crearOperacionRelacional()" style="font-size: 14px; padding: 10px 20px;">🚀 Radicar Operación en Cascada</button>
                     <div style="width: 1px; height: 35px; background: #CBD5E1; margin: 0 10px;"></div>
@@ -58,20 +47,27 @@
                 </div>
             </div>
 
-            <div style="display: flex; justify-content: space-between; align-items: baseline;">
-                <h2 class="titulo-seccion" style="font-size: 18px;">Radicaciones de Hoy (Orden de Prioridad 1 ➔ 3)</h2>
-                <span style="font-size:12px; color:#64748B; font-weight:bold;">🕒 Solo muestra operaciones del día. Ver todas en Historial.</span>
+            <!-- ENCABEZADO CON FILTRO POR FECHA -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <div>
+                    <h2 class="titulo-seccion" style="font-size: 18px; margin: 0;">Radicaciones de Hoy (Orden 1 ➔ 3)</h2>
+                    <span style="font-size:12px; color:#64748B; font-weight:bold;">🕒 Muestra por defecto las del día. Elige fecha para buscar anteriores.</span>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center; background: white; padding: 6px 12px; border-radius: 8px; border: 1px solid #CBD5E1;">
+                    <label style="font-size: 12px; font-weight: bold; color: #0B1442; margin: 0;">📅 Filtrar por Fecha:</label>
+                    <input type="date" id="filtro-fecha" class="form-control" style="width: 140px; padding: 4px 8px; height: 32px;" onchange="renderizarTabla()">
+                    <button class="btn btn-detalle" onclick="limpiarFiltroFecha()" style="padding: 4px 10px; height: 32px;">Limpiar</button>
+                </div>
             </div>
             
-            <div class="tabla-contenedor" style="margin-top: 10px;">
-                <table><thead><tr><th>Radicado & Prioridad</th><th>Operación & Tipo</th><th>Origen -> Destino</th><th>Monto Solicitado</th><th>Estado</th><th>Auditoría</th></tr></thead><tbody id="tabla-solicitante"></tbody></table>
+            <div class="tabla-contenedor">
+                <table><thead><tr><th>Radicado & Prioridad</th><th>Fecha</th><th>Operación & Tipo</th><th>Origen -> Destino</th><th>Monto Solicitado</th><th>Estado</th><th>Auditoría</th></tr></thead><tbody id="tabla-solicitante"></tbody></table>
             </div>
         </main>
     </div>
     
     <!-- Modal Compartido -->
     <div class="modal-overlay" id="modalDetalles"><div class="modal modal-grande"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;"><h2 id="mod-radicado-titulo" style="margin:0; border:none; padding:0;">Módulo de Auditoría</h2><button class="btn" style="background:#3B82F6; color:white;" onclick="alternarVisor()">👁 Visor Dual</button></div><div class="modal-layout-split"><div class="seccion-datos"><div class="grid-detalles"><div class="dato-grupo"><span class="dato-label">Compañía</span><span class="dato-valor" id="mod-origen"></span></div><div class="dato-grupo"><span class="dato-label">Moneda</span><span class="dato-valor" id="mod-moneda"></span></div><div class="dato-grupo"><span class="dato-label">Valor Solicitado</span><span class="dato-valor" id="mod-val-sol"></span><div class="auditor-data auditor-alerta" id="mod-val-prep"></div></div><div class="dato-grupo"><span class="dato-label">Registros</span><span class="dato-valor" id="mod-regs"></span></div></div><div class="timeline" id="mod-timeline"></div></div><div class="seccion-visor" id="contenedorVisor"><div class="tab-container"><button class="tab active" id="tabSol" onclick="cambiarPestana('solicitante')">📄 Factura</button><button class="tab" id="tabPrep" onclick="cambiarPestana('preparador')">🖼 Screen Banco</button></div><div class="marco-visor"><div class="documento-simulado" id="vistaSolicitante"><h4>SOPORTE ORIGINAL</h4><p>Proveedor: <strong id="vis-sol-prov"></strong></p><p style="margin-top:40px; text-align:right; font-weight:bold;" id="vis-sol-total"></p></div><div class="documento-simulado hidden" id="vistaPreparador" style="background:#0F172A; color:#22C55E;"><h4>PORTAL BANCARIO</h4><p style="margin-top:40px; text-align:right; font-weight:bold; font-size:15px;" id="vis-prep-total"></p></div></div></div></div><div style="text-align: right; margin-top: 20px; border-top: 1px solid #E2E8F0; padding-top: 15px;"><button class="btn btn-detalle" onclick="cerrarModal('modalDetalles')">Cerrar</button></div></div></div>
-    
     <script src="js/logica-comun.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -95,27 +91,17 @@
             if(!nombre) return alert("⚠️ Escribe un nombre para guardar la plantilla (Ej: Traslado Citi Principal).");
 
             const datos = {
-                op: document.getElementById('f-op').value,
-                tipo: document.getElementById('f-tipo').value,
-                det: document.getElementById('f-det').value,
-                corig: document.getElementById('f-corig').value,
-                ctaorig: document.getElementById('f-ctaorig').value,
-                cdest: document.getElementById('f-cdest').value,
-                ctadest: document.getElementById('f-ctadest').value,
-                moneda: document.getElementById('f-mon').value,
-                prio: document.getElementById('f-prio').value
+                op: document.getElementById('f-op').value, tipo: document.getElementById('f-tipo').value, det: document.getElementById('f-det').value,
+                corig: document.getElementById('f-corig').value, ctaorig: document.getElementById('f-ctaorig').value, cdest: document.getElementById('f-cdest').value,
+                ctadest: document.getElementById('f-ctadest').value, moneda: document.getElementById('f-mon').value, prio: document.getElementById('f-prio').value
             };
-
-            if(!datos.tipo || !datos.det || !datos.ctaorig || !datos.ctadest) {
-                return alert("⚠️ Llena completamente la ruta de la operación antes de guardarla como modelo.");
-            }
+            if(!datos.tipo || !datos.det || !datos.ctaorig || !datos.ctadest) return alert("⚠️ Llena completamente la ruta de la operación antes de guardarla como modelo.");
 
             const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}');
             const plantillas = JSON.parse(localStorage.getItem('bold_plantillas') || '{}');
             if(!plantillas[usr.correo]) plantillas[usr.correo] = {};
             plantillas[usr.correo][nombre] = datos;
             localStorage.setItem('bold_plantillas', JSON.stringify(plantillas));
-            
             alert(`✅ Plantilla "${nombre}" guardada con éxito.`);
             document.getElementById('nombre-plantilla').value = "";
             cargarPlantillasUI();
@@ -124,7 +110,6 @@
         function aplicarPlantilla() {
             const nombre = document.getElementById('select-plantilla').value;
             if(!nombre) return alert("⚠️ Selecciona una plantilla del menú primero.");
-
             const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}');
             const plantillas = JSON.parse(localStorage.getItem('bold_plantillas') || '{}');
             const datos = plantillas[usr.correo]?.[nombre];
@@ -139,134 +124,82 @@
             document.getElementById('f-ctadest').value = datos.ctadest;
             document.getElementById('f-mon').value = datos.moneda;
             if(datos.prio) document.getElementById('f-prio').value = datos.prio;
-            
             alert(`🔄 Plantilla "${nombre}" aplicada. Ingresa el monto.`);
             document.getElementById('f-monto').focus();
         }
 
         function cascada(nivel) {
-            const op = document.getElementById('f-op').value;
-            const tipo = document.getElementById('f-tipo');
-            const det = document.getElementById('f-det');
-            const corig = document.getElementById('f-corig');
-            const ctaorig = document.getElementById('f-ctaorig');
-            const cdest = document.getElementById('f-cdest');
-            const ctadest = document.getElementById('f-ctadest');
-
-            if (nivel === 1) {
-                tipo.innerHTML = '<option value="">Seleccione...</option>';
-                if (arbolOperaciones[op]) Object.keys(arbolOperaciones[op]).forEach(k => tipo.innerHTML += `<option value="${k}">${k}</option>`);
-                tipo.value = ""; det.innerHTML = '<option value="">Seleccione...</option>'; corig.innerHTML = '<option value="">Seleccione...</option>'; ctaorig.innerHTML = '<option value="">Seleccione...</option>'; cdest.innerHTML = '<option value="">Seleccione...</option>'; ctadest.innerHTML = '<option value="">Seleccione...</option>';
-            }
-            if (nivel === 2) {
-                det.innerHTML = '<option value="">Seleccione...</option>';
-                if (arbolOperaciones[op] && arbolOperaciones[op][tipo.value]) Object.keys(arbolOperaciones[op][tipo.value]).forEach(k => det.innerHTML += `<option value="${k}">${k}</option>`);
-                det.value = ""; corig.innerHTML = '<option value="">Seleccione...</option>'; ctaorig.innerHTML = '<option value="">Seleccione...</option>'; cdest.innerHTML = '<option value="">Seleccione...</option>'; ctadest.innerHTML = '<option value="">Seleccione...</option>';
-            }
-            if (nivel === 3) {
-                corig.innerHTML = '<option value="">Seleccione...</option>';
-                if (arbolOperaciones[op] && arbolOperaciones[op][tipo.value] && arbolOperaciones[op][tipo.value][det.value]) {
-                    Object.keys(arbolOperaciones[op][tipo.value][det.value]).forEach(k => corig.innerHTML += `<option value="${k}">${k}</option>`);
-                }
-                corig.value = ""; ctaorig.innerHTML = '<option value="">Seleccione...</option>'; cdest.innerHTML = '<option value="">Seleccione...</option>'; ctadest.innerHTML = '<option value="">Seleccione...</option>';
-            }
-            if (nivel === 4) {
-                ctaorig.innerHTML = '<option value="">Seleccione...</option>';
-                if (arbolOperaciones[op] && arbolOperaciones[op][tipo.value] && arbolOperaciones[op][tipo.value][det.value] && arbolOperaciones[op][tipo.value][det.value][corig.value]) {
-                    Object.keys(arbolOperaciones[op][tipo.value][det.value][corig.value]).forEach(k => ctaorig.innerHTML += `<option value="${k}" title="${k}">${k.substring(0, 45)}...</option>`);
-                }
-                ctaorig.value = ""; cdest.innerHTML = '<option value="">Seleccione...</option>'; ctadest.innerHTML = '<option value="">Seleccione...</option>';
-            }
-            if (nivel === 5) {
-                cdest.innerHTML = '<option value="">Seleccione...</option>';
-                if (arbolOperaciones[op] && arbolOperaciones[op][tipo.value] && arbolOperaciones[op][tipo.value][det.value] && arbolOperaciones[op][tipo.value][det.value][corig.value] && arbolOperaciones[op][tipo.value][det.value][corig.value][ctaorig.value]) {
-                    Object.keys(arbolOperaciones[op][tipo.value][det.value][corig.value][ctaorig.value]).forEach(k => cdest.innerHTML += `<option value="${k}">${k}</option>`);
-                }
-                cdest.value = ""; ctadest.innerHTML = '<option value="">Seleccione...</option>';
-            }
-            if (nivel === 6) {
-                ctadest.innerHTML = '<option value="">Seleccione...</option>';
-                const lista = arbolOperaciones[op]?.[tipo.value]?.[det.value]?.[corig.value]?.[ctaorig.value]?.[cdest.value];
-                if (lista) lista.forEach(k => ctadest.innerHTML += `<option value="${k}" title="${k}">${k.substring(0, 45)}...</option>`);
-            }
+            const op = document.getElementById('f-op').value; const tipo = document.getElementById('f-tipo'); const det = document.getElementById('f-det');
+            const corig = document.getElementById('f-corig'); const ctaorig = document.getElementById('f-ctaorig'); const cdest = document.getElementById('f-cdest'); const ctadest = document.getElementById('f-ctadest');
+            if (nivel === 1) { tipo.innerHTML = '<option value="">Seleccione...</option>'; if (arbolOperaciones[op]) Object.keys(arbolOperaciones[op]).forEach(k => tipo.innerHTML += `<option value="${k}">${k}</option>`); tipo.value = ""; det.innerHTML = '<option value="">Seleccione...</option>'; corig.innerHTML = '<option value="">Seleccione...</option>'; ctaorig.innerHTML = '<option value="">Seleccione...</option>'; cdest.innerHTML = '<option value="">Seleccione...</option>'; ctadest.innerHTML = '<option value="">Seleccione...</option>'; }
+            if (nivel === 2) { det.innerHTML = '<option value="">Seleccione...</option>'; if (arbolOperaciones[op] && arbolOperaciones[op][tipo.value]) Object.keys(arbolOperaciones[op][tipo.value]).forEach(k => det.innerHTML += `<option value="${k}">${k}</option>`); det.value = ""; corig.innerHTML = '<option value="">Seleccione...</option>'; ctaorig.innerHTML = '<option value="">Seleccione...</option>'; cdest.innerHTML = '<option value="">Seleccione...</option>'; ctadest.innerHTML = '<option value="">Seleccione...</option>'; }
+            if (nivel === 3) { corig.innerHTML = '<option value="">Seleccione...</option>'; if (arbolOperaciones[op] && arbolOperaciones[op][tipo.value] && arbolOperaciones[op][tipo.value][det.value]) Object.keys(arbolOperaciones[op][tipo.value][det.value]).forEach(k => corig.innerHTML += `<option value="${k}">${k}</option>`); corig.value = ""; ctaorig.innerHTML = '<option value="">Seleccione...</option>'; cdest.innerHTML = '<option value="">Seleccione...</option>'; ctadest.innerHTML = '<option value="">Seleccione...</option>'; }
+            if (nivel === 4) { ctaorig.innerHTML = '<option value="">Seleccione...</option>'; if (arbolOperaciones[op] && arbolOperaciones[op][tipo.value] && arbolOperaciones[op][tipo.value][det.value] && arbolOperaciones[op][tipo.value][det.value][corig.value]) Object.keys(arbolOperaciones[op][tipo.value][det.value][corig.value]).forEach(k => ctaorig.innerHTML += `<option value="${k}" title="${k}">${k.substring(0, 45)}...</option>`); ctaorig.value = ""; cdest.innerHTML = '<option value="">Seleccione...</option>'; ctadest.innerHTML = '<option value="">Seleccione...</option>'; }
+            if (nivel === 5) { cdest.innerHTML = '<option value="">Seleccione...</option>'; if (arbolOperaciones[op] && arbolOperaciones[op][tipo.value] && arbolOperaciones[op][tipo.value][det.value] && arbolOperaciones[op][tipo.value][det.value][corig.value] && arbolOperaciones[op][tipo.value][det.value][corig.value][ctaorig.value]) Object.keys(arbolOperaciones[op][tipo.value][det.value][corig.value][ctaorig.value]).forEach(k => cdest.innerHTML += `<option value="${k}">${k}</option>`); cdest.value = ""; ctadest.innerHTML = '<option value="">Seleccione...</option>'; }
+            if (nivel === 6) { ctadest.innerHTML = '<option value="">Seleccione...</option>'; const lista = arbolOperaciones[op]?.[tipo.value]?.[det.value]?.[corig.value]?.[ctaorig.value]?.[cdest.value]; if (lista) lista.forEach(k => ctadest.innerHTML += `<option value="${k}" title="${k}">${k.substring(0, 45)}...</option>`); }
         }
 
         function renderizarTabla() {
             const ops = typeof obtenerOperacionesActivas === 'function' ? obtenerOperacionesActivas() : obtenerOperaciones();
-            const hoy = new Date().toLocaleDateString();
+            const hoy = new Date().toLocaleDateString('es-CO');
+            const filtroVal = document.getElementById('filtro-fecha')?.value;
             
-            const opsDelDia = ops.filter(o => {
+            const opsFiltradas = ops.filter(o => {
+                if (filtroVal) return coincideFechaFiltro(o);
                 const fechaOp = o.fechaRadicacion || (o.historial && o.historial[0] ? o.historial[0].fecha.split(' - ')[0] : '');
                 return fechaOp === hoy;
             }).sort((a, b) => (a.prioridad || 2) - (b.prioridad || 2));
 
             const tb = document.getElementById('tabla-solicitante');
             tb.innerHTML = '';
-            if(opsDelDia.length === 0) {
-                tb.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#64748B; padding: 30px;">No hay radicaciones registradas el día de hoy (${hoy}). Ve a <strong>Historial y Expedientes</strong> para consultar días anteriores.</td></tr>`;
+            if(opsFiltradas.length === 0) {
+                tb.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#64748B; padding: 30px;">No hay operaciones para la fecha seleccionada.</td></tr>`;
                 return;
             }
             
-            opsDelDia.forEach(o => {
-                const prioBadge = o.prioridad === 1 
-                    ? '<span class="badge" style="background:#FEE2E2; color:#991B1B; border:1px solid #FECACA;">🔥 1 - Alta</span>' 
-                    : o.prioridad === 3 
-                    ? '<span class="badge" style="background:#F1F5F9; color:#475569; border:1px solid #CBD5E1;">☕ 3 - Baja</span>' 
-                    : '<span class="badge" style="background:#FEF3C7; color:#92400E; border:1px solid #FDE68A;">⚡ 2 - Media</span>';
-
+            opsFiltradas.forEach(o => {
+                const prioBadge = o.prioridad === 1 ? '<span class="badge" style="background:#FEE2E2; color:#991B1B;">🔥 1 - Alta</span>' : o.prioridad === 3 ? '<span class="badge" style="background:#F1F5F9; color:#475569;">☕ 3 - Baja</span>' : '<span class="badge" style="background:#FEF3C7; color:#92400E;">⚡ 2 - Media</span>';
                 tb.innerHTML += `<tr>
                     <td><strong>${o.radicado}</strong><br>${prioBadge}</td>
+                    <td style="font-size:12px; font-weight:700; color:#475569;">📅 ${o.fechaRadicacion || hoy}</td>
                     <td>${o.tipo}<br><span class="badge badge-opex" style="margin-top:3px;">${o.detalle || 'General'}</span></td>
                     <td style="font-size:11px;">${o.empresa} ➔ ${o.compDestino || 'N/A'}<br><span style="color:#64748B;">Cta Dest: ${(o.ctaDestino||'').substring(0,25)}...</span></td>
                     <td><strong>$ ${o.montoSol.toLocaleString()}</strong> <span class="badge badge-moneda">${o.moneda}</span></td>
-                    <td><span class="badge badge-estado-pendiente">${o.estado}</span></td>
+                    <td>${obtenerBadgeEstado(o.estado)}</td>
                     <td><button class="btn btn-detalle" onclick="auditarRadicado('${o.radicado}')">🔍 Expediente</button></td>
                 </tr>`;
             });
         }
 
-        // ==========================================
-        // GENERADOR CON CONTADOR HISTÓRICO SECUENCIAL
-        // ==========================================
         function crearOperacionRelacional() {
             const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : [];
-            
             const opNombre = document.getElementById('f-op').value || "OPER";
             const pref = opNombre.normalize("NFD").replace(/[\u0300-\u036f]/g, "").substring(0, 4).toUpperCase();
-            
             const hoyObj = new Date();
             const dd = String(hoyObj.getDate()).padStart(2, '0');
             const mm = String(hoyObj.getMonth() + 1).padStart(2, '0');
             const yy = String(hoyObj.getFullYear()).slice(-2);
-            
-            // Consecutivo histórico basado en el total de operaciones registradas en el sistema
             const numRegistro = String(ops.length + 1).padStart(4, '0');
-            
-            // Formato final: TRAS-22/07-26-0004
             const rad = `${pref}-${dd}/${mm}-${yy}-${numRegistro}`;
             
-            const tipo = document.getElementById('f-tipo').value;
-            const det = document.getElementById('f-det').value;
-            const corig = document.getElementById('f-corig').value;
-            const ctaorig = document.getElementById('f-ctaorig').value;
-            const cdest = document.getElementById('f-cdest').value;
-            const ctadest = document.getElementById('f-ctadest').value;
-            const monto = parseFloat(document.getElementById('f-monto').value);
-            const prio = parseInt(document.getElementById('f-prio').value || 2);
-            const hoy = new Date().toLocaleDateString();
+            const tipo = document.getElementById('f-tipo').value; const det = document.getElementById('f-det').value;
+            const corig = document.getElementById('f-corig').value; const ctaorig = document.getElementById('f-ctaorig').value;
+            const cdest = document.getElementById('f-cdest').value; const ctadest = document.getElementById('f-ctadest').value;
+            const monto = parseFloat(document.getElementById('f-monto').value); const prio = parseInt(document.getElementById('f-prio').value || 2);
+            const hoy = new Date().toLocaleDateString('es-CO'); const hoyISO = obtenerFechaISO();
             
             const usrData = sessionStorage.getItem('usuarioLogueado');
             const usr = usrData ? JSON.parse(usrData) : { pais: "Colombia", correo: "lau@bold.co" };
 
-            if(!tipo || !det || !ctaorig || !ctadest || !monto) return alert("⚠️ Selecciona toda la ruta relacional (Origen ➔ Destino) y un monto válido.");
+            if(!tipo || !det || !ctaorig || !ctadest || !monto) return alert("⚠️ Selecciona toda la ruta relacional y un monto válido.");
 
             ops.unshift({
                 radicado: rad, pais: usr.pais, empresa: corig, compDestino: cdest,
                 tipo: tipo, detalle: det, ctaOrigen: ctaorig, ctaDestino: ctadest,
                 solicitante: usr.correo, montoSol: monto, montoPrep: monto, moneda: document.getElementById('f-mon').value,
                 registros: 1, ans: prio === 1 ? "1 Hora" : prio === 3 ? "4 Horas" : "2 Horas", 
-                estado: "Pendiente Validación", prioridad: prio, fechaRadicacion: hoy,
-                historial: [{ fecha: hoy + " - " + obtenerHoraMilitar(), paso: "1. RADICACIÓN RELACIONAL", detalle: `Ruta: ${corig} ➔ ${cdest} (${det}). Prioridad asignada: ${prio}. Registro histórico #${numRegistro}.` }]
+                estado: "Pendiente Validación", prioridad: prio, fechaRadicacion: hoy, fechaISO: hoyISO,
+                historial: [{ fecha: obtenerFechaHoraMilitar(), paso: "1. RADICACIÓN RELACIONAL", detalle: `Ruta: ${corig} ➔ ${cdest} (${det}). Prioridad asignada: ${prio}. Registro histórico #${numRegistro}.` }]
             });
             if (typeof guardarOperaciones === 'function') guardarOperaciones(ops);
             alert(`✅ Radicado ${rad} creado exitosamente con Prioridad ${prio}.`);

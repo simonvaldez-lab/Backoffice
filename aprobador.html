@@ -10,11 +10,21 @@
             <div class="menu-categoria">Ejecución</div><a href="preparador.html" class="menu-item">Ejecución Banco</a>
         </aside>
         <main class="contenido">
-            <h1 class="titulo-seccion">Bandeja de Aprobador</h1>
-            <p class="subtitulo">Auditoría cruzada: Contraste visual de soportes originales vs capturas de pantalla de la operación.</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <div>
+                    <h1 class="titulo-seccion" style="margin: 0;">Bandeja de Aprobador</h1>
+                    <p class="subtitulo" style="margin: 4px 0 0 0;">Auditoría cruzada: Contraste visual y autorización definitiva.</p>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center; background: white; padding: 6px 12px; border-radius: 8px; border: 1px solid #CBD5E1;">
+                    <label style="font-size: 12px; font-weight: bold; color: #0B1442; margin: 0;">📅 Filtrar por Fecha:</label>
+                    <input type="date" id="filtro-fecha" class="form-control" style="width: 140px; padding: 4px 8px; height: 32px;" onchange="renderizarTabla()">
+                    <button class="btn btn-detalle" onclick="limpiarFiltroFecha()" style="padding: 4px 10px; height: 32px;">Limpiar</button>
+                </div>
+            </div>
+            
             <div class="tabla-contenedor">
                 <table>
-                    <thead><tr><th>Control ANS / Radicado</th><th>Compañía & Operación</th><th>Solicitante</th><th>Valor Auditado</th><th>Registros</th><th>Acciones</th></tr></thead>
+                    <thead><tr><th>Control ANS / Radicado</th><th>Fecha</th><th>Compañía & Operación</th><th>Solicitante</th><th>Valor Auditado</th><th>Estado</th><th>Acciones</th></tr></thead>
                     <tbody id="tabla-aprobador"></tbody>
                 </table>
             </div>
@@ -26,21 +36,22 @@
     <script>
         function renderizarTabla() {
             const ops = typeof obtenerOperacionesActivas === 'function' ? obtenerOperacionesActivas() : obtenerOperaciones();
-            const cola = ops.filter(o => o.estado === "En Aprobación");
+            const cola = ops.filter(o => o.estado === "En Aprobación" && coincideFechaFiltro(o));
             const tb = document.getElementById('tabla-aprobador');
             tb.innerHTML = '';
-            if(cola.length === 0) { tb.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#64748B; padding:30px;">No hay radicados en cola de aprobación.</td></tr>'; return; }
+            if(cola.length === 0) { tb.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#64748B; padding:30px;">No hay radicados en cola para esta fecha.</td></tr>'; return; }
             cola.forEach(o => {
                 const prioBadge = o.prioridad === 1 ? '<span class="badge" style="background:#FEE2E2; color:#991B1B;">🔥 1 - Alta</span>' : o.prioridad === 3 ? '<span class="badge" style="background:#F1F5F9; color:#475569;">☕ 3 - Baja</span>' : '<span class="badge" style="background:#FEF3C7; color:#92400E;">⚡ 2 - Media</span>';
                 tb.innerHTML += `<tr>
                     <td><div class="semaforo-caja"><span class="luz"></span> ANS: ${o.ans}</div><br><strong>${o.radicado}</strong><br>${prioBadge}</td>
+                    <td style="font-size:12px; font-weight:700; color:#475569;">📅 ${o.fechaRadicacion || ''}</td>
                     <td>${o.empresa}<br><span class="badge badge-opex" style="margin-top:4px;">${o.tipo}</span></td>
                     <td>${o.solicitante}</td>
                     <td><strong>$ ${o.montoPrep.toLocaleString()}</strong> <span class="badge badge-moneda">${o.moneda}</span></td>
-                    <td>${o.registros}</td>
+                    <td>${obtenerBadgeEstado(o.estado)}</td>
                     <td style="display: flex; gap: 8px;">
                         <button class="btn btn-detalle" onclick="auditarRadicado('${o.radicado}')">🔍 Auditar</button>
-                        <button class="btn btn-aprobar" onclick="cambiarEstado('${o.radicado}', 'Listo para Banco')">✓</button>
+                        <button class="btn btn-aprobar" onclick="cambiarEstado('${o.radicado}', 'Listo para Banco')">✓ Autorizar</button>
                         <button class="btn btn-rechazar" onclick="cambiarEstado('${o.radicado}', 'Rechazado')">✕</button>
                     </td>
                 </tr>`;
