@@ -13,7 +13,7 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <div>
                     <h1 class="titulo-seccion" style="margin: 0;">Dispersión en Portal Bancario (CUD)</h1>
-                    <p class="subtitulo" style="margin: 4px 0 0 0;">Descarga layout, sube soporte y confirma transferencias.</p>
+                    <p class="subtitulo" style="margin: 4px 0 0 0;">Descarga layout, sube soporte y confirma transferencias. <strong style="color:#D97706;">🔒 Aparta operaciones para evitar dispersiones duplicadas.</strong></p>
                 </div>
                 <div style="display: flex; gap: 8px; align-items: center; background: white; padding: 6px 12px; border-radius: 8px; border: 1px solid #CBD5E1;">
                     <label style="font-size: 12px; font-weight: bold; color: #0B1442; margin: 0;">📅 Filtrar por Fecha:</label>
@@ -24,7 +24,7 @@
             
             <div class="tabla-contenedor">
                 <table>
-                    <thead><tr><th>Control ANS / Radicado</th><th>Fecha</th><th>Compañía & Gasto</th><th>Valor a Transferir</th><th>Estado</th><th>Soporte Banco</th><th>Acción Banco</th></tr></thead>
+                    <thead><tr><th>Control ANS / Radicado</th><th>Fecha</th><th>Compañía & Gasto</th><th>Valor a Transferir</th><th>Titularidad (Candado)</th><th>Soporte Banco</th><th>Acción Banco</th></tr></thead>
                     <tbody id="tabla-preparador"></tbody>
                 </table>
             </div>
@@ -38,29 +38,62 @@
             const ops = typeof obtenerOperacionesActivas === 'function' ? obtenerOperacionesActivas() : obtenerOperaciones();
             const listos = ops.filter(o => o.estado === "Listo para Banco" && coincideFechaFiltro(o));
             const tb = document.getElementById('tabla-preparador');
+            const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}');
+            
             tb.innerHTML = '';
             if(listos.length === 0) { tb.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#64748B; padding:30px;">No hay dispersiones pendientes para esta fecha.</td></tr>'; return; }
+            
             listos.forEach(o => {
                 const prioBadge = o.prioridad === 1 ? '<span class="badge" style="background:#FEE2E2; color:#991B1B;">🔥 1 - Alta</span>' : o.prioridad === 3 ? '<span class="badge" style="background:#F1F5F9; color:#475569;">☕ 3 - Baja</span>' : '<span class="badge" style="background:#FEF3C7; color:#92400E;">⚡ 2 - Media</span>';
+                
+                let candadoHtml = "";
+                let btnDispersarStyle = "background:#15803D;";
+                let btnDispersarAttr = "";
+                
+                if (o.apartadaPor) {
+                    candadoHtml = `<span style="background:#FEF3C7; color:#92400E; border:1px solid #FDE68A; padding:5px 8px; border-radius:6px; font-size:11px; font-weight:bold; display:inline-block;">🔒 Apartada: ${o.apartadaPor}</span>`;
+                    if (o.apartadaPor !== (usr.nombre || usr.correo) && usr.rol !== 'maestro') {
+                        btnDispersarStyle = "background:#94A3B8; cursor:not-allowed;";
+                        btnDispersarAttr = "disabled title='Bloqueado por otro analista preparador'";
+                    }
+                } else {
+                    candadoHtml = `<button class="btn" style="background:#FEF9C3; color:#A16207; border:1px dashed #CA8A04;" onclick="apartarRadicado('${o.radicado}')">🔓 Apartar (Bloquear)</button>`;
+                }
+
                 tb.innerHTML += `<tr>
                     <td><strong>${o.radicado}</strong><br>${prioBadge}</td>
                     <td style="font-size:12px; font-weight:700; color:#475569;">📅 ${o.fechaRadicacion || ''}</td>
                     <td>${o.empresa}<br><span class="badge badge-opex" style="margin-top:3px;">${o.tipo}</span></td>
                     <td><strong>$ ${o.montoPrep.toLocaleString()}</strong> <span class="badge badge-moneda">${o.moneda}</span></td>
-                    <td>${obtenerBadgeEstado(o.estado)}</td>
+                    <td>${candadoHtml}</td>
                     <td><button class="btn btn-detalle" onclick="auditarRadicado('${o.radicado}')">📄 Subir Screen</button></td>
-                    <td><button class="btn btn-primario" style="background:#15803D;" onclick="cambiarEstado('${o.radicado}', 'Dispersado en Banco')">🚀 Confirmar Transferencia</button></td>
+                    <td><button class="btn btn-primario" style="${btnDispersarStyle}" ${btnDispersarAttr} onclick="confirmarPagoFinal('${o.radicado}')">🚀 Confirmar Pago</button></td>
                 </tr>`;
             });
         }
-        function cambiarEstado(rad, est) {
+
+        // CIERRE DEFINITIVO DE COMPROBANTE Y SILENCIO OPERATIVO
+        function confirmarPagoFinal(rad) {
             const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : [];
             const op = ops.find(o => o.radicado === rad);
+            const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}');
+
             if(op) {
-                op.estado = est;
-                op.historial.push({ fecha: obtenerFechaHoraMilitar(), paso: "4. DISPERSIÓN BANCARIA COMPLETE", detalle: "Transferencia ejecutada en hora militar 24h por Felipe (Preparador)." });
+                op.estado = "Pagada (Comprobante Cerrado)";
+                op.enTransito = false;         // Detiene el ciclo de vida en tránsito
+                op.comprobanteCerrado = true;  // Bloquea futuras modificaciones y notificaciones
+                
+                op.historial.push({ 
+                    fecha: obtenerFechaHoraMilitar(), 
+                    paso: "4. DISPERSIÓN BANCARIA COMPLETE (PAGADA)", 
+                    detalle: `Transferencia ejecutada por ${usr.nombre || 'Preparador'}. Comprobante cerrado, notificaciones finalizadas.` 
+                });
+                
                 guardarOperaciones(ops);
-                alert("¡Lote dispersado con éxito! Registro completado.");
+                // El tercer parámetro 'true' indica que es la última alerta de cierre antes del silencio operativo
+                crearNotificacion(rad, `🏁 ¡PAGO CERRADO! El radicado ${rad} quedó Pagado en banco. Comprobante cerrado.`, true);
+                
+                alert(`✅ ¡Operación Pagada con éxito!\nEl comprobante de ${rad} ha sido cerrado y ya no generará alertas en el sistema.`);
                 renderizarTabla();
             }
         }
