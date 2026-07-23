@@ -38,7 +38,11 @@ function conectarFirestore() {
         firebase.initializeApp(firebaseConfig);
         // CONEXIÓN ESPECÍFICA A TU BASE DE DATOS "treasurybackoffice"
         window.dbFirestore = firebase.app().firestore("treasurybackoffice");
-        console.log("🟢 FIREBASE CONECTADO a la base de datos: treasurybackoffice");
+        console.log("🟢 FIREBASE CONECTADO OK"); 
+        const chivato = document.createElement("div"); 
+        chivato.style = "position:fixed; bottom:10px; right:10px; background:#15803D; color:white; padding:8px 15px; border-radius:20px; font-size:12px; font-weight:bold; z-index:99999; box-shadow: 0 4px 12px rgba(0,0,0,0.2);"; 
+        chivato.innerText = "🟢 Nube Firebase: CONECTADA (treasurybackoffice)"; 
+        document.body.appendChild(chivato);
 
         // 1. ESCUCHADOR EN TIEMPO REAL: OPERACIONES
         window.dbFirestore.collection("operaciones").onSnapshot(snapshot => {
@@ -65,7 +69,8 @@ function conectarFirestore() {
         });
 
     } catch (e) {
-        console.error("❌ Error al inicializar Firebase Firestore:", e);
+        console.error("❌ Error Firebase:", e); 
+        alert("🚨 ERROR DE FIREBASE: " + e.message);
     }
 }
 
