@@ -354,7 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
             "solicitante": ["solicitante.html", "historial.html"],
             "validador": ["validador.html", "historial.html"],
             "aprobador": ["aprobador.html", "historial.html"],
-            "preparador": ["preparador.html", "historial.html"]
+            "preparador": ["validador.html", "preparador.html", "historial.html"]
         };
 
         if (!permisos[usuario.rol].includes(rutaActual)) {

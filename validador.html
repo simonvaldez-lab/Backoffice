@@ -6,14 +6,14 @@
     <div class="contenedor-principal">
         <aside class="sidebar">
             <div class="menu-categoria">Operaciones</div><a href="solicitante.html" class="menu-item">Carga de Operaciones</a><a href="historial.html" class="menu-item">Historial y Expedientes</a>
-            <div class="menu-categoria">Validación y Aprobación</div><a href="validador.html" class="menu-item activo">Validación (Compliance)</a><a href="aprobador.html" class="menu-item">Bandeja de Aprobador</a>
-            <div class="menu-categoria">Ejecución</div><a href="preparador.html" class="menu-item">Ejecución Banco</a>
+            <div class="menu-categoria">Validación y Ejecución</div><a href="validador.html" class="menu-item activo">Validación (Compliance)</a><a href="preparador.html" class="menu-item">Ejecución Banco</a>
+            <div class="menu-categoria">Cierre Final</div><a href="aprobador.html" class="menu-item">Bandeja de Aprobador</a>
         </aside>
         <main class="contenido">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <div>
-                    <h1 class="titulo-seccion" style="margin: 0;">Validación Compliance</h1>
-                    <p class="subtitulo" style="margin: 4px 0 0 0;">Revisa soportes KYC y aprueba para pasar a Kate.</p>
+                    <h1 class="titulo-seccion" style="margin: 0;">Paso 1: Validación y Revisión KYC</h1>
+                    <p class="subtitulo" style="margin: 4px 0 0 0;">Revisa que los soportes y cuentas sean correctos antes de pasar al montaje en el portal bancario.</p>
                 </div>
                 <div style="display: flex; gap: 8px; align-items: center; background: white; padding: 6px 12px; border-radius: 8px; border: 1px solid #CBD5E1;">
                     <label style="font-size: 12px; font-weight: bold; color: #0B1442; margin: 0;">📅 Filtrar por Fecha:</label>
@@ -24,7 +24,7 @@
             
             <div class="tabla-contenedor">
                 <table>
-                    <thead><tr><th>Control ANS / Radicado</th><th>Fecha</th><th>Compañía & Tipo</th><th>Solicitante</th><th>Valor Radicado</th><th>Estado</th><th>Acciones Compliance</th></tr></thead>
+                    <thead><tr><th>Control ANS / Radicado</th><th>Fecha</th><th>Compañía & Tipo</th><th>Solicitante</th><th>Valor Radicado</th><th>Estado</th><th>Acción Preparador</th></tr></thead>
                     <tbody id="tabla-validador"></tbody>
                 </table>
             </div>
@@ -39,7 +39,7 @@
             const pendientes = ops.filter(o => o.estado === "Pendiente Validación" && coincideFechaFiltro(o));
             const tb = document.getElementById('tabla-validador');
             tb.innerHTML = '';
-            if(pendientes.length === 0) { tb.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#64748B; padding:30px;">No hay radicados pendientes para esta fecha.</td></tr>'; return; }
+            if(pendientes.length === 0) { tb.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#64748B; padding:30px;">No hay radicados pendientes de validación para esta fecha.</td></tr>'; return; }
             pendientes.forEach(o => {
                 const prioBadge = o.prioridad === 1 ? '<span class="badge" style="background:#FEE2E2; color:#991B1B;">🔥 1 - Alta</span>' : o.prioridad === 3 ? '<span class="badge" style="background:#F1F5F9; color:#475569;">☕ 3 - Baja</span>' : '<span class="badge" style="background:#FEF3C7; color:#92400E;">⚡ 2 - Media</span>';
                 tb.innerHTML += `<tr>
@@ -51,20 +51,23 @@
                     <td>${obtenerBadgeEstado(o.estado)}</td>
                     <td style="display: flex; gap: 8px;">
                         <button class="btn btn-detalle" onclick="auditarRadicado('${o.radicado}')">🔍 Auditar</button>
-                        <button class="btn btn-aprobar" onclick="cambiarEstado('${o.radicado}', 'En Aprobación')">✓ Validar</button>
+                        <button class="btn btn-aprobar" style="background:#2563EB;" onclick="cambiarEstado('${o.radicado}', 'Listo para Banco')">✓ Autorizar para Banco</button>
                         <button class="btn btn-rechazar" onclick="cambiarEstado('${o.radicado}', 'Rechazado')">✕ Devolver</button>
                     </td>
                 </tr>`;
             });
         }
+        function changingEstado(rad, est) { changingEstado(rad, est); }
         function cambiarEstado(rad, est) {
             const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : [];
             const op = ops.find(o => o.radicado === rad);
+            const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}');
             if(op) {
                 op.estado = est;
-                op.historial.push({ fecha: obtenerFechaHoraMilitar(), paso: "2. COMPLIANCE (" + est.toUpperCase() + ")", detalle: "Revisión completada en hora militar 24h por María (Validador)." });
+                op.historial.push({ fecha: obtenerFechaHoraMilitar(), paso: "2. VALIDACIÓN KYC COMPLETA", detalle: `Revisión de soportes aprobada por ${usr.nombre || 'Preparador'}. Pasa a pestaña Ejecución Banco.` });
                 guardarOperaciones(ops);
-                alert("Radicado " + rad + " movido a: " + est);
+                crearNotificacion(rad, `➡️ ¡VALIDADO! El radicado ${rad} fue verificado por ${usr.nombre || 'Preparador'} y está Listo para Banco.`);
+                alert("✅ Radicado validado con éxito.\nAhora haz clic en el menú izquierdo en 'Ejecución Banco' para proceder con el montaje del pago.");
                 renderizarTabla();
             }
         }

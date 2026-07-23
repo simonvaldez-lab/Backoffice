@@ -6,14 +6,14 @@
     <div class="contenedor-principal">
         <aside class="sidebar">
             <div class="menu-categoria">Operaciones</div><a href="solicitante.html" class="menu-item">Carga de Operaciones</a><a href="historial.html" class="menu-item">Historial y Expedientes</a>
-            <div class="menu-categoria">Validación y Aprobación</div><a href="validador.html" class="menu-item">Validación (Compliance)</a><a href="aprobador.html" class="menu-item activo">Bandeja de Aprobador</a>
-            <div class="menu-categoria">Ejecución</div><a href="preparador.html" class="menu-item">Ejecución Banco</a>
+            <div class="menu-categoria">Validación y Ejecución</div><a href="validador.html" class="menu-item">Validación (Compliance)</a><a href="preparador.html" class="menu-item">Ejecución Banco</a>
+            <div class="menu-categoria">Cierre Final</div><a href="aprobador.html" class="menu-item activo">Bandeja de Aprobador</a>
         </aside>
         <main class="contenido">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <div>
-                    <h1 class="titulo-seccion" style="margin: 0;">Bandeja de Aprobador</h1>
-                    <p class="subtitulo" style="margin: 4px 0 0 0;">Auditoría cruzada: Contraste visual y autorización definitiva.</p>
+                    <h1 class="titulo-seccion" style="margin: 0;">Paso 3: Check Final y Cierre de Comprobante</h1>
+                    <p class="subtitulo" style="margin: 4px 0 0 0;">Control dual: Revisa la captura de pantalla del montaje bancario, autoriza la liberación definitiva del pago y cierra el comprobante.</p>
                 </div>
                 <div style="display: flex; gap: 8px; align-items: center; background: white; padding: 6px 12px; border-radius: 8px; border: 1px solid #CBD5E1;">
                     <label style="font-size: 12px; font-weight: bold; color: #0B1442; margin: 0;">📅 Filtrar por Fecha:</label>
@@ -24,7 +24,7 @@
             
             <div class="tabla-contenedor">
                 <table>
-                    <thead><tr><th>Control ANS / Radicado</th><th>Fecha</th><th>Compañía & Operación</th><th>Solicitante</th><th>Valor Auditado</th><th>Estado</th><th>Acciones</th></tr></thead>
+                    <thead><tr><th>Control ANS / Radicado</th><th>Fecha</th><th>Compañía & Operación</th><th>Solicitante</th><th>Valor Montado</th><th>Estado</th><th>Acción Check Final</th></tr></thead>
                     <tbody id="tabla-aprobador"></tbody>
                 </table>
             </div>
@@ -39,7 +39,7 @@
             const cola = ops.filter(o => o.estado === "En Aprobación" && coincideFechaFiltro(o));
             const tb = document.getElementById('tabla-aprobador');
             tb.innerHTML = '';
-            if(cola.length === 0) { tb.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#64748B; padding:30px;">No hay radicados en cola para esta fecha.</td></tr>'; return; }
+            if(cola.length === 0) { tb.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#64748B; padding:30px;">No hay radicados en cola de Check Final para esta fecha.</td></tr>'; return; }
             cola.forEach(o => {
                 const prioBadge = o.prioridad === 1 ? '<span class="badge" style="background:#FEE2E2; color:#991B1B;">🔥 1 - Alta</span>' : o.prioridad === 3 ? '<span class="badge" style="background:#F1F5F9; color:#475569;">☕ 3 - Baja</span>' : '<span class="badge" style="background:#FEF3C7; color:#92400E;">⚡ 2 - Media</span>';
                 tb.innerHTML += `<tr>
@@ -51,20 +51,48 @@
                     <td>${obtenerBadgeEstado(o.estado)}</td>
                     <td style="display: flex; gap: 8px;">
                         <button class="btn btn-detalle" onclick="auditarRadicado('${o.radicado}')">🔍 Auditar</button>
-                        <button class="btn btn-aprobar" onclick="cambiarEstado('${o.radicado}', 'Listo para Banco')">✓ Autorizar</button>
-                        <button class="btn btn-rechazar" onclick="cambiarEstado('${o.radicado}', 'Rechazado')">✕</button>
+                        <button class="btn btn-primario" style="background:#15803D;" onclick="confirmarPagoFinal('${o.radicado}')">🏁 Check Final (Cerrar)</button>
+                        <button class="btn btn-rechazar" onclick="cambiarEstadoRechazo('${o.radicado}', 'Rechazado')">✕ Devolver</button>
                     </td>
                 </tr>`;
             });
         }
-        function cambiarEstado(rad, est) {
+
+        // CIERRE DEFINITIVO Y LIBERACIÓN DEL PAGO
+        function confirmarPagoFinal(rad) {
+            const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : [];
+            const op = ops.find(o => o.radicado === rad);
+            const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}');
+
+            if(op) {
+                op.estado = "Pagada (Comprobante Cerrado)";
+                op.enTransito = false;         // Detiene el ciclo en tránsito
+                op.comprobanteCerrado = true;  // Bloquea futuras modificaciones y notificaciones
+                
+                op.historial.push({ 
+                    fecha: obtenerFechaHoraMilitar(), 
+                    paso: "4. CHECK FINAL Y LIBERACIÓN (PAGADA)", 
+                    detalle: `Liberación final y cierre de comprobante ejecutado por ${usr.nombre || 'Aprobador'}. Operación finalizada con éxito.` 
+                });
+                
+                guardarOperaciones(ops);
+                crearNotificacion(rad, `🏁 ¡PAGO CERRADO! El radicado ${rad} superó el Check Final de Kate (Aprobador) y quedó Pagado en banco.`, true);
+                
+                alert(`✅ ¡Check Final Exitoso!\nEl pago de ${rad} ha sido liberado en el banco y el comprobante está cerrado.`);
+                renderizarTabla();
+            }
+        }
+
+        function changingEstadoRechazo(rad, est) { changingEstadoRechazo(rad, est); }
+        function changingEstadoRechazo(rad, est) {
             const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : [];
             const op = ops.find(o => o.radicado === rad);
             if(op) {
                 op.estado = est;
-                op.historial.push({ fecha: obtenerFechaHoraMilitar(), paso: "3. CIERRE DEFINITIVO (" + est.toUpperCase() + ")", detalle: "Autorizado en hora militar 24h por Kate (Aprobador)." });
+                op.historial.push({ fecha: obtenerFechaHoraMilitar(), paso: "4. CHECK FINAL RECHAZADO", detalle: "Diferencia encontrada en control dual por Aprobador. Devuelto." });
                 guardarOperaciones(ops);
-                alert("Radicado " + rad + " autorizado. Pasa a Felipe (Banco).");
+                crearNotificacion(rad, `🚨 ¡ATENCIÓN! El radicado ${rad} fue devuelto por el Aprobador Final.`);
+                alert("Operación devuelta para revisión del Preparador.");
                 renderizarTabla();
             }
         }

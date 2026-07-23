@@ -6,14 +6,14 @@
     <div class="contenedor-principal">
         <aside class="sidebar">
             <div class="menu-categoria">Operaciones</div><a href="solicitante.html" class="menu-item">Carga de Operaciones</a><a href="historial.html" class="menu-item">Historial y Expedientes</a>
-            <div class="menu-categoria">Validación y Aprobación</div><a href="validador.html" class="menu-item">Validación (Compliance)</a><a href="aprobador.html" class="menu-item">Bandeja de Aprobador</a>
-            <div class="menu-categoria">Ejecución</div><a href="preparador.html" class="menu-item activo">Ejecución Banco</a>
+            <div class="menu-categoria">Validación y Ejecución</div><a href="validador.html" class="menu-item">Validación (Compliance)</a><a href="preparador.html" class="menu-item activo">Ejecución Banco</a>
+            <div class="menu-categoria">Cierre Final</div><a href="aprobador.html" class="menu-item">Bandeja de Aprobador</a>
         </aside>
         <main class="contenido">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <div>
-                    <h1 class="titulo-seccion" style="margin: 0;">Dispersión en Portal Bancario (CUD)</h1>
-                    <p class="subtitulo" style="margin: 4px 0 0 0;">Descarga layout, sube soporte y confirma transferencias. <strong style="color:#D97706;">🔒 Aparta operaciones para evitar dispersiones duplicadas.</strong></p>
+                    <h1 class="titulo-seccion" style="margin: 0;">Paso 2: Dispersión en Portal Bancario (CUD)</h1>
+                    <p class="subtitulo" style="margin: 4px 0 0 0;">Aparta el lote, realiza el montaje del pago en el banco y envíalo a Kate (Aprobador) para el Check Final.</p>
                 </div>
                 <div style="display: flex; gap: 8px; align-items: center; background: white; padding: 6px 12px; border-radius: 8px; border: 1px solid #CBD5E1;">
                     <label style="font-size: 12px; font-weight: bold; color: #0B1442; margin: 0;">📅 Filtrar por Fecha:</label>
@@ -24,7 +24,7 @@
             
             <div class="tabla-contenedor">
                 <table>
-                    <thead><tr><th>Control ANS / Radicado</th><th>Fecha</th><th>Compañía & Gasto</th><th>Valor a Transferir</th><th>Titularidad (Candado)</th><th>Soporte Banco</th><th>Acción Banco</th></tr></thead>
+                    <thead><tr><th>Control ANS / Radicado</th><th>Fecha</th><th>Compañía & Gasto</th><th>Valor a Transferir</th><th>Titularidad (Candado)</th><th>Soporte Banco</th><th>Acción Montaje</th></tr></thead>
                     <tbody id="tabla-preparador"></tbody>
                 </table>
             </div>
@@ -41,7 +41,7 @@
             const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}');
             
             tb.innerHTML = '';
-            if(listos.length === 0) { tb.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#64748B; padding:30px;">No hay dispersiones pendientes para esta fecha.</td></tr>'; return; }
+            if(listos.length === 0) { tb.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#64748B; padding:30px;">No hay dispersiones listas para montaje en esta fecha.</td></tr>'; return; }
             
             listos.forEach(o => {
                 const prioBadge = o.prioridad === 1 ? '<span class="badge" style="background:#FEE2E2; color:#991B1B;">🔥 1 - Alta</span>' : o.prioridad === 3 ? '<span class="badge" style="background:#F1F5F9; color:#475569;">☕ 3 - Baja</span>' : '<span class="badge" style="background:#FEF3C7; color:#92400E;">⚡ 2 - Media</span>';
@@ -67,33 +67,29 @@
                     <td><strong>$ ${o.montoPrep.toLocaleString()}</strong> <span class="badge badge-moneda">${o.moneda}</span></td>
                     <td>${candadoHtml}</td>
                     <td><button class="btn btn-detalle" onclick="auditarRadicado('${o.radicado}')">📄 Subir Screen</button></td>
-                    <td><button class="btn btn-primario" style="${btnDispersarStyle}" ${btnDispersarAttr} onclick="confirmarPagoFinal('${o.radicado}')">🚀 Confirmar Pago</button></td>
+                    <td><button class="btn btn-primario" style="${btnDispersarStyle}" ${btnDispersarAttr} onclick="enviarAAprobador('${o.radicado}')">🚀 Montar Pago y Enviar</button></td>
                 </tr>`;
             });
         }
 
-        // CIERRE DEFINITIVO DE COMPROBANTE Y SILENCIO OPERATIVO
-        function confirmarPagoFinal(rad) {
+        // MONTAJE DEL PAGO: ENVÍA AL APROBADOR FINAL
+        function enviarAAprobador(rad) {
             const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : [];
             const op = ops.find(o => o.radicado === rad);
             const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}');
 
             if(op) {
-                op.estado = "Pagada (Comprobante Cerrado)";
-                op.enTransito = false;         // Detiene el ciclo de vida en tránsito
-                op.comprobanteCerrado = true;  // Bloquea futuras modificaciones y notificaciones
-                
+                op.estado = "En Aprobación";
                 op.historial.push({ 
                     fecha: obtenerFechaHoraMilitar(), 
-                    paso: "4. DISPERSIÓN BANCARIA COMPLETE (PAGADA)", 
-                    detalle: `Transferencia ejecutada por ${usr.nombre || 'Preparador'}. Comprobante cerrado, notificaciones finalizadas.` 
+                    paso: "3. MONTAJE EN PORTAL BANCARIO COMPLETE", 
+                    detalle: `Dispersión montada en banco por ${usr.nombre || 'Preparador'}. Enviada al Aprobador Final (Kate) para doble control.` 
                 });
                 
                 guardarOperaciones(ops);
-                // El tercer parámetro 'true' indica que es la última alerta de cierre antes del silencio operativo
-                crearNotificacion(rad, `🏁 ¡PAGO CERRADO! El radicado ${rad} quedó Pagado en banco. Comprobante cerrado.`, true);
+                crearNotificacion(rad, `⏳ ¡MONTAJE REALIZADO! El radicado ${rad} fue montado en el portal bancario por ${usr.nombre || 'Preparador'} y espera Check Final del Aprobador.`);
                 
-                alert(`✅ ¡Operación Pagada con éxito!\nEl comprobante de ${rad} ha sido cerrado y ya no generará alertas en el sistema.`);
+                alert(`🚀 ¡Montaje bancario completado!\nEl radicado ${rad} ha sido enviado a la Bandeja de Aprobador para el Check Final y cierre.`);
                 renderizarTabla();
             }
         }
