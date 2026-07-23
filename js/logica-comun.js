@@ -1,4 +1,79 @@
 // ==========================================
+// 🚀 MOTOR FIREBASE: CONEXIÓN A FIRESTORE ("treasurybackoffice")
+// ==========================================
+
+// 👇 AQUÍ PEGAS TUS LLAVES (Reemplaza los valores entre comillas) 👇
+const firebaseConfig = {
+  apiKey: "AIzaSyBse--Da5Fdrso5bp9rFsUbq_uLcn61HS0",
+  authDomain: "black-hulling-462522-j2.firebaseapp.com",
+  projectId: "black-hulling-462522-j2",
+  storageBucket: "black-hulling-462522-j2.firebasestorage.app",
+  messagingSenderId: "625642864594",
+  appId: "1:625642864594:web:14d656c6f0ba1f5a72d20b",
+  measurementId: "G-ERCH4HEG2H"
+};
+// 👆 ========================================================= 👆
+
+window.dbFirestore = null;
+
+function iniciarMotorNube() {
+    if (firebaseConfig.apiKey === "TU_API_KEY_AQUI" || firebaseConfig.apiKey.includes("xxxx")) {
+        console.warn("⚠️ MODO OFFLINE: Pega tus llaves reales de Firebase en js/logica-comun.js para activar la nube en tiempo real.");
+        return;
+    }
+
+    const scriptApp = document.createElement('script');
+    scriptApp.src = "https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js";
+    scriptApp.onload = () => {
+        const scriptDb = document.createElement('script');
+        scriptDb.src = "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js";
+        scriptDb.onload = conectarFirestore;
+        document.head.appendChild(scriptDb);
+    };
+    document.head.appendChild(scriptApp);
+}
+
+function conectarFirestore() {
+    try {
+        firebase.initializeApp(firebaseConfig);
+        // CONEXIÓN ESPECÍFICA A TU BASE DE DATOS "treasurybackoffice"
+        window.dbFirestore = firebase.app().firestore("treasurybackoffice");
+        console.log("🟢 FIREBASE CONECTADO a la base de datos: treasurybackoffice");
+
+        // 1. ESCUCHADOR EN TIEMPO REAL: OPERACIONES
+        window.dbFirestore.collection("operaciones").onSnapshot(snapshot => {
+            if (snapshot.empty) {
+                // Subir datos iniciales la primera vez que se conecta
+                const locales = JSON.parse(localStorage.getItem('bold_operaciones_bd') || '[]');
+                locales.forEach(op => window.dbFirestore.collection("operaciones").doc(op.radicado).set(op));
+            } else {
+                const opsNube = [];
+                snapshot.forEach(doc => opsNube.push(doc.data()));
+                localStorage.setItem('bold_operaciones_bd', JSON.stringify(opsNube));
+                if (typeof renderizarTabla === 'function') renderizarTabla();
+            }
+        });
+
+        // 2. ESCUCHADOR EN TIEMPO REAL: NOTIFICACIONES
+        window.dbFirestore.collection("notificaciones").orderBy("id", "desc").limit(30).onSnapshot(snapshot => {
+            if (!snapshot.empty) {
+                const notifsNube = [];
+                snapshot.forEach(doc => notifsNube.push(doc.data()));
+                localStorage.setItem('bold_notificaciones_bd', JSON.stringify(notifsNube));
+                if (typeof renderizarNotificacionesUI === 'function') renderizarNotificacionesUI();
+            }
+        });
+
+    } catch (e) {
+        console.error("❌ Error al inicializar Firebase Firestore:", e);
+    }
+}
+
+iniciarMotorNube();
+
+
+
+// ==========================================
 // 0. GENERADORES DE FECHA Y HORA MILITAR (24H)
 // ==========================================
 function obtenerHoraMilitar() {
@@ -421,3 +496,10 @@ const arbolOperaciones = {
     }
   }
 };
+function guardarOperaciones(lista) {
+    localStorage.setItem('bold_operaciones_bd', JSON.stringify(lista));
+    // Envía los datos inmediatamente a la colección de Firebase
+    if (window.dbFirestore) {
+        lista.forEach(op => window.dbFirestore.collection("operaciones").doc(op.radicado).set(op));
+    }
+}
