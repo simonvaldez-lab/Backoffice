@@ -410,39 +410,37 @@ document.addEventListener('DOMContentLoaded', () => {
 // 6. AUDITORÍA UNIVERSAL
 // ==========================================
 function auditarRadicado(radicado) {
-    const ops = obtenerOperaciones();
-    const op = ops.find(o => o.radicado === radicado);
+    var ops = typeof obtenerOperaciones === "function" ? obtenerOperaciones() : [];
+    var op = ops.find(function(o) { return o.radicado === radicado; });
     if (!op) return alert("No se encontró el Radicado: " + radicado);
 
-    document.getElementById('mod-radicado-titulo').innerText = `Módulo de Auditoría (${op.pais || 'Colombia'}): ${op.radicado}`;
-    document.getElementById('mod-origen').innerText = op.empresa;
-    document.getElementById('mod-moneda').innerText = op.moneda;
-    document.getElementById('mod-val-sol').innerText = `$ ${op.montoSol.toLocaleString()} ${op.moneda}`;
-    document.getElementById('mod-val-prep').innerText = `Screen Banco: $ ${op.montoPrep.toLocaleString()} ${op.moneda}`;
-    document.getElementById('mod-regs').innerText = `${op.registros} Transacciones`;
+    document.getElementById("mod-radicado-titulo").innerText = "Módulo de Auditoría (" + (op.pais || "Colombia") + "): " + op.radicado;
+    document.getElementById("mod-origen").innerText = op.empresa || "";
+    document.getElementById("mod-moneda").innerText = op.moneda || "";
+    document.getElementById("mod-val-sol").innerText = "$ " + (op.montoSol || 0).toLocaleString() + " " + (op.moneda || "");
+    document.getElementById("mod-val-prep").innerText = "Screen Banco: $ " + (op.montoPrep || 0).toLocaleString() + " " + (op.moneda || "");
+    document.getElementById("mod-regs").innerText = (op.registros || 1) + " Transacciones";
 
-    // 🚀 INYECCIÓN: CUENTAS ORIGEN, DESTINO Y DOCUMENTOS ADJUNTOS EN EL EXPEDIENTE
-    let elOrigen = document.getElementById("mod-cta-origen");
-    let elDestino = document.getElementById("mod-cta-destino");
-    let elDocSec = document.getElementById("mod-doc-seccion");
+    var elOrigen = document.getElementById("mod-cta-origen");
+    var elDestino = document.getElementById("mod-cta-destino");
+    var elDocSec = document.getElementById("mod-doc-seccion");
 
     if (!elOrigen) {
-        const grid = document.querySelector(".grid-detalles");
+        var grid = document.querySelector(".grid-detalles");
         if (grid) {
-            grid.insertAdjacentHTML("beforeend", `
-                <div class="dato-grupo" style="grid-column: 1 / -1; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #CBD5E1;">
-                    <span class="dato-label" style="color: #64748B;">🏦 Cuenta Origen (Débito / Salida)</span>
-                    <span class="dato-valor" id="mod-cta-origen" style="font-size: 12px; color: #1E293B; word-break: break-all; font-weight: 600; display: block; margin-top: 2px;"></span>
-                </div>
-                <div class="dato-grupo" style="grid-column: 1 / -1; margin-top: 6px;">
-                    <span class="dato-label" style="color: #64748B;">🎯 Cuenta Destino (Crédito / Dispersión)</span>
-                    <span class="dato-valor" id="mod-cta-destino" style="font-size: 12px; color: #15803D; font-weight: 700; word-break: break-all; display: block; margin-top: 2px;"></span>
-                </div>
-                <div id="mod-doc-seccion" style="grid-column: 1 / -1; margin-top: 10px; padding-top: 10px; border-top: 1px solid #E2E8F0; display: none;">
-                    <span class="dato-label" style="color: #0B1442; font-weight: bold; margin-bottom: 6px; display: block;">📎 Soporte Operativo y Observaciones</span>
-                    <div id="mod-doc-contenido"></div>
-                </div>
-            `);
+            var htmlCuentas = '<div class="dato-grupo" style="grid-column: 1 / -1; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #CBD5E1;">' +
+                '<span class="dato-label" style="color: #64748B;">🏦 Cuenta Origen (Débito / Salida)</span>' +
+                '<span class="dato-valor" id="mod-cta-origen" style="font-size: 12px; color: #1E293B; word-break: break-all; font-weight: 600; display: block; margin-top: 2px;"></span>' +
+            '</div>' +
+            '<div class="dato-grupo" style="grid-column: 1 / -1; margin-top: 6px;">' +
+                '<span class="dato-label" style="color: #64748B;">🎯 Cuenta Destino (Crédito / Dispersión)</span>' +
+                '<span class="dato-valor" id="mod-cta-destino" style="font-size: 12px; color: #15803D; font-weight: 700; word-break: break-all; display: block; margin-top: 2px;"></span>' +
+            '</div>' +
+            '<div id="mod-doc-seccion" style="grid-column: 1 / -1; margin-top: 10px; padding-top: 10px; border-top: 1px solid #E2E8F0; display: none;">' +
+                '<span class="dato-label" style="color: #0B1442; font-weight: bold; margin-bottom: 6px; display: block;">📎 Soporte Operativo y Observaciones</span>' +
+                '<div id="mod-doc-contenido"></div>' +
+            '</div>';
+            grid.insertAdjacentHTML("beforeend", htmlCuentas);
             elOrigen = document.getElementById("mod-cta-origen");
             elDestino = document.getElementById("mod-cta-destino");
             elDocSec = document.getElementById("mod-doc-seccion");
@@ -451,25 +449,24 @@ function auditarRadicado(radicado) {
 
     if (elOrigen) elOrigen.innerText = op.ctaOrigen || op.detalle || "No especificada";
     if (elDestino) elDestino.innerText = op.ctaDestino || op.compDestino || "No especificada";
-    
-    // Renderizado inteligente del documento, link e instrucciones
+
     if (elDocSec) {
-        let docHtml = "";
+        var docHtml = "";
         if (op.nombreOperacion) {
-            docHtml += `<div style="font-size:12px; margin-bottom:6px;"><strong>🏷️ Operación:</strong> <span style="background:#EEF2FF; color:#3730A3; padding:2px 6px; border-radius:4px; font-weight:bold;">${op.nombreOperacion}</span></div>`;
+            docHtml += '<div style="font-size:12px; margin-bottom:6px;"><strong>🏷️ Operación:</strong> <span style="background:#EEF2FF; color:#3730A3; padding:2px 6px; border-radius:4px; font-weight:bold;">' + op.nombreOperacion + '</span></div>';
         }
         if (op.archivoLink) {
-            docHtml += `<div style="font-size:12px; margin-bottom:6px;"><strong>🔗 Link Operativo:</strong> <a href="${op.archivoLink}" target="_blank" style="color:#2563EB; font-weight:bold; text-decoration:underline;">Abrir portal o documento externo ↗</a></div>`;
+            docHtml += '<div style="font-size:12px; margin-bottom:6px;"><strong>🔗 Link Operativo:</strong> <a href="' + op.archivoLink + '" target="_blank" style="color:#2563EB; font-weight:bold; text-decoration:underline;">Abrir portal o documento externo ↗</a></div>';
         }
         if (op.instrucciones) {
-            docHtml += `<div style="font-size:11px; background:#FEF3C7; color:#92400E; padding:8px; border-radius:6px; margin-bottom:8px; border:1px solid #FDE68A;"><strong>📝 Observaciones:</strong> ${op.instrucciones}</div>`;
+            docHtml += '<div style="font-size:11px; background:#FEF3C7; color:#92400E; padding:8px; border-radius:6px; margin-bottom:8px; border:1px solid #FDE68A;"><strong>📝 Observaciones:</strong> ' + op.instrucciones + '</div>';
         }
         if (op.archivoData && op.archivoNombre) {
-            docHtml += `<div style="margin-top:6px;"><a href="${op.archivoData}" download="${op.archivoNombre}" class="btn" style="background:#3B82F6; color:white; font-size:11px; padding:6px 12px; text-decoration:none; display:inline-block; font-weight:bold;">📥 Descargar Archivo (${op.archivoNombre})</a></div>`;
+            docHtml += '<div style="margin-top:6px;"><a href="' + op.archivoData + '" download="' + op.archivoNombre + '" class="btn" style="background:#3B82F6; color:white; font-size:11px; padding:6px 12px; text-decoration:none; display:inline-block; font-weight:bold;">📥 Descargar Archivo (' + op.archivoNombre + ')</a></div>';
             if (op.archivoNombre.endsWith(".png") || (op.archivoTipo && op.archivoTipo.includes("image"))) {
-                docHtml += `<div style="margin-top:8px;"><img src="${op.archivoData}" style="max-width:100%; max-height:180px; border-radius:6px; border:1px solid #CBD5E1;"></div>`;
+                docHtml += '<div style="margin-top:8px;"><img src="' + op.archivoData + '" style="max-width:100%; max-height:180px; border-radius:6px; border:1px solid #CBD5E1;"></div>';
             } else if (op.archivoNombre.endsWith(".pdf") || (op.archivoTipo && op.archivoTipo.includes("pdf"))) {
-                docHtml += `<div style="margin-top:8px;"><iframe src="${op.archivoData}" style="width:100%; height:220px; border:1px solid #CBD5E1; border-radius:6px;"></iframe></div>`;
+                docHtml += '<div style="margin-top:8px;"><iframe src="' + op.archivoData + '" style="width:100%; height:220px; border:1px solid #CBD5E1; border-radius:6px;"></iframe></div>';
             }
         }
         if (docHtml !== "") {
@@ -480,47 +477,30 @@ function auditarRadicado(radicado) {
         }
     }
 
-    // 🚀 INYECCIÓN DINÁMICA: CUENTA ORIGEN Y CUENTA DESTINO EN EL EXPEDIENTE
-    let elOrigen = document.getElementById("mod-cta-origen");
-    let elDestino = document.getElementById("mod-cta-destino");
-    if (!elOrigen) {
-        const grid = document.querySelector(".grid-detalles");
-        if (grid) {
-            grid.insertAdjacentHTML("beforeend", `
-                <div class="dato-grupo" style="grid-column: 1 / -1; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #CBD5E1;">
-                    <span class="dato-label" style="color: #64748B;">🏦 Cuenta Origen (Débito / Salida)</span>
-                    <span class="dato-valor" id="mod-cta-origen" style="font-size: 12px; color: #1E293B; word-break: break-all; font-weight: 600; display: block; margin-top: 2px;"></span>
-                </div>
-                <div class="dato-grupo" style="grid-column: 1 / -1; margin-top: 6px;">
-                    <span class="dato-label" style="color: #64748B;">🎯 Cuenta Destino (Crédito / Dispersión)</span>
-                    <span class="dato-valor" id="mod-cta-destino" style="font-size: 12px; color: #15803D; font-weight: 700; word-break: break-all; display: block; margin-top: 2px;"></span>
-                </div>
-            `);
-            elOrigen = document.getElementById("mod-cta-origen");
-            elDestino = document.getElementById("mod-cta-destino");
-        }
+    var divTraza = document.getElementById("mod-timeline");
+    if (divTraza && op.historial) {
+        divTraza.innerHTML = "";
+        op.historial.forEach(function(h) {
+            var estiloAlerta = h.alerta ? ' style="border-left: 4px solid #D97706;"' : '';
+            divTraza.innerHTML += '<div class="timeline-item">' +
+                '<div class="timeline-fecha">' + h.fecha + '</div>' +
+                '<div class="timeline-desc"' + estiloAlerta + '>' +
+                    '<strong>' + h.paso + '</strong><br>' +
+                    '<span style="font-size:11px; color:#1E293B; display:block; margin-top:4px;">' + h.detalle + '</span>' +
+                '</div>' +
+            '</div>';
+        });
     }
-    if (elOrigen) elOrigen.innerText = op.ctaOrigen || op.detalle || "No especificada en el radicado";
-    if (elDestino) elDestino.innerText = op.ctaDestino || op.compDestino || "No especificada en el radicado";
 
-    const divTraza = document.getElementById('mod-timeline');
-    divTraza.innerHTML = '';
-    op.historial.forEach(h => {
-        divTraza.innerHTML += `
-            <div class="timeline-item">
-                <div class="timeline-fecha">${h.fecha}</div>
-                <div class="timeline-desc" ${h.alerta ? 'style="border-left: 4px solid #D97706;"' : ''}>
-                    <strong>${h.paso}</strong><br>
-                    <span style="font-size:11px; color:#1E293B; display:block; margin-top:4px;">${h.detalle}</span>
-                </div>
-            </div>`;
-    });
+    var visSolProv = document.getElementById("vis-sol-prov");
+    if (visSolProv) visSolProv.innerText = op.empresa || "";
+    var visSolTotal = document.getElementById("vis-sol-total");
+    if (visSolTotal) visSolTotal.innerText = "$ " + (op.montoSol || 0).toLocaleString() + " " + (op.moneda || "");
+    var visPrepTotal = document.getElementById("vis-prep-total");
+    if (visPrepTotal) visPrepTotal.innerText = "$ " + (op.montoPrep || 0).toLocaleString() + " " + (op.moneda || "");
 
-    document.getElementById('vis-sol-prov').innerText = op.empresa;
-    document.getElementById('vis-sol-total').innerText = `$ ${op.montoSol.toLocaleString()} ${op.moneda}`;
-    document.getElementById('vis-prep-total').innerText = `$ ${op.montoPrep.toLocaleString()} ${op.moneda}`;
-
-    document.getElementById('modalDetalles').style.display = 'flex';
+    var modDetalles = document.getElementById("modalDetalles");
+    if (modDetalles) modDetalles.style.display = "flex";
 }
 
 function alternarVisor() {
