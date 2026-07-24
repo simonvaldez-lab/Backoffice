@@ -86,9 +86,14 @@ function obtenerHoraMilitar() {
 }
 
 function obtenerFechaHoraMilitar() {
-    const ahora = new Date();
-    const fecha = ahora.toLocaleDateString('es-CO');
-    const hora = ahora.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', hour12: false });
+        const d = new Date();
+        const dia = String(d.getDate()).padStart(2, "0");
+        const mes = String(d.getMonth() + 1).padStart(2, "0");
+        const anio = d.getFullYear();
+        const hrs = String(d.getHours()).padStart(2, "0");
+        const min = String(d.getMinutes()).padStart(2, "0");
+        return `${dia}/${mes}/${anio} - ${hrs}:${min}`;
+    });
     return `${fecha} - ${hora}`;
 }
 
