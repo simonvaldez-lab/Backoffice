@@ -421,6 +421,65 @@ function auditarRadicado(radicado) {
     document.getElementById('mod-val-prep').innerText = `Screen Banco: $ ${op.montoPrep.toLocaleString()} ${op.moneda}`;
     document.getElementById('mod-regs').innerText = `${op.registros} Transacciones`;
 
+    // 🚀 INYECCIÓN: CUENTAS ORIGEN, DESTINO Y DOCUMENTOS ADJUNTOS EN EL EXPEDIENTE
+    let elOrigen = document.getElementById("mod-cta-origen");
+    let elDestino = document.getElementById("mod-cta-destino");
+    let elDocSec = document.getElementById("mod-doc-seccion");
+
+    if (!elOrigen) {
+        const grid = document.querySelector(".grid-detalles");
+        if (grid) {
+            grid.insertAdjacentHTML("beforeend", `
+                <div class="dato-grupo" style="grid-column: 1 / -1; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #CBD5E1;">
+                    <span class="dato-label" style="color: #64748B;">🏦 Cuenta Origen (Débito / Salida)</span>
+                    <span class="dato-valor" id="mod-cta-origen" style="font-size: 12px; color: #1E293B; word-break: break-all; font-weight: 600; display: block; margin-top: 2px;"></span>
+                </div>
+                <div class="dato-grupo" style="grid-column: 1 / -1; margin-top: 6px;">
+                    <span class="dato-label" style="color: #64748B;">🎯 Cuenta Destino (Crédito / Dispersión)</span>
+                    <span class="dato-valor" id="mod-cta-destino" style="font-size: 12px; color: #15803D; font-weight: 700; word-break: break-all; display: block; margin-top: 2px;"></span>
+                </div>
+                <div id="mod-doc-seccion" style="grid-column: 1 / -1; margin-top: 10px; padding-top: 10px; border-top: 1px solid #E2E8F0; display: none;">
+                    <span class="dato-label" style="color: #0B1442; font-weight: bold; margin-bottom: 6px; display: block;">📎 Soporte Operativo e Instrucciones</span>
+                    <div id="mod-doc-contenido"></div>
+                </div>
+            `);
+            elOrigen = document.getElementById("mod-cta-origen");
+            elDestino = document.getElementById("mod-cta-destino");
+            elDocSec = document.getElementById("mod-doc-seccion");
+        }
+    }
+
+    if (elOrigen) elOrigen.innerText = op.ctaOrigen || op.detalle || "No especificada";
+    if (elDestino) elDestino.innerText = op.ctaDestino || op.compDestino || "No especificada";
+    
+    // Renderizado inteligente del documento, link e instrucciones
+    if (elDocSec) {
+        let docHtml = "";
+        if (op.nombreOperacion) {
+            docHtml += `<div style="font-size:12px; margin-bottom:6px;"><strong>🏷️ Operación:</strong> <span style="background:#EEF2FF; color:#3730A3; padding:2px 6px; border-radius:4px; font-weight:bold;">${op.nombreOperacion}</span></div>`;
+        }
+        if (op.archivoLink) {
+            docHtml += `<div style="font-size:12px; margin-bottom:6px;"><strong>🔗 Link Operativo:</strong> <a href="${op.archivoLink}" target="_blank" style="color:#2563EB; font-weight:bold; text-decoration:underline;">Abrir portal o documento externo ↗</a></div>`;
+        }
+        if (op.instrucciones) {
+            docHtml += `<div style="font-size:11px; background:#FEF3C7; color:#92400E; padding:8px; border-radius:6px; margin-bottom:8px; border:1px solid #FDE68A;"><strong>📝 Instrucciones:</strong> ${op.instrucciones}</div>`;
+        }
+        if (op.archivoData && op.archivoNombre) {
+            docHtml += `<div style="margin-top:6px;"><a href="${op.archivoData}" download="${op.archivoNombre}" class="btn" style="background:#3B82F6; color:white; font-size:11px; padding:6px 12px; text-decoration:none; display:inline-block; font-weight:bold;">📥 Descargar Archivo (${op.archivoNombre})</a></div>`;
+            if (op.archivoNombre.endsWith(".png") || (op.archivoTipo && op.archivoTipo.includes("image"))) {
+                docHtml += `<div style="margin-top:8px;"><img src="${op.archivoData}" style="max-width:100%; max-height:180px; border-radius:6px; border:1px solid #CBD5E1;"></div>`;
+            } else if (op.archivoNombre.endsWith(".pdf") || (op.archivoTipo && op.archivoTipo.includes("pdf"))) {
+                docHtml += `<div style="margin-top:8px;"><iframe src="${op.archivoData}" style="width:100%; height:220px; border:1px solid #CBD5E1; border-radius:6px;"></iframe></div>`;
+            }
+        }
+        if (docHtml !== "") {
+            document.getElementById("mod-doc-contenido").innerHTML = docHtml;
+            elDocSec.style.display = "block";
+        } else {
+            elDocSec.style.display = "none";
+        }
+    }
+
     // 🚀 INYECCIÓN DINÁMICA: CUENTA ORIGEN Y CUENTA DESTINO EN EL EXPEDIENTE
     let elOrigen = document.getElementById("mod-cta-origen");
     let elDestino = document.getElementById("mod-cta-destino");
