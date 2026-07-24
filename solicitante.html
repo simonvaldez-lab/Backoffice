@@ -1,6 +1,17 @@
 <!DOCTYPE html>
 <html lang="es">
-<head><meta charset="UTF-8"><title>Carga de Operaciones - Bold</title><link rel="stylesheet" href="css/estilos.css"></head>
+<head>
+    <meta charset="UTF-8"><title>Carga de Operaciones - Bold</title><link rel="stylesheet" href="css/estilos.css">
+    <style>
+        .btn-excel-card {
+            background: #F8FAFC; border: 1px solid #CBD5E1; padding: 10px 14px; border-radius: 8px;
+            display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.2s; width: 100%;
+        }
+        .btn-excel-card:hover {
+            background: #F0FDF4; border-color: #22C55E; box-shadow: 0 4px 10px rgba(34,197,94,0.15); transform: translateY(-1px);
+        }
+    </style>
+</head>
 <body>
     <header class="topbar"><a href="solicitante.html" class="logo">bold</a><div class="topbar-derecha"></div></header>
     <div class="contenedor-principal">
@@ -13,8 +24,8 @@
             <h1 class="titulo-seccion" style="margin: 0;">Paso 1: Carga y Radicación de Operaciones</h1>
             <p class="subtitulo" style="margin: 4px 0 15px 0;">Configura el enrutamiento bancario, define el valor del pago y gestiona los tiempos de atención (ANS).</p>
 
-            <!-- SECCIÓN: CARGA RÁPIDA DE PLANTILLAS -->
-            <div style="background: #EEF2FF; border: 1px solid #C7D2FE; padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+            <!-- SECCIÓN: CARGA RÁPIDA DE PLANTILLAS GENERALES -->
+            <div style="background: #EEF2FF; border: 1px solid #C7D2FE; padding: 12px 16px; border-radius: 10px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <strong style="color: #1E1B4B; font-size: 13px;">⚡ Cargar Plantilla Frecuente (Modelo de Trabajo):</strong>
                     <p style="margin: 2px 0 0 0; font-size: 11px; color: #4338CA;">Al seleccionar una plantilla se limpiarán los datos actuales y se autocompletará el formulario automáticamente.</p>
@@ -25,7 +36,41 @@
                 </div>
             </div>
 
-            <!-- SECCIÓN 1: IDENTIFICACIÓN Y PRIORIDAD (SIN MONTO) -->
+            <!-- PANEL VISUAL: PLANTILLAS EXCEL INSTITUCIONALES -->
+            <div style="background: white; border: 1px solid #E2E8F0; padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <strong style="color: #0B1442; font-size: 12px; display: flex; align-items: center; gap: 6px;">
+                        <span>📊 Plantillas Operativas en Excel (Carga Masiva Especializada):</span>
+                        <span style="background: #DCFCE7; color: #166534; font-size: 10px; padding: 2px 8px; border-radius: 12px; font-weight: 800; border: 1px solid #BBF7D0;">Soporta .XLSX / .XLSM</span>
+                    </strong>
+                    <span style="font-size: 11px; color: #64748B;">Haz clic en una opción para preparar la carga del archivo Excel:</span>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+                    <button type="button" class="btn-excel-card" onclick="activarModoExcel('Pactos Bancarios', 'Inversión / Pacto de Recompra en Excel (.xlsx)')">
+                        <span style="font-size: 20px;">📈</span>
+                        <div style="text-align: left;">
+                            <strong style="display: block; font-size: 12px; color: #1E293B;">Plantilla Pactos</strong>
+                            <span style="font-size: 10px; color: #64748B;">Inversiones y Recompras (.xlsx)</span>
+                        </div>
+                    </button>
+                    <button type="button" class="btn-excel-card" onclick="activarModoExcel('Pago de Impuestos (Taxes)', 'Liquidación y Pago de Impuestos / Taxes (.xlsx)')">
+                        <span style="font-size: 20px;">🏛️</span>
+                        <div style="text-align: left;">
+                            <strong style="display: block; font-size: 12px; color: #1E293B;">Plantilla Taxes</strong>
+                            <span style="font-size: 10px; color: #64748B;">Impuestos DIAN / Distritales (.xlsx)</span>
+                        </div>
+                    </button>
+                    <button type="button" class="btn-excel-card" onclick="activarModoExcel('Dispersión Masiva PSE', 'Lote masivo de transferencias por PSE (.xlsx)')">
+                        <span style="font-size: 20px;">🔄</span>
+                        <div style="text-align: left;">
+                            <strong style="display: block; font-size: 12px; color: #1E293B;">Plantilla PSE</strong>
+                            <span style="font-size: 10px; color: #64748B;">Dispersión Masiva por Lote (.xlsx)</span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- SECCIÓN 1: IDENTIFICACIÓN Y PRIORIDAD -->
             <div style="background: white; border: 1px solid #CBD5E1; border-radius: 10px; padding: 16px; margin-bottom: 15px;">
                 <h3 style="margin: 0 0 12px 0; font-size: 14px; color: #0B1442; border-bottom: 1px solid #F1F5F9; padding-bottom: 8px;">1. Identificación y Parámetros de Atención</h3>
                 <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px;">
@@ -65,7 +110,7 @@
                     <div><label style="font-size: 11px; font-weight: bold; color: #2563EB;">Nivel 7: Cuenta Destino (Crédito)</label><select id="niv-cta-des" class="form-control" style="width:100%;" disabled><option value="">-- Primero Empresa Destino --</option></select></div>
                 </div>
 
-                <!-- VALOR DEL PAGO AL FINAL DEL ENRUTAMIENTO -->
+                <!-- VALOR DEL PAGO AL FINAL -->
                 <div style="background: #F8FAFC; border: 1px dashed #CBD5E1; padding: 12px 16px; border-radius: 8px; display: grid; grid-template-columns: 2fr 1fr; gap: 15px; align-items: center;">
                     <div>
                         <label style="font-size: 12px; font-weight: 800; color: #0B1442;">💰 Monto Solicitado a Transferir <span style="color:#EF4444;">*</span></label>
@@ -78,7 +123,7 @@
                 </div>
             </div>
 
-            <!-- SECCIÓN 3: DOCUMENTACIÓN COLAPSABLE (OPCIONAL POR COMPLETO) -->
+            <!-- SECCIÓN 3: DOCUMENTACIÓN COLAPSABLE (OPCIONAL) -->
             <div style="margin-bottom: 20px;">
                 <button type="button" class="btn" style="background: white; border: 1px dashed #3B82F6; color: #2563EB; font-weight: bold; width: 100%; padding: 10px; text-align: left; display: flex; justify-content: space-between; align-items: center;" onclick="alternarSeccionDocs()">
                     <span>📎 ¿Deseas adjuntar archivos, links u observaciones? <span style="font-weight: normal; color: #64748B; font-size: 11px;">(Haz clic aquí para desplegar opciones opcionales)</span></span>
@@ -89,7 +134,7 @@
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 12px;">
                         <div>
                             <label style="font-size: 11px; font-weight: bold; color: #334155;">📁 Adjuntar Soporte / Archivo (Opcional):</label>
-                            <input type="file" id="doc-archivo" class="form-control" accept=".txt,.pdf,.xlsx,.csv,.png,.xlsm,.pgp" style="width:100%; font-size:11px; padding: 6px; background:white;">
+                            <input type="file" id="doc-archivo" class="form-control" accept=".txt,.pdf,.xlsx,.csv,.png,.xlsm,.pgp" style="width:100%; font-size:11px; padding: 6px; background:white; transition: all 0.3s;">
                         </div>
                         <div>
                             <label style="font-size: 11px; font-weight: bold; color: #334155;">🔗 Link de Referencia / Portal Bancario (Opcional):</label>
@@ -104,12 +149,74 @@
             </div>
 
             <!-- BOTONES DE ACCIÓN -->
-            <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
                 <button class="btn" style="background: white; border: 1px solid #64748B; color: #334155; font-weight: bold; padding: 10px 18px;" onclick="guardarComoPlantilla()">💾 Guardar Modelo como Plantilla</button>
                 <button class="btn btn-primario" style="background: #15803D; font-size: 15px; padding: 12px 28px; box-shadow: 0 4px 12px rgba(21,128,61,0.2);" onclick="procesarRadicacion()">🚀 Radicar Operación en Cascada</button>
             </div>
+
+            <!-- 🚀 NUEVA TABLA AL FINAL: REFLEJO INSTANTÁNEO DE OPERACIONES RADICADAS -->
+            <div style="background: white; border: 1px solid #CBD5E1; border-radius: 10px; padding: 16px; margin-top: 20px;">
+                <h3 style="margin: 0 0 10px 0; font-size: 14px; color: #0B1442; display: flex; justify-content: space-between; align-items: center;">
+                    <span>📋 Tus Últimas Operaciones Radicadas (Sesión Actual)</span>
+                    <span style="font-size: 11px; color: #64748B; font-weight: normal;">Se actualiza en vivo al radicar</span>
+                </h3>
+                <div class="tabla-contenedor">
+                    <table>
+                        <thead>
+                            <tr><th>Radicado / Hora</th><th>Operación & Ruta</th><th>Valor Solicitado</th><th>Prioridad</th><th>Estado Actual</th></tr>
+                        </thead>
+                        <tbody id="tabla-recientes"></tbody>
+                    </table>
+                </div>
+            </div>
         </main>
     </div>
+
+    <!-- 🛡️ NUEVO MODAL DE REVISIÓN Y CONFIRMACIÓN PRE-RADICACIÓN -->
+    <div class="modal-overlay" id="modalConfirmacion" style="display: none; z-index: 2000;">
+        <div class="modal" style="max-width: 580px; padding: 24px; border-radius: 12px; background: white; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15);">
+            <div style="border-bottom: 1px solid #E2E8F0; padding-bottom: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="margin: 0; font-size: 18px; color: #0B1442; display: flex; align-items: center; gap: 8px;">
+                    <span>🛡️ Revisión y Confirmación de Datos</span>
+                </h2>
+                <span style="background: #FEF3C7; color: #92400E; font-size: 11px; font-weight: bold; padding: 4px 8px; border-radius: 6px; border: 1px solid #FDE68A;">Paso Previo</span>
+            </div>
+            <p style="font-size: 13px; color: #475569; margin-top: 0; margin-bottom: 16px;">
+                Por favor verifica los parámetros del pago y el enrutamiento bancario antes de emitir el radicado oficial a la mesa de dinero:
+            </p>
+            <div style="background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 8px; padding: 16px; margin-bottom: 20px; font-size: 13px; display: grid; gap: 10px;">
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #E2E8F0; padding-bottom: 6px;">
+                    <span style="color: #64748B;">🏷️ Operación:</span>
+                    <strong id="conf-nom" style="color: #0B1442; text-align: right;"></strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #E2E8F0; padding-bottom: 6px;">
+                    <span style="color: #64748B;">🔥 Prioridad / ANS:</span>
+                    <strong id="conf-prio" style="color: #D97706;"></strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #E2E8F0; padding-bottom: 6px;">
+                    <span style="color: #64748B;">💰 Valor a Dispersar:</span>
+                    <strong id="conf-monto" style="color: #15803D; font-size: 15px;"></strong>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 2px; border-bottom: 1px dashed #E2E8F0; padding-bottom: 6px;">
+                    <span style="color: #64748B; font-size: 11px;">🏦 Cuenta Origen (Débito):</span>
+                    <strong id="conf-ori" style="color: #1E293B; font-size: 12px; word-break: break-all;"></strong>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 2px; border-bottom: 1px dashed #E2E8F0; padding-bottom: 6px;">
+                    <span style="color: #64748B; font-size: 11px;">🎯 Cuenta Destino (Crédito):</span>
+                    <strong id="conf-des" style="color: #2563EB; font-size: 12px; word-break: break-all;"></strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding-top: 2px;">
+                    <span style="color: #64748B;">📎 Adjuntos / Observaciones:</span>
+                    <strong id="conf-doc" style="color: #475569; font-size: 12px; text-align: right;"></strong>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="button" class="btn" style="background: white; border: 1px solid #94A3B8; color: #475569; padding: 8px 16px; font-weight: bold;" onclick="cerrarModalConfirmacion()">⬅️ Volver a Editar</button>
+                <button type="button" class="btn btn-primario" style="background: #15803D; padding: 8px 20px; font-weight: bold; box-shadow: 0 4px 10px rgba(21,128,61,0.2);" onclick="confirmarYRadicar()">✅ Confirmar y Radicar Pago</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal Compartido -->
     <div class="modal-overlay" id="modalDetalles"><div class="modal modal-grande"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;"><h2 id="mod-radicado-titulo" style="margin:0; border:none; padding:0;">Módulo de Auditoría</h2><button class="btn" style="background:#3B82F6; color:white;" onclick="alternarVisor()">👁 Visor Dual</button></div><div class="modal-layout-split"><div class="seccion-datos"><div class="grid-detalles"><div class="dato-grupo"><span class="dato-label">Compañía</span><span class="dato-valor" id="mod-origen"></span></div><div class="dato-grupo"><span class="dato-label">Moneda</span><span class="dato-valor" id="mod-moneda"></span></div><div class="dato-grupo"><span class="dato-label">Valor Solicitado</span><span class="dato-valor" id="mod-val-sol"></span><div class="auditor-data auditor-alerta" id="mod-val-prep"></div></div><div class="dato-grupo"><span class="dato-label">Registros</span><span class="dato-valor" id="mod-regs"></span></div></div><div class="timeline" id="mod-timeline"></div></div><div class="seccion-visor" id="contenedorVisor"><div class="tab-container"><button class="tab active" id="tabSol" onclick="cambiarPestana('solicitante')">📄 Factura</button><button class="tab" id="tabPrep" onclick="cambiarPestana('preparador')">🖼 Screen Banco</button></div><div class="marco-visor"><div class="documento-simulado" id="vistaSolicitante"><h4>SOPORTE ORIGINAL</h4><p>Proveedor: <strong id="vis-sol-prov"></strong></p><p style="margin-top:40px; text-align:right; font-weight:bold;" id="vis-sol-total"></p></div><div class="documento-simulado hidden" id="vistaPreparador" style="background:#0F172A; color:#22C55E;"><h4>PORTAL BANCARIO</h4><p style="margin-top:40px; text-align:right; font-weight:bold; font-size:15px;" id="vis-prep-total"></p></div></div></div></div><div style="text-align: right; margin-top: 20px; border-top: 1px solid #E2E8F0; padding-top: 15px;"><button class="btn btn-detalle" onclick="cerrarModal('modalDetalles')">Cerrar</button></div></div></div>
     
@@ -118,7 +225,34 @@
         document.addEventListener('DOMContentLoaded', () => {
             inicializarArbol();
             cargarListaPlantillas();
+            renderizarTabla();
         });
+
+        // 🚀 ACCIÓN DINÁMICA DE PLANTILLAS EXCEL
+        function activarModoExcel(tipo, descripcion) {
+            limpiarFormularioCompleto();
+            document.getElementById('nombre-op').value = `[Excel] ${tipo} - ${new Date().toLocaleDateString('es-CO')}`;
+            document.getElementById('doc-instrucciones').value = `Operación basada en plantilla Excel institucional: ${descripcion}. Por favor verificar registros y soportes en el archivo adjunto.`;
+            
+            const caja = document.getElementById('caja-docs-opcional');
+            const flecha = document.getElementById('flecha-docs');
+            if (caja && caja.style.display === "none") {
+                caja.style.display = "block";
+                flecha.innerText = "▲";
+            }
+            
+            const fileInput = document.getElementById('doc-archivo');
+            if (fileInput) {
+                fileInput.style.border = "2px solid #22C55E";
+                fileInput.style.background = "#F0FDF4";
+                setTimeout(() => {
+                    fileInput.style.border = "1px solid #CBD5E1";
+                    fileInput.style.background = "white";
+                }, 3500);
+            }
+            
+            alert(`📊 Modo de Plantilla Excel Activado: ${tipo}\n\n1. El nombre se completó con la etiqueta [Excel].\n2. Completa el monto y la cuenta destino en los selectores.\n3. Adjunta tu archivo .XLSX en el campo iluminado de color verde.`);
+        }
 
         function alternarSeccionDocs() {
             const caja = document.getElementById('caja-docs-opcional');
@@ -261,15 +395,47 @@
             alert(`💾 ¡Modelo "${nom}" guardado exitosamente!\nAhora estará disponible en el menú superior para futuras cargas.`);
         }
 
+        // 🛡️ PASO 1: ABRIR MODAL DE REVISIÓN Y CONFIRMACIÓN PREVIA
         function procesarRadicacion() {
             const nomOp = document.getElementById('nombre-op').value.trim();
             const monto = document.getElementById('monto-sol').value;
             const ctaDes = document.getElementById('niv-cta-des').value;
+            const ctaOri = document.getElementById('niv-cta-ori').value;
+            const prio = document.getElementById('prioridad-op').value;
+            const ans = document.getElementById('ans-op').value;
+            const moneda = document.getElementById('moneda-op').value;
+            const fileInput = document.getElementById('doc-archivo');
+            const link = document.getElementById('doc-link').value.trim();
+            const inst = document.getElementById('doc-instrucciones').value.trim();
 
             if(!nomOp) return alert("⚠️ El 'Nombre de Operación / Plantilla' es obligatorio.");
             if(!monto || monto <= 0) return alert("⚠️ Por favor ingresa un monto solicitado válido.");
-            if(!ctaDes) return alert("⚠️ Por favor completa los 7 niveles de enrutamiento bancario.");
+            if(!ctaDes) return alert("⚠️ Por favor completa los 7 niveles de enrutamiento bancario (Cuenta Destino).");
 
+            // Poblar datos en el modal de confirmación
+            document.getElementById('conf-nom').innerText = nomOp;
+            const prioTexto = prio === "1" ? "🔥 1 - Alta (Urgente)" : prio === "2" ? "⚡ 2 - Media (Normal)" : "☕ 3 - Baja (Flexible)";
+            document.getElementById('conf-prio').innerText = `${prioTexto} | ANS: ${ans}`;
+            document.getElementById('conf-monto').innerText = `$ ${parseFloat(monto).toLocaleString()} ${moneda}`;
+            document.getElementById('conf-ori').innerText = ctaOri || "No seleccionada";
+            document.getElementById('conf-des').innerText = ctaDes;
+
+            let docResumen = [];
+            if (fileInput.files[0]) docResumen.push(`📁 Archivo: ${fileInput.files[0].name}`);
+            if (link) docResumen.push("🔗 Link adjunto");
+            if (inst) docResumen.push("📝 Con observaciones");
+            document.getElementById('conf-doc').innerText = docResumen.length > 0 ? docResumen.join(" | ") : "Ninguno (Estándar)";
+
+            document.getElementById('modalConfirmacion').style.display = 'flex';
+        }
+
+        function cerrarModalConfirmacion() {
+            document.getElementById('modalConfirmacion').style.display = 'none';
+        }
+
+        // 🚀 PASO 2: EJECUTAR EL GUARDADO DEFINITIVO TRAS CONFIRMAR
+        function confirmarYRadicar() {
+            cerrarModalConfirmacion();
             const fileInput = document.getElementById('doc-archivo');
             const file = fileInput.files[0];
 
@@ -346,6 +512,32 @@
             
             alert(`✅ ¡Operación Radicada con Éxito!\nRadicado: ${rad}\nNombre: ${nomOp}\n\nSe ha notificado al equipo de Validación Compliance.`);
             limpiarFormularioCompleto();
+            renderizarTabla();
+        }
+
+        // 📋 RENDERIZAR TABLA INFERIOR DE SESIÓN
+        function renderizarTabla() {
+            const tb = document.getElementById('tabla-recientes');
+            if (!tb) return;
+            const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : [];
+            const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}');
+            const misOps = ops.filter(o => o.solicitante === (usr.correo || 'lau@bold.co')).slice(0, 5);
+            
+            tb.innerHTML = '';
+            if (misOps.length === 0) {
+                tb.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#64748B; padding:20px;">Aún no has radicado operaciones en esta sesión. Completa el formulario y presiona Radicar.</td></tr>';
+                return;
+            }
+            misOps.forEach(o => {
+                const prioBadge = o.prioridad === 1 ? '<span style="color:#991B1B; font-weight:bold;">🔥 Alta</span>' : o.prioridad === 3 ? '<span style="color:#475569;">☕ Baja</span>' : '<span style="color:#D97706; font-weight:bold;">⚡ Media</span>';
+                tb.innerHTML += `<tr>
+                    <td><strong>${o.radicado}</strong><br><span style="font-size:11px; color:#64748B;">${o.fechaRadicacion}</span></td>
+                    <td><strong style="color:#0B1442;">${o.nombreOperacion || o.tipo}</strong><br><span style="font-size:11px; color:#475569;">${o.empresa} ➔ ${o.compDestino}</span></td>
+                    <td><strong>$ ${o.montoSol.toLocaleString()}</strong> <span class="badge badge-moneda">${o.moneda}</span></td>
+                    <td>${prioBadge} (${o.ans})</td>
+                    <td>${typeof obtenerBadgeEstado === 'function' ? obtenerBadgeEstado(o.estado) : o.estado}</td>
+                </tr>`;
+            });
         }
     </script>
 </body>
