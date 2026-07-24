@@ -421,6 +421,29 @@ function auditarRadicado(radicado) {
     document.getElementById('mod-val-prep').innerText = `Screen Banco: $ ${op.montoPrep.toLocaleString()} ${op.moneda}`;
     document.getElementById('mod-regs').innerText = `${op.registros} Transacciones`;
 
+    // 🚀 INYECCIÓN DINÁMICA: CUENTA ORIGEN Y CUENTA DESTINO EN EL EXPEDIENTE
+    let elOrigen = document.getElementById("mod-cta-origen");
+    let elDestino = document.getElementById("mod-cta-destino");
+    if (!elOrigen) {
+        const grid = document.querySelector(".grid-detalles");
+        if (grid) {
+            grid.insertAdjacentHTML("beforeend", `
+                <div class="dato-grupo" style="grid-column: 1 / -1; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #CBD5E1;">
+                    <span class="dato-label" style="color: #64748B;">🏦 Cuenta Origen (Débito / Salida)</span>
+                    <span class="dato-valor" id="mod-cta-origen" style="font-size: 12px; color: #1E293B; word-break: break-all; font-weight: 600; display: block; margin-top: 2px;"></span>
+                </div>
+                <div class="dato-grupo" style="grid-column: 1 / -1; margin-top: 6px;">
+                    <span class="dato-label" style="color: #64748B;">🎯 Cuenta Destino (Crédito / Dispersión)</span>
+                    <span class="dato-valor" id="mod-cta-destino" style="font-size: 12px; color: #15803D; font-weight: 700; word-break: break-all; display: block; margin-top: 2px;"></span>
+                </div>
+            `);
+            elOrigen = document.getElementById("mod-cta-origen");
+            elDestino = document.getElementById("mod-cta-destino");
+        }
+    }
+    if (elOrigen) elOrigen.innerText = op.ctaOrigen || op.detalle || "No especificada en el radicado";
+    if (elDestino) elDestino.innerText = op.ctaDestino || op.compDestino || "No especificada en el radicado";
+
     const divTraza = document.getElementById('mod-timeline');
     divTraza.innerHTML = '';
     op.historial.forEach(h => {
