@@ -11,7 +11,7 @@
         </aside>
         <main class="contenido">
             <h1 class="titulo-seccion" style="margin: 0;">Paso 1: Carga y Radicación de Operaciones</h1>
-            <p class="subtitulo" style="margin: 4px 0 15px 0;">Configura los datos del pago, adjunta soportes operativos y define los tiempos de atención (ANS).</p>
+            <p class="subtitulo" style="margin: 4px 0 15px 0;">Configura el enrutamiento bancario, define el valor del pago y gestiona los tiempos de atención (ANS).</p>
 
             <!-- SECCIÓN: CARGA RÁPIDA DE PLANTILLAS -->
             <div style="background: #EEF2FF; border: 1px solid #C7D2FE; padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
@@ -25,10 +25,10 @@
                 </div>
             </div>
 
-            <!-- SECCIÓN 1: DATOS BÁSICOS Y NOMBRE OBLIGATORIO -->
+            <!-- SECCIÓN 1: IDENTIFICACIÓN Y PRIORIDAD (SIN MONTO) -->
             <div style="background: white; border: 1px solid #CBD5E1; border-radius: 10px; padding: 16px; margin-bottom: 15px;">
-                <h3 style="margin: 0 0 12px 0; font-size: 14px; color: #0B1442; border-bottom: 1px solid #F1F5F9; padding-bottom: 8px;">1. Identificación y Parámetros del Pago</h3>
-                <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1.5fr 1fr; gap: 12px;">
+                <h3 style="margin: 0 0 12px 0; font-size: 14px; color: #0B1442; border-bottom: 1px solid #F1F5F9; padding-bottom: 8px;">1. Identificación y Parámetros de Atención</h3>
+                <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px;">
                     <div>
                         <label style="font-size: 11px; font-weight: bold; color: #334155;">🏷️ Nombre de Operación / Plantilla <span style="color:#EF4444;">*</span></label>
                         <input type="text" id="nombre-op" class="form-control" placeholder="Ej: Nómina Quincenal Bold CO" style="width: 100%; font-weight: bold;" required>
@@ -45,20 +45,12 @@
                         <label style="font-size: 11px; font-weight: bold; color: #334155;">⏱️ Tiempo ANS (SLA)</label>
                         <input type="text" id="ans-op" class="form-control" value="2 Horas" style="width: 100%; background: #F8FAFC; font-weight: bold;" readonly>
                     </div>
-                    <div>
-                        <label style="font-size: 11px; font-weight: bold; color: #334155;">💰 Monto Solicitado <span style="color:#EF4444;">*</span></label>
-                        <input type="number" id="monto-sol" class="form-control" placeholder="Ej: 15000000" style="width: 100%; font-weight: bold;">
-                    </div>
-                    <div>
-                        <label style="font-size: 11px; font-weight: bold; color: #334155;">💱 Moneda</label>
-                        <select id="moneda-op" class="form-control" style="width: 100%;"><option value="COP">COP ($)</option><option value="PEN">PEN (S/)</option><option value="USD">USD ($)</option></select>
-                    </div>
                 </div>
             </div>
 
-            <!-- SECCIÓN 2: ÁRBOL RELACIONAL -->
+            <!-- SECCIÓN 2: ÁRBOL RELACIONAL CON MONTO Y MONEDA AL FINAL -->
             <div style="background: white; border: 1px solid #CBD5E1; border-radius: 10px; padding: 16px; margin-bottom: 15px;">
-                <h3 style="margin: 0 0 12px 0; font-size: 14px; color: #0B1442; border-bottom: 1px solid #F1F5F9; padding-bottom: 8px;">2. Enrutamiento Bancario (Árbol Relacional de 7 Niveles)</h3>
+                <h3 style="margin: 0 0 12px 0; font-size: 14px; color: #0B1442; border-bottom: 1px solid #F1F5F9; padding-bottom: 8px;">2. Enrutamiento Bancario y Valor del Pago</h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px;">
                     <div><label style="font-size: 11px; font-weight: bold; color: #475569;">Nivel 1: Categoría</label><select id="niv-cat" class="form-control" style="width:100%;"><option value="">-- Seleccione Categoría --</option></select></div>
                     <div><label style="font-size: 11px; font-weight: bold; color: #475569;">Nivel 2: Subtipo</label><select id="niv-sub" class="form-control" style="width:100%;" disabled><option value="">-- Primero Categoría --</option></select></div>
@@ -68,31 +60,46 @@
                     <div><label style="font-size: 11px; font-weight: bold; color: #15803D;">Nivel 4: Empresa Origen</label><select id="niv-emp-ori" class="form-control" style="width:100%;" disabled><option value="">-- Primero Detalle --</option></select></div>
                     <div><label style="font-size: 11px; font-weight: bold; color: #15803D;">Nivel 5: Cuenta Origen (Débito)</label><select id="niv-cta-ori" class="form-control" style="width:100%;" disabled><option value="">-- Primero Empresa Origen --</option></select></div>
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
                     <div><label style="font-size: 11px; font-weight: bold; color: #2563EB;">Nivel 6: Empresa Destino</label><select id="niv-emp-des" class="form-control" style="width:100%;" disabled><option value="">-- Primero Cuenta Origen --</option></select></div>
                     <div><label style="font-size: 11px; font-weight: bold; color: #2563EB;">Nivel 7: Cuenta Destino (Crédito)</label><select id="niv-cta-des" class="form-control" style="width:100%;" disabled><option value="">-- Primero Empresa Destino --</option></select></div>
                 </div>
-            </div>
 
-            <!-- SECCIÓN 3: DOCUMENTACIÓN E INSTRUCCIONES OPCIONALES -->
-            <div style="background: #F8FAFC; border: 1px dashed #94A3B8; border-radius: 10px; padding: 16px; margin-bottom: 20px;">
-                <h3 style="margin: 0 0 10px 0; font-size: 14px; color: #0B1442; display:flex; justify-content:space-between; align-items:center;">
-                    <span>📎 3. Documentación Operativa y Observaciones <span style="font-size:11px; color:#64748B; font-weight:normal;">(Archivos y enlaces no obligatorios)</span></span>
-                    <span style="font-size: 11px; background: #E2E8F0; padding: 2px 8px; border-radius: 4px; color: #334155;">Soporta: txt, pdf, xlsx, xlsm, csv, png, pgp</span>
-                </h3>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 12px;">
+                <!-- VALOR DEL PAGO AL FINAL DEL ENRUTAMIENTO -->
+                <div style="background: #F8FAFC; border: 1px dashed #CBD5E1; padding: 12px 16px; border-radius: 8px; display: grid; grid-template-columns: 2fr 1fr; gap: 15px; align-items: center;">
                     <div>
-                        <label style="font-size: 11px; font-weight: bold; color: #334155;">📁 Adjuntar Soporte / Archivo (Opcional):</label>
-                        <input type="file" id="doc-archivo" class="form-control" accept=".txt,.pdf,.xlsx,.csv,.png,.xlsm,.pgp" style="width:100%; font-size:11px; padding: 6px; background:white;">
+                        <label style="font-size: 12px; font-weight: 800; color: #0B1442;">💰 Monto Solicitado a Transferir <span style="color:#EF4444;">*</span></label>
+                        <input type="number" id="monto-sol" class="form-control" placeholder="Ej: 15000000" style="width: 100%; font-weight: bold; font-size: 14px; margin-top: 4px;">
                     </div>
                     <div>
-                        <label style="font-size: 11px; font-weight: bold; color: #334155;">🔗 Link de Referencia / Portal Bancario (Opcional):</label>
-                        <input type="url" id="doc-link" class="form-control" placeholder="https://drive.google.com/... o portal del banco" style="width:100%; font-size:12px;">
+                        <label style="font-size: 12px; font-weight: 800; color: #0B1442;">💱 Moneda</label>
+                        <select id="moneda-op" class="form-control" style="width: 100%; font-weight: bold; font-size: 14px; margin-top: 4px;"><option value="COP">COP ($)</option><option value="PEN">PEN (S/)</option><option value="USD">USD ($)</option></select>
                     </div>
                 </div>
-                <div>
-                    <label style="font-size: 11px; font-weight: bold; color: #334155;">📝 Observaciones (Opcional):</label>
-                    <textarea id="doc-instrucciones" class="form-control" rows="2" placeholder="Ej: Dispersar antes de las 11:00 AM. Clave de referencia bancaria: 99281..." style="width:100%; font-size:12px; resize:vertical;"></textarea>
+            </div>
+
+            <!-- SECCIÓN 3: DOCUMENTACIÓN COLAPSABLE (OPCIONAL POR COMPLETO) -->
+            <div style="margin-bottom: 20px;">
+                <button type="button" class="btn" style="background: white; border: 1px dashed #3B82F6; color: #2563EB; font-weight: bold; width: 100%; padding: 10px; text-align: left; display: flex; justify-content: space-between; align-items: center;" onclick="alternarSeccionDocs()">
+                    <span>📎 ¿Deseas adjuntar archivos, links u observaciones? <span style="font-weight: normal; color: #64748B; font-size: 11px;">(Haz clic aquí para desplegar opciones opcionales)</span></span>
+                    <span id="flecha-docs">▼</span>
+                </button>
+
+                <div id="caja-docs-opcional" style="display: none; background: #F8FAFC; border: 1px solid #CBD5E1; border-top: none; border-radius: 0 0 10px 10px; padding: 16px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 12px;">
+                        <div>
+                            <label style="font-size: 11px; font-weight: bold; color: #334155;">📁 Adjuntar Soporte / Archivo (Opcional):</label>
+                            <input type="file" id="doc-archivo" class="form-control" accept=".txt,.pdf,.xlsx,.csv,.png,.xlsm,.pgp" style="width:100%; font-size:11px; padding: 6px; background:white;">
+                        </div>
+                        <div>
+                            <label style="font-size: 11px; font-weight: bold; color: #334155;">🔗 Link de Referencia / Portal Bancario (Opcional):</label>
+                            <input type="url" id="doc-link" class="form-control" placeholder="https://drive.google.com/... o portal del banco" style="width:100%; font-size:12px;">
+                        </div>
+                    </div>
+                    <div>
+                        <label style="font-size: 11px; font-weight: bold; color: #334155;">📝 Observaciones (Opcional):</label>
+                        <textarea id="doc-instrucciones" class="form-control" rows="2" placeholder="Ej: Dispersar antes de las 11:00 AM. Clave de referencia bancaria: 99281..." style="width:100%; font-size:12px; resize:vertical;"></textarea>
+                    </div>
                 </div>
             </div>
 
@@ -113,12 +120,23 @@
             cargarListaPlantillas();
         });
 
+        function alternarSeccionDocs() {
+            const caja = document.getElementById('caja-docs-opcional');
+            const flecha = document.getElementById('flecha-docs');
+            if (caja.style.display === "none") {
+                caja.style.display = "block";
+                flecha.innerText = "▲";
+            } else {
+                caja.style.display = "none";
+                flecha.innerText = "▼";
+            }
+        }
+
         function ajustarANS() {
             const prio = document.getElementById('prioridad-op').value;
             document.getElementById('ans-op').value = prio === "1" ? "1 Hora" : prio === "2" ? "2 Horas" : "4 Horas";
         }
 
-        // INICIALIZACIÓN DE SELECTORES
         function inicializarArbol() {
             const catSelect = document.getElementById('niv-cat');
             catSelect.innerHTML = '<option value="">-- Seleccione Categoría --</option>';
@@ -167,7 +185,6 @@
             if(nv <= 7) { const e = document.getElementById('niv-cta-des'); e.innerHTML='<option value=""></option>'; e.disabled=true; }
         }
 
-        // LIMPIEZA TOTAL Y CARGA DE PLANTILLA
         function cargarListaPlantillas() {
             const pls = JSON.parse(localStorage.getItem('bold_plantillas_bd') || '[]');
             const sel = document.getElementById('select-plantilla');
@@ -192,10 +209,7 @@
             const p = JSON.parse(localStorage.getItem('bold_plantillas_bd') || '[]')[idx];
             if(!p) return;
 
-            // 1. REGLA DE ORO: Borrar todos los datos actuales antes de cargar
             limpiarFormularioCompleto();
-
-            // 2. Autocompletar datos del modelo
             document.getElementById('nombre-op').value = p.nombre;
             if(p.monto) document.getElementById('monto-sol').value = p.monto;
             if(p.moneda) document.getElementById('moneda-op').value = p.moneda;
@@ -247,7 +261,6 @@
             alert(`💾 ¡Modelo "${nom}" guardado exitosamente!\nAhora estará disponible en el menú superior para futuras cargas.`);
         }
 
-        // PROCESAMIENTO CON ARCHIVOS ADJUNTOS EN BASE64
         function procesarRadicacion() {
             const nomOp = document.getElementById('nombre-op').value.trim();
             const monto = document.getElementById('monto-sol').value;
@@ -315,7 +328,6 @@
                 apartadaPor: null,
                 enTransito: true,
                 comprobanteCerrado: false,
-                // CAMPOS DOCUMENTALES OPCIONALES:
                 archivoNombre: fileName || null,
                 archivoTipo: fileType || null,
                 archivoData: fileData || null,
