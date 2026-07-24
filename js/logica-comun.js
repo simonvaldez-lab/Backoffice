@@ -439,7 +439,7 @@ function auditarRadicado(radicado) {
                     <span class="dato-valor" id="mod-cta-destino" style="font-size: 12px; color: #15803D; font-weight: 700; word-break: break-all; display: block; margin-top: 2px;"></span>
                 </div>
                 <div id="mod-doc-seccion" style="grid-column: 1 / -1; margin-top: 10px; padding-top: 10px; border-top: 1px solid #E2E8F0; display: none;">
-                    <span class="dato-label" style="color: #0B1442; font-weight: bold; margin-bottom: 6px; display: block;">📎 Soporte Operativo e Instrucciones</span>
+                    <span class="dato-label" style="color: #0B1442; font-weight: bold; margin-bottom: 6px; display: block;">📎 Soporte Operativo y Observaciones</span>
                     <div id="mod-doc-contenido"></div>
                 </div>
             `);
@@ -462,7 +462,7 @@ function auditarRadicado(radicado) {
             docHtml += `<div style="font-size:12px; margin-bottom:6px;"><strong>🔗 Link Operativo:</strong> <a href="${op.archivoLink}" target="_blank" style="color:#2563EB; font-weight:bold; text-decoration:underline;">Abrir portal o documento externo ↗</a></div>`;
         }
         if (op.instrucciones) {
-            docHtml += `<div style="font-size:11px; background:#FEF3C7; color:#92400E; padding:8px; border-radius:6px; margin-bottom:8px; border:1px solid #FDE68A;"><strong>📝 Instrucciones:</strong> ${op.instrucciones}</div>`;
+            docHtml += `<div style="font-size:11px; background:#FEF3C7; color:#92400E; padding:8px; border-radius:6px; margin-bottom:8px; border:1px solid #FDE68A;"><strong>📝 Observaciones:</strong> ${op.instrucciones}</div>`;
         }
         if (op.archivoData && op.archivoNombre) {
             docHtml += `<div style="margin-top:6px;"><a href="${op.archivoData}" download="${op.archivoNombre}" class="btn" style="background:#3B82F6; color:white; font-size:11px; padding:6px 12px; text-decoration:none; display:inline-block; font-weight:bold;">📥 Descargar Archivo (${op.archivoNombre})</a></div>`;
