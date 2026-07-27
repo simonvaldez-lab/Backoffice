@@ -170,13 +170,17 @@ function cerrarSesion() {
 
 // 7. BADGES DE ESTADO
 function obtenerBadgeEstado(estado) {
-    switch (estado) {
-        case 'Pendiente Validación': return '<span class="badge" style="background:#FEF3C7; color:#92400E; border:1px solid #FDE68A; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:11px;">🟡 PENDIENTE VALIDACIÓN</span>';
-        case 'En Preparación': return '<span class="badge" style="background:#E0F2FE; color:#075985; border:1px solid #BAE6FD; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:11px;">🔵 EN PREPARACIÓN</span>';
-        case 'En Aprobación': return '<span class="badge" style="background:#FEE2E2; color:#991B1B; border:1px solid #FECACA; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:11px;">🔴 EN APROBACIÓN</span>';
-        case 'Completado': case 'Aprobado': return '<span class="badge" style="background:#DCFCE7; color:#166534; border:1px solid #BBF7D0; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:11px;">🟢 COMPLETADO</span>';
-        case 'Rechazado': return '<span class="badge" style="background:#F1F5F9; color:#475569; border:1px solid #CBD5E1; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:11px;">⚫ RECHAZADO</span>';
-        default: return `<span class="badge">${estado}</span>`;
+    var est = String(estado || "").toUpperCase().trim();
+    if (est.indexOf("PENDIENTE_PREPARACION") !== -1 || est.indexOf("PENDIENTE VALIDACI") !== -1 || est === "PENDIENTE") {
+        return '<span class="badge" style="background:#FEF3C7; color:#92400E; border:1px solid #FDE68A; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:11px;">🟡 PENDIENTE PREPARACIÓN</span>';
+    } else if (est.indexOf("PENDIENTE_APROBACION") !== -1 || est.indexOf("EN APROBACI") !== -1 || est.indexOf("EN PREPARACI") !== -1 || est === "LISTO PARA BANCO") {
+        return '<span class="badge" style="background:#E0F2FE; color:#075985; border:1px solid #BAE6FD; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:11px;">🔵 PENDIENTE APROBACIÓN</span>';
+    } else if (est === "APROBADO" || est.indexOf("COMPLETADO") !== -1 || est.indexOf("PAGADA") !== -1 || est.indexOf("CERRADA") !== -1) {
+        return '<span class="badge" style="background:#DCFCE7; color:#166534; border:1px solid #BBF7D0; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:11px;">🟢 COMPLETADA / CERRADA ✓</span>';
+    } else if (est.indexOf("RECHAZADO") !== -1 || est.indexOf("DEVUELTO") !== -1) {
+        return '<span class="badge" style="background:#FEE2E2; color:#991B1B; border:1px solid #FECACA; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:11px;">⚫ RECHAZADO / DEVUELTO</span>';
+    } else {
+        return '<span class="badge" style="background:#F1F5F9; color:#475569; border:1px solid #CBD5E1; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:11px;">' + (estado || "SIN ESTADO") + '</span>';
     }
 }
 
@@ -680,4 +684,91 @@ if (document.readyState === "loading") {
 } else {
     aplicarSeguridadYMenuUniversal();
     refrescarPantallasUniversales();
+}
+
+// === MÓDULO DE CICLO DE VIDA, GUARDIAS RBAC Y RECHAZO ESTRICTO ===
+// 🛡️ GUARDIA RBAC: Verifica que el rol sea autorizado para rechazar o aprobar
+function guardiaRolRechazo(usr) {
+    var rol = String(usr.rol || "").toLowerCase().trim();
+    if (rol === "solicitante") {
+        alert("⛔ ACCESO DENEGADO (RBAC):" + "\n" + "El rol Solicitante solo puede iniciar solicitudes y monitorear su estado. No tiene permisos para rechazar, modificar ni aprobar operaciones.");
+        throw new Error("Violación RBAC: Solicitante intentando rechazar.");
+    }
+    if (rol !== "preparador" && rol !== "validador" && rol !== "aprobador" && rol !== "maestro") {
+        alert("⛔ ACCESO DENEGADO (RBAC):" + "\n" + "Tu rol no cuenta con privilegios para modificar el ciclo de vida de este radicado.");
+        throw new Error("Violación RBAC: Rol no autorizado.");
+    }
+    return true;
+}
+
+function ejecutarRechazoSeguro(radicado) {
+    try {
+        var usrRaw = sessionStorage.getItem("usuarioLogueado") || localStorage.getItem("bold_ultimo_usuario_backup") || "{}";
+        var usr = JSON.parse(usrRaw);
+        guardiaRolRechazo(usr);
+        var ops = typeof obtenerOperaciones === "function" ? obtenerOperaciones() : [];
+        var op = ops.find(function(o) { return o.radicado === radicado; });
+        if (!op) return alert("❌ No se encontró el radicado especificado: " + radicado);
+        var motivo = prompt("🚨 MOTIVO DE DEVOLUCIÓN / RECHAZO (OBLIGATORIO):" + "\n\n" + "Por favor describe detalladamente el error encontrado para que el Solicitante (" + (op.solicitante || "Analista") + ") pueda corregirlo y volver a radicar:");
+        if (motivo === null) return;
+        if (!motivo || motivo.trim() === "") {
+            alert("⚠️ VALIDACIÓN FALLIDA: Es absolutamente obligatorio escribir las observaciones o motivo de rechazo. No se puede devolver una operación en blanco.");
+            return ejecutarRechazoSeguro(radicado);
+        }
+        var motivoLimpio = motivo.trim();
+        var rechazador = (usr.nombre || "Analista") + " (" + (usr.rol || "Preparador").toUpperCase() + ")";
+        op.estado = "RECHAZADO";
+        op.motivoRechazo = motivoLimpio;
+        op.rechazadoPor = rechazador;
+        op.enTransito = false;
+        if (!op.historial) op.historial = [];
+        op.historial.push({
+            fecha: typeof obtenerFechaHoraMilitar === "function" ? obtenerFechaHoraMilitar() : new Date().toLocaleString(),
+            paso: "⚫ OPERACIÓN RECHAZADA / DEVUELTA",
+            detalle: "Devuelto por " + rechazador + ". Motivo obligatorio registrado: \"" + motivoLimpio + "\"",
+            alerta: true
+        });
+        if (typeof guardarOperaciones === "function") guardarOperaciones(ops);
+        if (typeof crearNotificacion === "function") crearNotificacion(radicado, "🚨 RECHAZADO: " + radicado + " fue devuelto por " + rechazador + ". Motivo: " + motivoLimpio, true);
+        alert("✅ OPERACIÓN RECHAZADA Y NOTIFICADA:" + "\n" + "El radicado " + radicado + " ha cambiado al estado RECHAZADO." + "\n" + "Se ha generado una alerta en la interfaz del Solicitante con tus observaciones.");
+        if (typeof refrescarPantallasUniversales === "function") refrescarPantallasUniversales();
+        else if (typeof renderizarTabla === "function") renderizarTabla();
+        if (typeof cerrarModal === "function") cerrarModal("modalDetalles");
+    } catch(err) {
+        console.error("Fallo controlado en rechazo:", err.message);
+    }
+}
+
+// 🛡️ INTERCEPTOR UI: Inyecta la Alerta Roja de Rechazo en la Vista del Solicitante y Auditoría
+if (typeof auditarRadicado === "function") {
+    var _auditarOriginal = auditarRadicado;
+    auditarRadicado = function(radicado) {
+        _auditarOriginal(radicado);
+        setTimeout(function() {
+            var ops = typeof obtenerOperaciones === "function" ? obtenerOperaciones() : [];
+            var op = ops.find(function(o) { return o.radicado === radicado; });
+            if (!op) return;
+            
+            var modalDatos = document.querySelector("#modalDetalles .seccion-datos");
+            var alertaExistente = document.getElementById("alerta-rechazo-ui");
+            if (alertaExistente) alertaExistente.remove();
+            
+            if (String(op.estado || "").toUpperCase().includes("RECHAZ") || String(op.estado || "").toUpperCase().includes("DEVUELT")) {
+                var cajaAlerta = document.createElement("div");
+                cajaAlerta.id = "alerta-rechazo-ui";
+                cajaAlerta.style.cssText = "background:#FEF2F2; border:2px solid #EF4444; color:#991B1B; padding:14px 18px; border-radius:10px; margin-bottom:16px; box-shadow:0 4px 12px rgba(239,68,68,0.15); animation: fadeIn 0.3s ease-in-out;";
+                cajaAlerta.innerHTML = '<div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">' +
+                    '<span style="font-size:24px;">🚨</span>' +
+                    '<strong style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px;">Operación Rechazada / Devuelto a Origen</strong>' +
+                '</div>' +
+                '<div style="font-size:12px; line-height:1.5; background:white; padding:10px; border-radius:6px; border:1px dashed #FECACA; color:#7F1D1D;">' +
+                    '<strong>👤 Devolución emitida por:</strong> ' + (op.rechazadoPor || "Equipo Preparador / Aprobador") + '<br>' +
+                    '<strong style="color:#991B1B;">📝 Observaciones y Motivo del Rechazo:</strong><br>' +
+                    '<span style="display:block; margin-top:4px; font-weight:600; font-size:13px; background:#FFF1F2; padding:6px; border-radius:4px;">"' + (op.motivoRechazo || op.instrucciones || "Por favor revisar los soportes bancarios y volver a diligenciar la solicitud.") + '"</span>' +
+                '</div>';
+                
+                if (modalDatos) modalDatos.insertBefore(cajaAlerta, modalDatos.firstChild);
+            }
+        }, 50);
+    };
 }
