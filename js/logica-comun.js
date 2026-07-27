@@ -421,3 +421,66 @@ if (typeof arbolOperaciones !== "undefined") {
         }
     };
 }
+
+
+// === EXPANSION DE CUENTAS BANCARIAS COMPLETAS SIN ASTERISCOS ===
+if (typeof arbolOperaciones !== "undefined") {
+    // 1. Agregamos una categoría formal con todas las cuentas completas (sin asteriscos ni resúmenes)
+    arbolOperaciones["Traslados entre cuentas"]["Cuentas Propias"]["Canal Directo"]["Bold CO"] = {
+        "Bancolombia - Cta. Corriente # 001-98765432-1 (Bold CO)": {
+            "Bold CO": [
+                "Banco de Bogotá - Cta. Corriente # 033-45678901-2 (Bold CO)",
+                "Citibank Colombia - Cta. Corriente # 100-200300400-5 (Bold CO)",
+                "Davivienda - Cta. Ahorros # 4568-7788-9900 (Bold CO)",
+                "Banco de Occidente - Cta. Corriente # 230-88997766-4 (Bold CO)",
+                "BBVA Colombia - Cta. Corriente # 310-99887766-5 (Bold CO)"
+            ]
+        },
+        "Davivienda - Cta. Ahorros # 4568-7788-9900 (Bold CO)": {
+            "Bold CO": [
+                "Bancolombia - Cta. Corriente # 001-98765432-1 (Bold CO)",
+                "Banco de Bogotá - Cta. Corriente # 033-45678901-2 (Bold CO)"
+            ]
+        },
+        "Citibank Colombia - Cta. Corriente # 100-200300400-5 (Bold CO)": {
+            "Bold CO": [
+                "Bancolombia - Cta. Corriente # 001-98765432-1 (Bold CO)",
+                "Banco de Occidente - Cta. Corriente # 230-88997766-4 (Bold CO)"
+            ]
+        }
+    };
+
+    // 2. Expandimos también las cuentas en las rutas operativas especiales (PSE, Pactos, Taxes)
+    if (arbolOperaciones["Pago PSE"] && arbolOperaciones["Pago PSE"]["Pago Proveedores"]) {
+        arbolOperaciones["Pago PSE"]["Pago Proveedores"]["Pago Proveedores Locales"]["Bold CO"] = {
+            "Bancolombia - Cta. Corriente # 001-98765432-1 (Bold CO)": {
+                "Proveedores Varios": [
+                    "ACH Colombia (PSE) - Dispersión Lote Proveedores Cta # 99001122",
+                    "ACH Colombia (PSE) - Dispersión Nómina y Honorarios Cta # 88776655"
+                ]
+            }
+        };
+    }
+    
+    if (arbolOperaciones["Pago PSE"] && arbolOperaciones["Pago PSE"]["Payroll"]) {
+        arbolOperaciones["Pago PSE"]["Payroll"]["Pacto Colectivo"]["Bold CO"] = {
+            "Bancolombia - Cta. Corriente # 001-98765432-1 (Bold CO)": {
+                "Fondo Pacto Colectivo": [
+                    "Fiduciaria Bancolombia - Encargo Fiduciario Cta # 55443322-1",
+                    "Fiduciaria Bogotá - Fondo Pacto Colectivo Cta # 11223344-9"
+                ]
+            }
+        };
+    }
+
+    if (arbolOperaciones["Pago PSE"] && arbolOperaciones["Pago PSE"]["Pago Impuestos"]) {
+        arbolOperaciones["Pago PSE"]["Pago Impuestos"]["Impuestos Nacionales DIAN"]["Bold CO"] = {
+            "Bancolombia - Cta. Corriente # 001-98765432-1 (Bold CO)": {
+                "DIAN / Tesorería Distrital": [
+                    "Cuenta Única Nacional DIAN - Recaudo Impuestos Cta # 0000-9999-8888",
+                    "Tesorería Distrital Bogotá - Recaudo ICA y Retención Cta # 1111-2222-3333"
+                ]
+            }
+        };
+    }
+}
