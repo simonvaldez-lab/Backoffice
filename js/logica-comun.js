@@ -484,3 +484,95 @@ if (typeof arbolOperaciones !== "undefined") {
         };
     }
 }
+
+// === RADAR EN VIVO Y MOTOR DE TABLA ROBUSTO (SIN F5) ===
+function actualizarRadarYTablaEnVivo() {
+    try {
+        var tb = document.getElementById("tabla-recientes");
+        if (!tb) return;
+        
+        var ops = [];
+        if (typeof obtenerOperaciones === "function") {
+            ops = obtenerOperaciones() || [];
+        } else {
+            try { ops = JSON.parse(localStorage.getItem("bold_operaciones_bd") || "[]"); } catch(e) { ops = []; }
+        }
+        
+        var usrRaw = sessionStorage.getItem("usuarioLogueado") || localStorage.getItem("bold_ultimo_usuario_backup") || "{}";
+        var usr = JSON.parse(usrRaw);
+        var correoUsr = usr.correo || "lau@bold.co";
+        
+        var misOps = ops.filter(function(o) {
+            return !o.solicitante || o.solicitante === correoUsr || usr.rol === "Maestro";
+        }).slice(0, 5);
+        
+        if (misOps.length === 0) misOps = ops.slice(0, 5);
+        
+        if (misOps.length === 0) {
+            tb.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#64748B; padding:20px;">Aún no tienes operaciones radicadas en el sistema. Radica la primera arriba.</td></tr>';
+            return;
+        }
+        
+        var html = "";
+        misOps.forEach(function(o) {
+            var prioBadge = o.prioridad === 1 ? '<span style="color:#991B1B; font-weight:bold;">🔥 Alta</span>' : o.prioridad === 3 ? '<span style="color:#475569;">☕ Baja</span>' : '<span style="color:#D97706; font-weight:bold;">⚡ Media</span>';
+            
+            // Semáforo visual en tiempo real para la pantalla del Solicitante
+            var badgeEst = "";
+            var est = o.estado || "Pendiente Validación";
+            if (est === "Pendiente Validación") {
+                badgeEst = '<span style="background:#FEF3C7; color:#92400E; border:1px solid #FDE68A; padding:4px 8px; border-radius:12px; font-weight:bold; font-size:11px; display:inline-block;">🟡 1. En Revisión Compliance</span>';
+            } else if (est === "En Preparación") {
+                var quier = o.apartadaPor ? " (" + o.apartadaPor + ")" : "";
+                badgeEst = '<span style="background:#E0F2FE; color:#075985; border:1px solid #BAE6FD; padding:4px 8px; border-radius:12px; font-weight:bold; font-size:11px; display:inline-block;">🔵 2. En Montaje Bancario' + quier + '</span>';
+            } else if (est === "En Aprobación") {
+                badgeEst = '<span style="background:#FEE2E2; color:#991B1B; border:1px solid #FECACA; padding:4px 8px; border-radius:12px; font-weight:bold; font-size:11px; display:inline-block;">🔴 3. En Firma de Aprobador</span>';
+            } else if (est === "Completado" || est === "Aprobado") {
+                badgeEst = '<span style="background:#DCFCE7; color:#166534; border:1px solid #BBF7D0; padding:4px 8px; border-radius:12px; font-weight:bold; font-size:11px; display:inline-block;">🟢 4. Dispersado / Pagado ✓</span>';
+            } else {
+                badgeEst = '<span style="background:#F1F5F9; color:#475569; border:1px solid #CBD5E1; padding:4px 8px; border-radius:12px; font-weight:bold; font-size:11px; display:inline-block;">⚫ ' + est + '</span>';
+            }
+            
+            var mon = o.moneda || "COP";
+            var mto = (o.montoSol || o.montoPrep || 0);
+            
+            html += '<tr style="border-bottom: 1px solid #F1F5F9; transition: background 0.2s;" onmouseover="this.style.background=\'#F8FAFC\'" onmouseout="this.style.background=\'transparent\'">' +
+                '<td style="padding: 12px 10px;"><strong>' + (o.radicado || "S/N") + '</strong><br><span style="font-size:11px; color:#64748B;">' + (o.fechaRadicacion || "Hoy") + '</span></td>' +
+                '<td style="padding: 12px 10px;"><strong style="color:#0B1442; font-size:13px;">' + (o.nombreOperacion || o.tipo || "Operación") + '</strong><br><span style="font-size:11px; color:#475569;">' + (o.empresa || "Bold CO") + ' ➔ ' + (o.compDestino || "Destino") + '</span></td>' +
+                '<td style="padding: 12px 10px;"><strong style="font-size:13px; color:#1E293B;">$ ' + Number(mto).toLocaleString() + '</strong> <span style="background:#EEF2FF; color:#3730A3; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:bold;">' + mon + '</span></td>' +
+                '<td style="padding: 12px 10px;">' + prioBadge + '<br><span style="font-size:11px; color:#64748B;">SLA: ' + (o.ans || "2 Horas") + '</span></td>' +
+                '<td style="padding: 12px 10px;">' + badgeEst + '</td>' +
+            '</tr>';
+        });
+        tb.innerHTML = html;
+    } catch(e) { console.error("Error en radar del solicitante:", e); }
+}
+
+// Sincronización multi-escritorio: actualiza el semáforo al instante cuando otro usuario aprueba el pago
+window.addEventListener("storage", function(e) {
+    if (!e.key || e.key === "bold_operaciones_bd" || e.key === "bold_notificaciones_bd") {
+        actualizarRadarYTablaEnVivo();
+    }
+});
+
+// Interceptor seguro en el propio navegador
+if (typeof guardarOperaciones === "function") {
+    var _oldGuardarRadar = guardarOperaciones;
+    guardarOperaciones = function(ops) {
+        _oldGuardarRadar(ops);
+        try { localStorage.setItem("bold_operaciones_bd", JSON.stringify(ops)); } catch(err){}
+        setTimeout(actualizarRadarYTablaEnVivo, 10);
+    };
+}
+
+setInterval(function() {
+    if (typeof actualizarRadarYTablaEnVivo === "function") {
+        actualizarRadarYTablaEnVivo();
+    }
+}, 1500);
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", actualizarRadarYTablaEnVivo);
+} else {
+    setTimeout(actualizarRadarYTablaEnVivo, 100);
+}
