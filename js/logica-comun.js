@@ -576,3 +576,108 @@ if (document.readyState === "loading") {
 } else {
     setTimeout(actualizarRadarYTablaEnVivo, 100);
 }
+
+// === MÓDULO MAESTRO DE SEGURIDAD RBAC, REDIRECCIÓN ESTRICTA Y SINCRONIZACIÓN UNIVERSAL ===
+function aplicarSeguridadYMenuUniversal() {
+    try {
+        var usrRaw = sessionStorage.getItem("usuarioLogueado");
+        if (!usrRaw) usrRaw = localStorage.getItem("bold_ultimo_usuario_backup");
+        
+        if (!usrRaw) {
+            usrRaw = JSON.stringify({ nombre: "Laura", rol: "solicitante", pais: "Colombia", correo: "lau@bold.co", url: "solicitante.html" });
+            sessionStorage.setItem("usuarioLogueado", usrRaw);
+        }
+        var usuario = JSON.parse(usrRaw);
+        localStorage.setItem("bold_ultimo_usuario_backup", usrRaw);
+
+        // 1. DIBUJAR BARRA SUPERIOR DE USUARIO (TOPBAR)
+        var topbarRight = document.querySelector(".topbar-derecha");
+        if (topbarRight) {
+            topbarRight.innerHTML = '<div style="display:flex; align-items:center; gap:12px;">' +
+                '<div style="position:relative; cursor:pointer;" onclick="alert(\'Notificaciones en tiempo real activas\')">🔔<span style="position:absolute; top:-5px; right:-5px; background:#EF4444; color:white; font-size:9px; border-radius:50%; padding:2px 5px; font-weight:bold;">1</span></div>' +
+                '<span style="font-size:12px; background:#E2E8F0; padding:4px 8px; border-radius:12px; font-weight:bold;">🌍 ' + (usuario.pais || "General") + '</span>' +
+                '<span style="font-size:12px; font-weight:bold; color:#0B1442;">👤 ' + (usuario.nombre || "Usuario") + ' (' + (usuario.rol || "solicitante") + ')</span>' +
+                '<button class="btn" style="background:#FEE2E2; color:#991B1B; font-size:11px; padding:4px 10px; font-weight:bold;" onclick="cerrarSesion()">Salir</button>' +
+            '</div>';
+        }
+
+        // 2. MAPEO DE PERMISOS ESTRICTO (CASE-INSENSITIVE)
+        var rol = String(usuario.rol || "solicitante").toLowerCase().trim();
+        var mapaPermisos = {
+            "solicitante": ["solicitante.html", "historial.html"],
+            "validador": ["validador.html", "historial.html"],
+            "preparador": ["preparador.html", "historial.html"],
+            "aprobador": ["aprobador.html", "historial.html"],
+            "maestro": ["solicitante.html", "validador.html", "preparador.html", "aprobador.html", "historial.html"]
+        };
+        
+        var permitidos = mapaPermisos[rol] || ["solicitante.html", "historial.html"];
+        var paginaActual = window.location.pathname.split("/").pop() || "solicitante.html";
+
+        // 🚀 REDIRECCIÓN ESTRICTA: Si el usuario intenta estar en una página que no corresponde a su rol, se le redirige
+        if (paginaActual !== "index.html" && paginaActual !== "" && !permitidos.includes(paginaActual) && rol !== "maestro") {
+            var urlNativa = {
+                "solicitante": "solicitante.html",
+                "validador": "validador.html",
+                "preparador": "preparador.html",
+                "aprobador": "aprobador.html"
+            }[rol] || "solicitante.html";
+            
+            window.location.href = urlNativa;
+            return;
+        }
+
+        // 3. OCULTAR ELEMENTOS DEL MENÚ LATERAL SEGÚN EL ROL
+        document.querySelectorAll(".menu-item").forEach(function(item) {
+            var enlace = item.getAttribute("href");
+            if (enlace && !permitidos.includes(enlace)) {
+                item.style.display = "none";
+                item.style.visibility = "hidden";
+            } else {
+                item.style.display = "block";
+                item.style.visibility = "visible";
+            }
+        });
+
+        document.querySelectorAll(".menu-categoria").forEach(function(cat) {
+            var next = cat.nextElementSibling;
+            var hayVisible = false;
+            while (next && !next.classList.contains("menu-categoria")) {
+                if (next.style.display !== "none" && next.style.visibility !== "hidden") hayVisible = true;
+                next = next.nextElementSibling;
+            }
+            cat.style.display = hayVisible ? "block" : "none";
+        });
+    } catch(e) { console.error("Error en RBAC Universal:", e); }
+}
+
+// 4. SINCRONIZACIÓN UNIVERSAL SIN F5 EN TODAS LAS PANTALLAS
+function refrescarPantallasUniversales() {
+    try {
+        if (typeof renderizarTabla === "function") renderizarTabla();
+        if (typeof actualizarRadarYTablaEnVivo === "function") actualizarRadarYTablaEnVivo();
+        if (typeof pintarTablaRecientesSegura === "function") pintarTablaRecientesSegura();
+    } catch(e) {}
+}
+
+window.addEventListener("storage", function(e) {
+    if (!e.key || e.key === "bold_operaciones_bd" || e.key === "bold_notificaciones_bd" || e.key === "usuarioLogueado") {
+        aplicarSeguridadYMenuUniversal();
+        refrescarPantallasUniversales();
+    }
+});
+
+setInterval(function() {
+    aplicarSeguridadYMenuUniversal();
+    refrescarPantallasUniversales();
+}, 1500);
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function() {
+        aplicarSeguridadYMenuUniversal();
+        refrescarPantallasUniversales();
+    });
+} else {
+    aplicarSeguridadYMenuUniversal();
+    refrescarPantallasUniversales();
+}
