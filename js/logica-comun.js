@@ -314,3 +314,76 @@ function cerrarModal(id) {
 document.addEventListener('DOMContentLoaded', () => {
     aplicarSeguridadYMenu();
 });
+
+
+// === MÓDULO DE SEGURIDAD RBAC Y TOPBAR AGREGADO AL FINAL ===
+function aplicarSeguridadYMenu() {
+    try {
+        var usrRaw = sessionStorage.getItem("usuarioLogueado");
+        if (!usrRaw) usrRaw = localStorage.getItem("bold_ultimo_usuario_backup");
+        
+        // Si no hay sesión, por seguridad iniciamos como Laura (Solicitante) para no abrir roles prohibidos
+        if (!usrRaw) {
+            usrRaw = JSON.stringify({ nombre: "Laura", rol: "Solicitante", pais: "Colombia", correo: "lau@bold.co" });
+            sessionStorage.setItem("usuarioLogueado", usrRaw);
+        }
+        var usuario = JSON.parse(usrRaw);
+        localStorage.setItem("bold_ultimo_usuario_backup", usrRaw);
+
+        // 1. DIBUJAR BARRA SUPERIOR DE USUARIO (TOPBAR)
+        var topbarRight = document.querySelector(".topbar-derecha");
+        if (topbarRight) {
+            topbarRight.innerHTML = '<div style="display:flex; align-items:center; gap:12px;">' +
+                '<div style="position:relative; cursor:pointer;" onclick="alert(\'Notificaciones del sistema\')">🔔<span style="position:absolute; top:-5px; right:-5px; background:#EF4444; color:white; font-size:9px; border-radius:50%; padding:2px 5px; font-weight:bold;">1</span></div>' +
+                '<span style="font-size:12px; background:#E2E8F0; padding:4px 8px; border-radius:12px; font-weight:bold;">🌍 ' + (usuario.pais || "General") + '</span>' +
+                '<span style="font-size:12px; font-weight:bold; color:#0B1442;">👤 ' + (usuario.nombre || "Usuario") + ' (' + (usuario.rol || "Solicitante") + ')</span>' +
+                '<button class="btn" style="background:#FEE2E2; color:#991B1B; font-size:11px; padding:4px 10px; font-weight:bold;" onclick="cerrarSesion()">Salir</button>' +
+            '</div>';
+        }
+
+        // 2. BLOQUEO ESTRICTO DE MENÚ POR ROL (RBAC)
+        var mapaPermisos = {
+            "Solicitante": ["solicitante.html", "historial.html"],
+            "Validador": ["validador.html", "historial.html"],
+            "Preparador": ["preparador.html", "historial.html"],
+            "Aprobador": ["aprobador.html", "historial.html"],
+            "Maestro": ["solicitante.html", "validador.html", "preparador.html", "aprobador.html", "historial.html"]
+        };
+        var rol = usuario.rol || "Solicitante";
+        var permitidos = mapaPermisos[rol] || ["solicitante.html", "historial.html"];
+
+        document.querySelectorAll(".menu-item").forEach(function(item) {
+            var enlace = item.getAttribute("href");
+            if (enlace && !permitidos.includes(enlace)) {
+                item.style.display = "none";
+                item.style.visibility = "hidden";
+            } else {
+                item.style.display = "block";
+                item.style.visibility = "visible";
+            }
+        });
+
+        document.querySelectorAll(".menu-categoria").forEach(function(cat) {
+            var next = cat.nextElementSibling;
+            var hayVisible = false;
+            while (next && !next.classList.contains("menu-categoria")) {
+                if (next.style.display !== "none" && next.style.visibility !== "hidden") hayVisible = true;
+                next = next.nextElementSibling;
+            }
+            cat.style.display = hayVisible ? "block" : "none";
+        });
+    } catch(e) { console.error("Error RBAC:", e); }
+}
+
+function cerrarSesion() {
+    sessionStorage.removeItem("usuarioLogueado");
+    localStorage.removeItem("bold_ultimo_usuario_backup");
+    window.location.href = "index.html";
+}
+
+// Ejecución garantizada al cargar la página
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", aplicarSeguridadYMenu);
+} else {
+    aplicarSeguridadYMenu();
+}
