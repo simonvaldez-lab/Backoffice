@@ -387,3 +387,37 @@ if (document.readyState === "loading") {
 } else {
     aplicarSeguridadYMenu();
 }
+
+
+// === EXPANSIÓN DE ÁRBOL OPERATIVO (PAGO PSE, PACTOS, TAXES) ===
+if (typeof arbolOperaciones !== "undefined") {
+    arbolOperaciones["Pago PSE"] = {
+        "Pago Proveedores": {
+            "Pago Proveedores Locales": {
+                "Bold CO": {
+                    "Bancolombia - *1234": {
+                        "Proveedores Varios": ["Dispersión Lote PSE #001", "Dispersión Lote PSE #002"]
+                    }
+                }
+            }
+        },
+        "Pago Impuestos": {
+            "Impuestos Nacionales DIAN": {
+                "Bold CO": {
+                    "Bancolombia - *1234": {
+                        "DIAN / Tesorería Distrital": ["Cuenta Única Nacional DIAN", "Pago Electrónico Impuestos"]
+                    }
+                }
+            }
+        },
+        "Payroll": {
+            "Pacto Colectivo": {
+                "Bold CO": {
+                    "Bancolombia - *1234": {
+                        "Fondo Pacto Colectivo": ["Cuenta Nómina / Pacto *9988", "Fiduciaria Pacto Colectivo"]
+                    }
+                }
+            }
+        }
+    };
+}

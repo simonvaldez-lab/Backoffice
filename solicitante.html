@@ -3,13 +3,7 @@
 <head>
     <meta charset="UTF-8"><title>Carga de Operaciones - Bold</title><link rel="stylesheet" href="css/estilos.css">
     <style>
-        .btn-excel-card {
-            background: #F8FAFC; border: 1px solid #CBD5E1; padding: 10px 14px; border-radius: 8px;
-            display: flex; align-items: center; gap: 12px; cursor: pointer; transition: all 0.2s; width: 100%;
-        }
-        .btn-excel-card:hover {
-            background: #F0FDF4; border-color: #22C55E; box-shadow: 0 4px 10px rgba(34,197,94,0.15); transform: translateY(-1px);
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -25,7 +19,7 @@
             <p class="subtitulo" style="margin: 4px 0 15px 0;">Configura el enrutamiento bancario, define el valor del pago y gestiona los tiempos de atención (ANS).</p>
 
             <!-- SECCIÓN: CARGA RÁPIDA DE PLANTILLAS GENERALES -->
-            <div style="background: #EEF2FF; border: 1px solid #C7D2FE; padding: 12px 16px; border-radius: 10px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="background: #EEF2FF; border: 1px solid #C7D2FE; padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <strong style="color: #1E1B4B; font-size: 13px;">⚡ Cargar Plantilla Frecuente (Modelo de Trabajo):</strong>
                     <p style="margin: 2px 0 0 0; font-size: 11px; color: #4338CA;">Al seleccionar una plantilla se limpiarán los datos actuales y se autocompletará el formulario automáticamente.</p>
@@ -33,40 +27,6 @@
                 <div style="display: flex; gap: 8px;">
                     <select id="select-plantilla" class="form-control" style="width: 260px; font-size: 12px; height: 34px;"><option value="">-- Seleccionar Plantilla Guardada --</option></select>
                     <button class="btn btn-primario" style="background: #3730A3; height: 34px; padding: 0 14px;" onclick="cargarPlantilla()">Cargar Modelo</button>
-                </div>
-            </div>
-
-            <!-- PANEL VISUAL: PLANTILLAS EXCEL INSTITUCIONALES -->
-            <div style="background: white; border: 1px solid #E2E8F0; padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                    <strong style="color: #0B1442; font-size: 12px; display: flex; align-items: center; gap: 6px;">
-                        <span>📊 Plantillas Operativas en Excel (Carga Masiva Especializada):</span>
-                        <span style="background: #DCFCE7; color: #166534; font-size: 10px; padding: 2px 8px; border-radius: 12px; font-weight: 800; border: 1px solid #BBF7D0;">Soporta .XLSX / .XLSM</span>
-                    </strong>
-                    <span style="font-size: 11px; color: #64748B;">Haz clic en una opción para preparar la carga del archivo Excel:</span>
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
-                    <button type="button" class="btn-excel-card" onclick="activarModoExcel('Pactos Bancarios', 'Inversión / Pacto de Recompra en Excel (.xlsx)')">
-                        <span style="font-size: 20px;">📈</span>
-                        <div style="text-align: left;">
-                            <strong style="display: block; font-size: 12px; color: #1E293B;">Plantilla Pactos</strong>
-                            <span style="font-size: 10px; color: #64748B;">Inversiones y Recompras (.xlsx)</span>
-                        </div>
-                    </button>
-                    <button type="button" class="btn-excel-card" onclick="activarModoExcel('Pago de Impuestos (Taxes)', 'Liquidación y Pago de Impuestos / Taxes (.xlsx)')">
-                        <span style="font-size: 20px;">🏛️</span>
-                        <div style="text-align: left;">
-                            <strong style="display: block; font-size: 12px; color: #1E293B;">Plantilla Taxes</strong>
-                            <span style="font-size: 10px; color: #64748B;">Impuestos DIAN / Distritales (.xlsx)</span>
-                        </div>
-                    </button>
-                    <button type="button" class="btn-excel-card" onclick="activarModoExcel('Dispersión Masiva PSE', 'Lote masivo de transferencias por PSE (.xlsx)')">
-                        <span style="font-size: 20px;">🔄</span>
-                        <div style="text-align: left;">
-                            <strong style="display: block; font-size: 12px; color: #1E293B;">Plantilla PSE</strong>
-                            <span style="font-size: 10px; color: #64748B;">Dispersión Masiva por Lote (.xlsx)</span>
-                        </div>
-                    </button>
                 </div>
             </div>
 
@@ -93,7 +53,7 @@
                 </div>
             </div>
 
-            <!-- SECCIÓN 2: ÁRBOL RELACIONAL CON MONTO Y MONEDA AL FINAL -->
+            <!-- SECCIÓN 2: ÁRBOL RELACIONAL CON SENSOR DINÁMICO DE EXCEL -->
             <div style="background: white; border: 1px solid #CBD5E1; border-radius: 10px; padding: 16px; margin-bottom: 15px;">
                 <h3 style="margin: 0 0 12px 0; font-size: 14px; color: #0B1442; border-bottom: 1px solid #F1F5F9; padding-bottom: 8px;">2. Enrutamiento Bancario y Valor del Pago</h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px;">
@@ -108,6 +68,11 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
                     <div><label style="font-size: 11px; font-weight: bold; color: #2563EB;">Nivel 6: Empresa Destino</label><select id="niv-emp-des" class="form-control" style="width:100%;" disabled><option value="">-- Primero Cuenta Origen --</option></select></div>
                     <div><label style="font-size: 11px; font-weight: bold; color: #2563EB;">Nivel 7: Cuenta Destino (Crédito)</label><select id="niv-cta-des" class="form-control" style="width:100%;" disabled><option value="">-- Primero Empresa Destino --</option></select></div>
+                </div>
+
+                <!-- 🚀 CONTENEDOR DINÁMICO: APARECE SOLO CUANDO SE DETECTA LA RUTA EXCEL -->
+                <div id="panel-excel-dinamico" style="display: none; margin-bottom: 16px;">
+                    <div id="contenido-excel-dinamico"></div>
                 </div>
 
                 <!-- VALOR DEL PAGO AL FINAL -->
@@ -154,11 +119,11 @@
                 <button class="btn btn-primario" style="background: #15803D; font-size: 15px; padding: 12px 28px; box-shadow: 0 4px 12px rgba(21,128,61,0.2);" onclick="procesarRadicacion()">🚀 Radicar Operación en Cascada</button>
             </div>
 
-            <!-- 🚀 NUEVA TABLA AL FINAL: REFLEJO INSTANTÁNEO DE OPERACIONES RADICADAS -->
+            <!-- TABLA EN VIVO: ULTIMAS OPERACIONES RADICADAS -->
             <div style="background: white; border: 1px solid #CBD5E1; border-radius: 10px; padding: 16px; margin-top: 20px;">
                 <h3 style="margin: 0 0 10px 0; font-size: 14px; color: #0B1442; display: flex; justify-content: space-between; align-items: center;">
-                    <span>📋 Tus Últimas Operaciones Radicadas (Sesión Actual)</span>
-                    <span style="font-size: 11px; color: #64748B; font-weight: normal;">Se actualiza en vivo al radicar</span>
+                    <span>📋 Mis Últimos Radicados (Sincronizados en Nube)</span>
+                    <span style="font-size: 11px; color: #64748B; font-weight: normal;">Guardado en tiempo real en Firebase</span>
                 </h3>
                 <div class="tabla-contenedor">
                     <table>
@@ -172,7 +137,7 @@
         </main>
     </div>
 
-    <!-- 🛡️ NUEVO MODAL DE REVISIÓN Y CONFIRMACIÓN PRE-RADICACIÓN -->
+    <!-- MODAL DE CONFIRMACIÓN PRE-RADICACIÓN -->
     <div class="modal-overlay" id="modalConfirmacion" style="display: none; z-index: 2000;">
         <div class="modal" style="max-width: 580px; padding: 24px; border-radius: 12px; background: white; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15);">
             <div style="border-bottom: 1px solid #E2E8F0; padding-bottom: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
@@ -228,10 +193,69 @@
             renderizarTabla();
         });
 
-        // 🚀 ACCIÓN DINÁMICA DE PLANTILLAS EXCEL
+        // 🚀 SENSOR DINÁMICO: DETECTA CUANDO UNA RUTA ADMITE O REQUIERE PLANTILLA EXCEL
+        function evaluarReglasExcel() {
+            const cat = document.getElementById('niv-cat').value;
+            const sub = document.getElementById('niv-sub').value;
+            const det = document.getElementById('niv-det').value;
+            const panel = document.getElementById('panel-excel-dinamico');
+            const contenido = document.getElementById('contenido-excel-dinamico');
+            
+            if (!panel || !contenido) return;
+
+            let modo = null, icono = "", desc = "";
+
+            // Regla 1: Pago PSE / Pago Proveedores / Pago Proveedores Locales
+            if (cat === "Pago PSE" && sub === "Pago Proveedores" && det === "Pago Proveedores Locales") {
+                modo = "Dispersión Masiva PSE"; icono = "🔄"; desc = "Lote masivo de transferencias por PSE (Pago Proveedores Locales en Excel .xlsx)";
+            } 
+            // Regla 2: Pago PSE / Pago Impuestos / ...
+            else if (cat === "Pago PSE" && sub === "Pago Impuestos") {
+                modo = "Pago de Impuestos (Taxes)"; icono = "🏛️"; desc = "Liquidación y Pago de Impuestos DIAN / Distritales en Excel (.xlsx)";
+            }
+            // Regla 3: Pago PSE / Payroll / Pacto Colectivo
+            else if (cat === "Pago PSE" && sub === "Payroll" && det === "Pacto Colectivo") {
+                modo = "Pactos Bancarios"; icono = "📈"; desc = "Inversión / Pacto Colectivo de Recompra en Excel (.xlsx)";
+            }
+            // Compatibilidad con categorías anteriores
+            else if (cat === "Dispersión Masiva") {
+                modo = "Dispersión Masiva PSE"; icono = "🔄"; desc = "Dispersión Masiva por Lote ACH (.xlsx)";
+            }
+            else if (cat === "Inversiones y Pactos") {
+                modo = "Pactos Bancarios"; icono = "📈"; desc = "Inversión y Recompras en Excel (.xlsx)";
+            }
+            else if (cat === "Impuestos y Taxes") {
+                modo = "Pago de Impuestos (Taxes)"; icono = "🏛️"; desc = "Impuestos DIAN en Excel (.xlsx)";
+            }
+
+            if (modo) {
+                contenido.innerHTML = `
+                    <div style="background: #F0FDF4; border: 2px dashed #22C55E; padding: 14px 18px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; animation: fadeIn 0.3s ease-in-out;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <span style="font-size: 28px;">${icono}</span>
+                            <div>
+                                <strong style="color: #166534; font-size: 13px; display: block;">✨ Formato Masivo Detectado: Plantilla ${modo}</strong>
+                                <span style="color: #15803D; font-size: 11px;">La ruta operativa seleccionada admite o requiere adjuntar el detalle en formato Excel (.xlsx).</span>
+                            </div>
+                        </div>
+                        <button type="button" class="btn" style="background: #166534; color: white; font-weight: bold; font-size: 12px; padding: 8px 16px; box-shadow: 0 4px 10px rgba(22,101,52,0.2); white-space: nowrap;" onclick="activarModoExcel('${modo}', '${desc}')">
+                            ${icono} Adjuntar Plantilla Excel
+                        </button>
+                    </div>
+                `;
+                panel.style.display = 'block';
+            } else {
+                panel.style.display = 'none';
+                contenido.innerHTML = '';
+            }
+        }
+
+        // ACCIÓN AL HACER CLIC EN EL BOTÓN DINÁMICO DE EXCEL
         function activarModoExcel(tipo, descripcion) {
-            limpiarFormularioCompleto();
-            document.getElementById('nombre-op').value = `[Excel] ${tipo} - ${new Date().toLocaleDateString('es-CO')}`;
+            const nomActual = document.getElementById('nombre-op').value.trim();
+            if (!nomActual.startsWith("[Excel]")) {
+                document.getElementById('nombre-op').value = `[Excel] ${tipo} - ${new Date().toLocaleDateString('es-CO')}`;
+            }
             document.getElementById('doc-instrucciones').value = `Operación basada en plantilla Excel institucional: ${descripcion}. Por favor verificar registros y soportes en el archivo adjunto.`;
             
             const caja = document.getElementById('caja-docs-opcional');
@@ -251,7 +275,7 @@
                 }, 3500);
             }
             
-            alert(`📊 Modo de Plantilla Excel Activado: ${tipo}\n\n1. El nombre se completó con la etiqueta [Excel].\n2. Completa el monto y la cuenta destino en los selectores.\n3. Adjunta tu archivo .XLSX en el campo iluminado de color verde.`);
+            alert(`📊 Modo Excel Activado: ${tipo}\n\n1. Se etiquetó el nombre de la operación.\n2. Se abrió la sección inferior y parpadea en verde el campo para que subas tu archivo .XLSX o .XLSM.`);
         }
 
         function alternarSeccionDocs() {
@@ -275,41 +299,43 @@
             const catSelect = document.getElementById('niv-cat');
             catSelect.innerHTML = '<option value="">-- Seleccione Categoría --</option>';
             Object.keys(arbolOperaciones).forEach(c => catSelect.innerHTML += `<option value="${c}">${c}</option>`);
-            catSelect.onchange = () => poblarSubtipos(catSelect.value);
+            catSelect.onchange = () => { poblarSubtipos(catSelect.value); evaluarReglasExcel(); };
         }
         function poblarSubtipos(cat) {
             const el = document.getElementById('niv-sub'); el.innerHTML = '<option value="">-- Seleccione Subtipo --</option>'; el.disabled = !cat;
-            if(cat) Object.keys(arbolOperaciones[cat]).forEach(s => el.innerHTML += `<option value="${s}">${s}</option>`);
-            el.onchange = () => poblarDetalles(cat, el.value);
+            if(cat && arbolOperaciones[cat]) Object.keys(arbolOperaciones[cat]).forEach(s => el.innerHTML += `<option value="${s}">${s}</option>`);
+            el.onchange = () => { poblarDetalles(cat, el.value); evaluarReglasExcel(); };
             limpiarNivelesDesde(3);
+            evaluarReglasExcel();
         }
         function poblarDetalles(cat, sub) {
             const el = document.getElementById('niv-det'); el.innerHTML = '<option value="">-- Seleccione Detalle --</option>'; el.disabled = !sub;
-            if(sub) Object.keys(arbolOperaciones[cat][sub]).forEach(d => el.innerHTML += `<option value="${d}">${d}</option>`);
-            el.onchange = () => poblarEmpOrigen(cat, sub, el.value);
+            if(sub && arbolOperaciones[cat][sub]) Object.keys(arbolOperaciones[cat][sub]).forEach(d => el.innerHTML += `<option value="${d}">${d}</option>`);
+            el.onchange = () => { poblarEmpOrigen(cat, sub, el.value); evaluarReglasExcel(); };
             limpiarNivelesDesde(4);
+            evaluarReglasExcel();
         }
         function poblarEmpOrigen(cat, sub, det) {
             const el = document.getElementById('niv-emp-ori'); el.innerHTML = '<option value="">-- Seleccione Empresa Origen --</option>'; el.disabled = !det;
-            if(det) Object.keys(arbolOperaciones[cat][sub][det]).forEach(e => el.innerHTML += `<option value="${e}">${e}</option>`);
+            if(det && arbolOperaciones[cat][sub][det]) Object.keys(arbolOperaciones[cat][sub][det]).forEach(e => el.innerHTML += `<option value="${e}">${e}</option>`);
             el.onchange = () => poblarCtaOrigen(cat, sub, det, el.value);
             limpiarNivelesDesde(5);
         }
         function poblarCtaOrigen(cat, sub, det, empOri) {
             const el = document.getElementById('niv-cta-ori'); el.innerHTML = '<option value="">-- Seleccione Cuenta Origen --</option>'; el.disabled = !empOri;
-            if(empOri) Object.keys(arbolOperaciones[cat][sub][det][empOri]).forEach(c => el.innerHTML += `<option value="${c}">${c}</option>`);
+            if(empOri && arbolOperaciones[cat][sub][det][empOri]) Object.keys(arbolOperaciones[cat][sub][det][empOri]).forEach(c => el.innerHTML += `<option value="${c}">${c}</option>`);
             el.onchange = () => poblarEmpDestino(cat, sub, det, empOri, el.value);
             limpiarNivelesDesde(6);
         }
         function poblarEmpDestino(cat, sub, det, empOri, ctaOri) {
             const el = document.getElementById('niv-emp-des'); el.innerHTML = '<option value="">-- Seleccione Empresa Destino --</option>'; el.disabled = !ctaOri;
-            if(ctaOri) Object.keys(arbolOperaciones[cat][sub][det][empOri][ctaOri]).forEach(e => el.innerHTML += `<option value="${e}">${e}</option>`);
+            if(ctaOri && arbolOperaciones[cat][sub][det][empOri][ctaOri]) Object.keys(arbolOperaciones[cat][sub][det][empOri][ctaOri]).forEach(e => el.innerHTML += `<option value="${e}">${e}</option>`);
             el.onchange = () => poblarCtaDestino(cat, sub, det, empOri, ctaOri, el.value);
             limpiarNivelesDesde(7);
         }
         function poblarCtaDestino(cat, sub, det, empOri, ctaOri, empDes) {
             const el = document.getElementById('niv-cta-des'); el.innerHTML = '<option value="">-- Seleccione Cuenta Destino --</option>'; el.disabled = !empDes;
-            if(empDes) arbolOperaciones[cat][sub][det][empOri][ctaOri][empDes].forEach(c => el.innerHTML += `<option value="${c}">${c}</option>`);
+            if(empDes && arbolOperaciones[cat][sub][det][empOri][ctaOri][empDes]) arbolOperaciones[cat][sub][det][empOri][ctaOri][empDes].forEach(c => el.innerHTML += `<option value="${c}">${c}</option>`);
         }
         function limpiarNivelesDesde(nv) {
             if(nv <= 3) { const e = document.getElementById('niv-det'); e.innerHTML='<option value=""></option>'; e.disabled=true; }
@@ -335,6 +361,7 @@
             document.getElementById('prioridad-op').value = "2";
             ajustarANS();
             inicializarArbol();
+            evaluarReglasExcel();
         }
 
         function cargarPlantilla() {
@@ -365,7 +392,7 @@
                             setTimeout(() => {
                                 document.getElementById('niv-emp-des').value = p.empDes;
                                 poblarCtaDestino(p.cat, p.sub, p.det, p.empOri, p.ctaOri, p.empDes);
-                                setTimeout(() => { document.getElementById('niv-cta-des').value = p.ctaDes; }, 40);
+                                setTimeout(() => { document.getElementById('niv-cta-des').value = p.ctaDes; evaluarReglasExcel(); }, 40);
                             }, 40);
                         }, 40);
                     }, 40);
@@ -395,7 +422,6 @@
             alert(`💾 ¡Modelo "${nom}" guardado exitosamente!\nAhora estará disponible en el menú superior para futuras cargas.`);
         }
 
-        // 🛡️ PASO 1: ABRIR MODAL DE REVISIÓN Y CONFIRMACIÓN PREVIA
         function procesarRadicacion() {
             const nomOp = document.getElementById('nombre-op').value.trim();
             const monto = document.getElementById('monto-sol').value;
@@ -412,7 +438,6 @@
             if(!monto || monto <= 0) return alert("⚠️ Por favor ingresa un monto solicitado válido.");
             if(!ctaDes) return alert("⚠️ Por favor completa los 7 niveles de enrutamiento bancario (Cuenta Destino).");
 
-            // Poblar datos en el modal de confirmación
             document.getElementById('conf-nom').innerText = nomOp;
             const prioTexto = prio === "1" ? "🔥 1 - Alta (Urgente)" : prio === "2" ? "⚡ 2 - Media (Normal)" : "☕ 3 - Baja (Flexible)";
             document.getElementById('conf-prio').innerText = `${prioTexto} | ANS: ${ans}`;
@@ -421,7 +446,7 @@
             document.getElementById('conf-des').innerText = ctaDes;
 
             let docResumen = [];
-            if (fileInput.files[0]) docResumen.push(`📁 Archivo: ${fileInput.files[0].name}`);
+            if (fileInput && fileInput.files[0]) docResumen.push(`📁 Archivo: ${fileInput.files[0].name}`);
             if (link) docResumen.push("🔗 Link adjunto");
             if (inst) docResumen.push("📝 Con observaciones");
             document.getElementById('conf-doc').innerText = docResumen.length > 0 ? docResumen.join(" | ") : "Ninguno (Estándar)";
@@ -433,11 +458,10 @@
             document.getElementById('modalConfirmacion').style.display = 'none';
         }
 
-        // 🚀 PASO 2: EJECUTAR EL GUARDADO DEFINITIVO TRAS CONFIRMAR
         function confirmarYRadicar() {
             cerrarModalConfirmacion();
             const fileInput = document.getElementById('doc-archivo');
-            const file = fileInput.files[0];
+            const file = fileInput ? fileInput.files[0] : null;
 
             if (file) {
                 const reader = new FileReader();
@@ -452,7 +476,7 @@
 
         function finalizarGuardadoOperacion(fileData, fileName, fileType) {
             const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : [];
-            const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}');
+            const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || localStorage.getItem('bold_ultimo_usuario_backup') || '{}');
             const sec = String(ops.length + 1).padStart(4, '0');
             const rad = `TRAS-${new Date().toLocaleDateString('es-CO').substring(0,5)}-26-${sec}`;
 
@@ -489,8 +513,8 @@
                 ans: ans,
                 estado: "Pendiente Validación",
                 prioridad: parseInt(prio),
-                fechaRadicacion: obtenerFechaHoraMilitar().split(" - ")[0],
-                fechaISO: obtenerFechaISO(),
+                fechaRadicacion: typeof obtenerFechaHoraMilitar === 'function' ? obtenerFechaHoraMilitar().split(" - ")[0] : new Date().toLocaleDateString('es-CO'),
+                fechaISO: typeof obtenerFechaISO === 'function' ? obtenerFechaISO() : "2026-07-27",
                 apartadaPor: null,
                 enTransito: true,
                 comprobanteCerrado: false,
@@ -500,44 +524,19 @@
                 archivoLink: link || null,
                 instrucciones: inst || null,
                 historial: [{
-                    fecha: obtenerFechaHoraMilitar(),
+                    fecha: typeof obtenerFechaHoraMilitar === 'function' ? obtenerFechaHoraMilitar() : "Hoy",
                     paso: "1. RADICACIÓN EN CASCADA",
                     detalle: `Operación "${nomOp}" radicada por ${usr.nombre || 'Solicitante'}. ${fileName ? '📎 Adjuntó archivo: '+fileName : ''}`
                 }]
             };
 
             ops.unshift(nueva);
-            guardarOperaciones(ops);
-            crearNotificacion(rad, `📝 ¡NUEVA RADICACIÓN! ${usr.nombre || 'Laura'} radicó: "${nomOp}" por $${parseFloat(monto).toLocaleString()} ${moneda}.`);
+            if(typeof guardarOperaciones === 'function') guardarOperaciones(ops);
+            if(typeof crearNotificacion === 'function') crearNotificacion(rad, `📝 ¡NUEVA RADICACIÓN! ${usr.nombre || 'Laura'} radicó: "${nomOp}" por $${parseFloat(monto).toLocaleString()} ${moneda}.`);
             
             alert(`✅ ¡Operación Radicada con Éxito!\nRadicado: ${rad}\nNombre: ${nomOp}\n\nSe ha notificado al equipo de Validación Compliance.`);
             limpiarFormularioCompleto();
             renderizarTabla();
-        }
-
-        // 📋 RENDERIZAR TABLA INFERIOR DE SESIÓN
-        function renderizarTabla() {
-            const tb = document.getElementById('tabla-recientes');
-            if (!tb) return;
-            const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : [];
-            const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}');
-            const misOps = ops.filter(o => o.solicitante === (usr.correo || 'lau@bold.co')).slice(0, 5);
-            
-            tb.innerHTML = '';
-            if (misOps.length === 0) {
-                tb.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#64748B; padding:20px;">Aún no has radicado operaciones en esta sesión. Completa el formulario y presiona Radicar.</td></tr>';
-                return;
-            }
-            misOps.forEach(o => {
-                const prioBadge = o.prioridad === 1 ? '<span style="color:#991B1B; font-weight:bold;">🔥 Alta</span>' : o.prioridad === 3 ? '<span style="color:#475569;">☕ Baja</span>' : '<span style="color:#D97706; font-weight:bold;">⚡ Media</span>';
-                tb.innerHTML += `<tr>
-                    <td><strong>${o.radicado}</strong><br><span style="font-size:11px; color:#64748B;">${o.fechaRadicacion}</span></td>
-                    <td><strong style="color:#0B1442;">${o.nombreOperacion || o.tipo}</strong><br><span style="font-size:11px; color:#475569;">${o.empresa} ➔ ${o.compDestino}</span></td>
-                    <td><strong>$ ${o.montoSol.toLocaleString()}</strong> <span class="badge badge-moneda">${o.moneda}</span></td>
-                    <td>${prioBadge} (${o.ans})</td>
-                    <td>${typeof obtenerBadgeEstado === 'function' ? obtenerBadgeEstado(o.estado) : o.estado}</td>
-                </tr>`;
-            });
         }
     </script>
 </body>
