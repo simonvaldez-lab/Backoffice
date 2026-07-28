@@ -901,7 +901,7 @@ var NUBE_API = {
 function iniciarEscuchadoresNubeEnVivo() {
     try {
         if (typeof firebase !== "undefined" && firebase.firestore) {
-            var db = firebase.firestore();
+            var db = firebase.app().firestore("treasurybackoffice");
             db.collection("operaciones").orderBy("fechaServidor", "desc").onSnapshot(function(snapshot) {
                 var opsNube = [];
                 snapshot.forEach(function(doc) { opsNube.push(doc.data()); });
