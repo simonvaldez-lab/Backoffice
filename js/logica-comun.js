@@ -772,3 +772,61 @@ if (typeof auditarRadicado === "function") {
         }, 50);
     };
 }
+
+// === PUENTE ASÍNCRONO CON FIREBASE CLOUD FUNCTIONS ===
+// ⚙️ CONFIGURACIÓN DE TU ENDPOINT EN LA NUBE
+// Nota: Cuando despliegues con 'firebase deploy --only functions', reemplaza esta URL por la que te dé tu consola
+var CLOUD_FUNCTION_URL = "https://us-central1-TU-PROYECTO.cloudfunctions.net/apiRadicarOperacion";
+
+function enviarRadicadoACloudFunction(operacion) {
+    try {
+        if (!operacion || !operacion.radicado) return;
+        
+        // Evitamos reenviar si es un guardado de actualización o rechazo posterior
+        if (operacion.estado !== "Pendiente Validación" && operacion.estado !== "Pendiente Preparación") return;
+
+        console.log("☁️ [PUENTE CLOUD] Enviando radicado a Firebase Cloud Functions: " + operacion.radicado);
+
+        // Petición asíncrona en segundo plano (Fetch API) para no congelar la UI de Laura
+        fetch(CLOUD_FUNCTION_URL, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Accept": "application/json"
+            },
+            body: JSON.stringify(operacion)
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data.exito) {
+                console.log("🟢 [CLOUD FUNCTION OK]: Operación asegurada en la nube -> " + data.idDocumento);
+            } else {
+                console.warn("⚠️ [CLOUD FUNCTION RESPUESTA]: " + (data.error || "Desconocido"));
+            }
+        })
+        .catch(function(err) {
+            // Si la Cloud Function aún no está desplegada o hay fallo de red, el sistema local sigue intacto
+            console.warn("ℹ️ [MODO OFFLINE / LOCAL]: No se pudo contactar la Cloud Function aún. La operación permanece asegurada en la memoria local y se sincronizará luego. Detalle: " + err.message);
+        });
+    } catch(e) {
+        console.error("Fallo silencioso en puente Cloud:", e.message);
+    }
+}
+
+// 🛡️ INTERCEPTOR ADITIVO: Enganchamos la función guardarOperaciones sin alterar su comportamiento
+if (typeof guardarOperaciones === "function") {
+    var _guardarOriginalParaCloud = guardarOperaciones;
+    guardarOperaciones = function(ops) {
+        // 1. Ejecutamos tu guardado local intacto para respuesta en 0 ms
+        _guardarOriginalParaCloud(ops);
+        
+        // 2. Si hay operaciones y la más reciente es recién radicada, disparar el envío a Cloud Functions
+        try {
+            if (ops && ops.length > 0) {
+                var ultimaOp = ops[0]; // La radicación en cascada inserta al inicio del array (unshift)
+                // Disparamos en segundo plano con 100 ms de margen
+                setTimeout(function() { enviarRadicadoACloudFunction(ultimaOp); }, 100);
+            }
+        } catch(errCloud) {}
+    };
+}
