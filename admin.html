@@ -129,6 +129,18 @@
     </div>
 
     <!-- CARGA DE LÓGICA COMÚN -->
+    
+    <!-- 🔥 LIBRERÍAS OFICIALES DE FIREBASE & WEBSOCKETS -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script>
+        if (typeof firebase !== "undefined" && !firebase.apps.length) {
+            firebase.initializeApp({
+                projectId: "black-hulling-462522-j2"
+            });
+            console.log("🟢 [FIREBASE CORE]: Conectado exitosamente por WebSocket al proyecto black-hulling-462522-j2");
+        }
+    </script>
     <script src="js/logica-comun.js"></script>
     <script>
         function cambiarPestaña(idPanel, btn) {

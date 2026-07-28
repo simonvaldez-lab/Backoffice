@@ -885,3 +885,114 @@ function auditarCumplimientoANS(operacion) {
     var limite = (operacion.estado === "En Aprobación") ? regla.maxAprobacionMin : regla.maxMontajeMin;
     return { vencido: false, limiteMin: limite, regla: regla };
 }
+
+// === MOTOR CLIENTE: FIREBASE CLOUD TRANSACTIONS & WEBSOCKETS ===
+var NUBE_API = {
+    radicar: "https://us-central1-black-hulling-462522-j2.cloudfunctions.net/apiRadicarOperacion",
+    validarKYC: "https://us-central1-black-hulling-462522-j2.cloudfunctions.net/apiValidarKYC",
+    montar: "https://us-central1-black-hulling-462522-j2.cloudfunctions.net/apiRegistrarMontaje",
+    aprobar: "https://us-central1-black-hulling-462522-j2.cloudfunctions.net/apiAprobarMontaje",
+    cerrar: "https://us-central1-black-hulling-462522-j2.cloudfunctions.net/apiCerrarComprobante",
+    rechazar: "https://us-central1-black-hulling-462522-j2.cloudfunctions.net/apiRechazarOperacion",
+    guardarUsuarios: "https://us-central1-black-hulling-462522-j2.cloudfunctions.net/apiGuardarUsuarios",
+    guardarANS: "https://us-central1-black-hulling-462522-j2.cloudfunctions.net/apiGuardarANS"
+};
+
+function iniciarEscuchadoresNubeEnVivo() {
+    try {
+        if (typeof firebase !== "undefined" && firebase.firestore) {
+            var db = firebase.firestore();
+            db.collection("operaciones").orderBy("fechaServidor", "desc").onSnapshot(function(snapshot) {
+                var opsNube = [];
+                snapshot.forEach(function(doc) { opsNube.push(doc.data()); });
+                if (opsNube.length > 0) {
+                    localStorage.setItem("bold_operaciones_backup", JSON.stringify(opsNube));
+                    if (typeof refrescarPantallasUniversales === "function") refrescarPantallasUniversales();
+                    else if (typeof renderizarTabla === "function") renderizarTabla();
+                }
+            }, function(e) {});
+
+            db.collection("configuracion").doc("usuarios").onSnapshot(function(doc) {
+                if (doc.exists && doc.data().lista) {
+                    localStorage.setItem("bold_usuarios_config", JSON.stringify(doc.data().lista));
+                    if (typeof renderizarUsuarios === "function") renderizarUsuarios();
+                }
+            }, function(e) {});
+
+            db.collection("configuracion").doc("ans").onSnapshot(function(doc) {
+                console.log("⚡ [WEBSOCKET ANS] Cambio detectado en tiempo real desde Google Cloud!");
+                if (doc.exists && doc.data().lista) {
+                    localStorage.setItem("bold_config_ans", JSON.stringify(doc.data().lista));
+                    if (typeof renderizarANS === "function") renderizarANS();
+                }
+            }, function(e) {});
+        }
+    } catch(e) {}
+}
+
+if (typeof window !== "undefined") {
+    window.addEventListener("DOMContentLoaded", iniciarEscuchadoresNubeEnVivo);
+}
+
+function invocarCloudAPI(url, payload, callbackExito) {
+    var usr = JSON.parse(sessionStorage.getItem("usuarioLogueado") || "{}");
+    payload.usuario = usr;
+
+    fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.exito) {
+            if (callbackExito) callbackExito(data);
+        } else {
+            alert("❌ BLOQUEO DE SEGURIDAD RBAC EN LA NUBE:\n\n" + (data.error || "Desconocido"));
+        }
+    })
+    .catch(function(err) { alert("⚠️ Error de conexión: " + err.message); });
+}
+
+function validarKYCOperacion(rad) {
+    if (confirm("🛡️ CHECK DE CUMPLIMIENTO (KYC):\n\n¿Confirmas que has verificado la legitimidad de la cuenta para el radicado " + rad + " y autorizas pasar a preparación en banco?")) {
+        invocarCloudAPI(NUBE_API.validarKYC, { radicado: rad }, function(res) {
+            alert("✅ ¡Revisión KYC Aprobada con Éxito en la Nube!\nLa operación " + rad + " ha cambiado a estado En Preparación.");
+            if (typeof refrescarPantallasUniversales === "function") refrescarPantallasUniversales();
+        });
+    }
+}
+
+if (typeof enviarAAprobador === "function") {
+    enviarAAprobador = function(rad) {
+        var ops = typeof obtenerOperaciones === "function" ? obtenerOperaciones() : [];
+        var op = ops.find(function(o) { return o.radicado === rad; });
+        if (!op) return;
+        var screen = prompt("🖼️ PASO 2 - ADJUNTAR SCREENSHOT DE MONTAJE EN NUBE:\n\nNombre de captura o link del portal:", op.archivoScreenshot || "screenshot_banco.png");
+        if (!screen || screen.trim() === "") return alert("⚠️ El screenshot es obligatorio.");
+        invocarCloudAPI(NUBE_API.montar, { radicado: rad, archivoScreenshot: screen }, function(res) {
+            alert("🚀 ¡Montaje bancario registrado en Google Cloud!\nEvidencia: " + screen);
+            if (typeof refrescarPantallasUniversales === "function") refrescarPantallasUniversales();
+        });
+    };
+}
+
+if (typeof confirmarPagoFinal === "function") {
+    confirmarPagoFinal = function(rad) {
+        invocarCloudAPI(NUBE_API.aprobar, { radicado: rad }, function(res) {
+            alert("✅ ¡Visto Bueno sellado en la nube!\nDevuelto a Felipe para PDF de cierre.");
+            if (typeof refrescarPantallasUniversales === "function") refrescarPantallasUniversales();
+        });
+    };
+}
+
+if (typeof finalizarYCerrarComprobante === "function") {
+    finalizarYCerrarComprobante = function(rad) {
+        var pdf = prompt("📄 ADJUNTAR COMPROBANTE PDF FINAL:\n\nNombre del archivo bancario:", "comprobante_cierre.pdf");
+        if (!pdf || pdf.trim() === "") return alert("⚠️ El PDF es obligatorio.");
+        invocarCloudAPI(NUBE_API.cerrar, { radicado: rad, archivoPDF: pdf }, function(res) {
+            alert("🏁 ¡Comprobante Cerrado Exitosamente en Google Cloud!\nArchivo: " + pdf);
+            if (typeof refrescarPantallasUniversales === "function") refrescarPantallasUniversales();
+        });
+    };
+}
