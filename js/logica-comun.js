@@ -902,6 +902,7 @@ function iniciarEscuchadoresNubeEnVivo() {
     try {
         if (typeof firebase !== "undefined" && firebase.firestore) {
             var db = firebase.app().firestore("treasurybackoffice");
+            console.log("🟢 [INTERCEPTOR]: Conectado a la base de datos oficial: treasurybackoffice");
             db.collection("operaciones").orderBy("fechaServidor", "desc").onSnapshot(function(snapshot) {
                 var opsNube = [];
                 snapshot.forEach(function(doc) { opsNube.push(doc.data()); });

@@ -35,6 +35,16 @@
         .rol-aprobador { background: #F3E8FF; color: #6B21A8; border: 1px solid #D8B4FE; }
         .rol-maestro { background: #DCFCE7; color: #166534; border: 1px solid #BBF7D0; }
     </style>
+
+    <!-- 🛡️ INTERCEPTOR DB -->
+    <script id="interceptor-db">
+        if (typeof firebase !== "undefined") {
+            const _origFs = firebase.firestore;
+            firebase.firestore = function(dbName) {
+                return firebase.app().firestore(dbName || "treasurybackoffice");
+            };
+        }
+    </script>
 </head>
 <body>
     <div class="navbar">
