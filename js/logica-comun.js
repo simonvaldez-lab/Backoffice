@@ -1,3 +1,9 @@
+if (typeof firebase !== "undefined" && firebase.app) {
+    var _origFs = firebase.firestore;
+    firebase.firestore = function(dbName) {
+        return firebase.app().firestore(dbName || "treasurybackoffice");
+    };
+}
 // ==========================================
 // JS/LOGICA-COMUN.JS - BOLD TREASURY BACKOFFICE
 // ==========================================
