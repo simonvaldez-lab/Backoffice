@@ -172,7 +172,7 @@ function cerrarSesion() {
 function obtenerBadgeEstado(estado) {
     var est = String(estado || "").toUpperCase().trim();
     if (est.indexOf("PENDIENTE_PREPARACION") !== -1 || est.indexOf("PENDIENTE VALIDACI") !== -1 || est === "PENDIENTE") {
-        return '<span class="badge" style="background:#FEF3C7; color:#92400E; border:1px solid #FDE68A; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:11px;">🟡 PENDIENTE PREPARACIÓN</span>';
+        return '<span class="badge" style="background:#FEF3C7; color:#92400E; border:1px solid #FDE68A; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:11px;">🟡 PENDIENTE COMPLIANCE / MONTAJE</span>';
     } else if (est.indexOf("PENDIENTE_APROBACION") !== -1 || est.indexOf("EN APROBACI") !== -1 || est.indexOf("EN PREPARACI") !== -1 || est === "LISTO PARA BANCO") {
         return '<span class="badge" style="background:#E0F2FE; color:#075985; border:1px solid #BAE6FD; padding:3px 8px; border-radius:12px; font-weight:bold; font-size:11px;">🔵 PENDIENTE APROBACIÓN</span>';
     } else if (est === "APROBADO" || est.indexOf("COMPLETADO") !== -1 || est.indexOf("PAGADA") !== -1 || est.indexOf("CERRADA") !== -1) {

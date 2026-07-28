@@ -534,7 +534,7 @@
             if(typeof guardarOperaciones === 'function') guardarOperaciones(ops);
             if(typeof crearNotificacion === 'function') crearNotificacion(rad, `📝 ¡NUEVA RADICACIÓN! ${usr.nombre || 'Laura'} radicó: "${nomOp}" por $${parseFloat(monto).toLocaleString()} ${moneda}.`);
             
-            alert(`✅ ¡Operación Radicada con Éxito!\nRadicado: ${rad}\nNombre: ${nomOp}\n\nSe ha notificado al equipo de Validación Compliance.`);
+            alert(`✅ ¡Operación Radicada con Éxito!\nRadicado: ${rad}\nNombre: ${nomOp}\n\nSe ha notificado al equipo Preparador para su Validación Compliance y Montaje.`);
             limpiarFormularioCompleto();
             renderizarTabla();
         }
