@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bold Treasury - Centro de Mando Maestro</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #F8FAFC; color: #1E293B; margin: 0; padding: 0; }
+        .navbar { background-color: #0B1442; color: white; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .navbar h1 { font-size: 18px; margin: 0; display: flex; align-items: center; gap: 10px; }
+        .container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+        .tabs { display: flex; gap: 10px; border-bottom: 2px solid #CBD5E1; margin-bottom: 25px; }
+        .tab-btn { padding: 12px 24px; font-weight: bold; font-size: 14px; border: none; background: none; cursor: pointer; color: #64748B; border-bottom: 3px solid transparent; transition: all 0.2s; }
+        .tab-btn.active { color: #0B1442; border-bottom: 3px solid #1E3A8A; background: #EEF2FF; border-radius: 6px 6px 0 0; }
+        .panel { display: none; background: white; padding: 25px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid #E2E8F0; }
+        .panel.active { display: block; }
+        h2 { font-size: 16px; color: #0B1442; margin-top: 0; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #E2E8F0; font-size: 13px; }
+        th { background-color: #F1F5F9; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 11px; }
+        tr:hover { background-color: #F8FAFC; }
+        .btn { padding: 8px 16px; border-radius: 6px; border: none; font-weight: bold; cursor: pointer; font-size: 12px; transition: 0.2s; }
+        .btn-primario { background: #1E3A8A; color: white; }
+        .btn-primario:hover { background: #0B1442; }
+        .btn-éxito { background: #15803D; color: white; }
+        .btn-danger { background: #DC2626; color: white; padding: 6px 10px; font-size: 11px; }
+        .form-grid { display: grid; grid-template-columns: repeat(4, 1fr) auto; gap: 12px; align-items: end; background: #F8FAFC; padding: 15px; border-radius: 6px; border: 1px dashed #CBD5E1; margin-bottom: 20px; }
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        label { font-size: 11px; font-weight: bold; color: #475569; text-transform: uppercase; }
+        input, select { padding: 8px 10px; border: 1px solid #CBD5E1; border-radius: 6px; font-size: 13px; width: 100%; box-sizing: border-box; }
+        .badge-rol { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; text-transform: uppercase; display: inline-block; }
+        .rol-solicitante { background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; }
+        .rol-validador { background: #E0E7FF; color: #3730A3; border: 1px solid #C7D2FE; }
+        .rol-preparador { background: #E0F2FE; color: #075985; border: 1px solid #BAE6FD; }
+        .rol-aprobador { background: #F3E8FF; color: #6B21A8; border: 1px solid #D8B4FE; }
+        .rol-maestro { background: #DCFCE7; color: #166534; border: 1px solid #BBF7D0; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1>🛡️ Centro de Mando & Configuración — Bold Treasury</h1>
+        <div style="font-size:13px; display:flex; gap:15px; align-items:center;">
+            <span>Rol Activo: <strong style="color:#4ADE80;">MAESTRO / ADMIN</strong></span>
+            <button class="btn" style="background:#334155; color:white;" onclick="window.location.href='solicitante.html'">← Regresar a Operaciones</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- PESTAÑAS DE NAVEGACIÓN -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="cambiarPestaña('tab-roles', this)">👥 1. Asignación de Roles & Usuarios (RBAC)</button>
+            <button class="tab-btn" onclick="cambiarPestaña('tab-ans', this)">⏱️ 2. Matriz de ANS y Tiempos Límite (SLA)</button>
+        </div>
+
+        <!-- PESTAÑA 1: ROLES Y USUARIOS -->
+        <div id="tab-roles" class="panel active">
+            <h2>
+                <span>Añadir o Autorizar Nuevo Usuario en Mesa de Dinero</span>
+                <span style="font-size:12px; font-weight:normal; color:#64748B;">Control estricto de accesos a pantallas del Backoffice</span>
+            </h2>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Nombre del Analista / Director</label>
+                    <input type="text" id="new-nombre" placeholder="Ej: Carlos Gómez">
+                </div>
+                <div class="form-group">
+                    <label>Correo Corporativo (@bold.co)</label>
+                    <input type="email" id="new-correo" placeholder="cgomez@bold.co">
+                </div>
+                <div class="form-group">
+                    <label>Rol Asignado en Flujo</label>
+                    <select id="new-rol">
+                        <option value="solicitante">🟡 Solicitante (Radicador)</option>
+                        <option value="validador">🔵 Validador (Compliance)</option>
+                        <option value="preparador">🔵 Preparador (Montaje Banco)</option>
+                        <option value="aprobador">🟣 Aprobador (Check Final)</option>
+                        <option value="maestro">🟢 Maestro / Administrador</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Estado Acceso</label>
+                    <select id="new-estado">
+                        <option value="Activo">✓ Activo</option>
+                        <option value="Inactivo">✕ Bloqueado</option>
+                    </select>
+                </div>
+                <button class="btn btn-primario" style="height:36px;" onclick="crearUsuario()">➕ Guardar Usuario</button>
+            </div>
+
+            <table id="tabla-usuarios">
+                <thead>
+                    <tr>
+                        <th>Analista / Usuario</th>
+                        <th>Correo Corporativo</th>
+                        <th>Rol en Mesa de Dinero</th>
+                        <th>Estado</th>
+                        <th>Fecha Creación</th>
+                        <th>Acción Quirúrgica</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-usuarios"></tbody>
+            </table>
+        </div>
+
+        <!-- PESTAÑA 2: CONFIGURACIÓN DE ANS (SLA) -->
+        <div id="tab-ans" class="panel">
+            <h2>
+                <span>Parámetros de Tiempo Máximo por Operación (ANS / SLA Bancario)</span>
+                <button class="btn btn-éxito" onclick="restaurarANSPorDefecto()">🔄 Restaurar Matriz Original</button>
+            </h2>
+            <p style="font-size:13px; color:#475569; margin-bottom:20px;">
+                Define cuántos minutos máximo puede tardar una dispersión en cada etapa del control dual. Si una orden supera este umbral, el semáforo y los reportes de auditoría la marcarán como <strong>Vencida por ANS</strong>.
+            </p>
+
+            <table id="tabla-ans">
+                <thead>
+                    <tr>
+                        <th>Nivel de Prioridad / Flujo</th>
+                        <th>⏱️ Límite Montaje & Screen (Preparador)</th>
+                        <th>⏱️ Límite Visto Bueno (Aprobador)</th>
+                        <th>Color Alerta</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-ans"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- CARGA DE LÓGICA COMÚN -->
+    <script src="js/logica-comun.js"></script>
+    <script>
+        function cambiarPestaña(idPanel, btn) {
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(idPanel).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        // --- LÓGICA DE ROLES ---
+        function renderizarUsuarios() {
+            var usuarios = obtenerUsuariosConfig();
+            var tbody = document.getElementById('tbody-usuarios');
+            tbody.innerHTML = '';
+            
+            usuarios.forEach(function(u, idx) {
+                var badgeClase = 'rol-' + (u.rol || 'solicitante');
+                tbody.innerHTML += '<tr>' +
+                    '<td><strong>' + u.nombre + '</strong></td>' +
+                    '<td style="color:#2563EB; font-weight:600;">' + u.correo + '</td>' +
+                    '<td><span class="badge-rol ' + badgeClase + '">' + (u.rol || '').toUpperCase() + '</span></td>' +
+                    '<td><span style="color:' + (u.estado === 'Activo' ? '#166534' : '#991B1B') + '; font-weight:bold;">' + u.estado + '</span></td>' +
+                    '<td style="color:#64748B;">' + (u.creado || '2026-01-10') + '</td>' +
+                    '<td>' +
+                        '<button class="btn" style="background:#E2E8F0; color:#1E293B; margin-right:5px;" onclick="editarRol(' + idx + ')">✏️ Cambiar Rol</button>' +
+                        (u.correo !== 'simon.valdez@bold.co' ? '<button class="btn btn-danger" onclick="eliminarUsuario(' + idx + ')">🗑️</button>' : '') +
+                    '</td>' +
+                '</tr>';
+            });
+        }
+
+        function crearUsuario() {
+            var nombre = document.getElementById('new-nombre').value.trim();
+            var correo = document.getElementById('new-correo').value.trim();
+            var rol = document.getElementById('new-rol').value;
+            var estado = document.getElementById('new-estado').value;
+
+            if (!nombre || !correo) return alert("⚠️ Por favor ingresa el nombre y correo del analista.");
+            if (!correo.includes("@")) return alert("⚠️ El correo debe ser un email corporativo válido.");
+
+            var usuarios = obtenerUsuariosConfig();
+            if (usuarios.some(u => u.correo.toLowerCase() === correo.toLowerCase())) {
+                return alert("❌ Este correo corporativo ya se encuentra registrado.");
+            }
+
+            var hoy = new Date().toISOString().split('T')[0];
+            usuarios.push({ nombre: nombre, correo: correo, rol: rol, estado: estado, creado: hoy });
+            guardarUsuariosConfig(usuarios);
+            
+            document.getElementById('new-nombre').value = '';
+            document.getElementById('new-correo').value = '';
+            alert("✅ ¡Usuario " + nombre + " añadido y autorizado con éxito!");
+            renderizarUsuarios();
+        }
+
+        function editarRol(idx) {
+            var usuarios = obtenerUsuariosConfig();
+            var u = usuarios[idx];
+            var nuevoRol = prompt("✏️ CAMBIAR ROL PARA: " + u.nombre + "\n\nOpciones válidas: solicitante, validador, preparador, aprobador, maestro", u.rol);
+            if (nuevoRol && ['solicitante', 'validador', 'preparador', 'aprobador', 'maestro'].includes(nuevoRol.toLowerCase().trim())) {
+                u.rol = nuevoRol.toLowerCase().trim();
+                guardarUsuariosConfig(usuarios);
+                alert("✅ Rol actualizado a: " + u.rol.toUpperCase());
+                renderizarUsuarios();
+            } else if (nuevoRol) {
+                alert("⚠️ Rol no válido. Debes escribir una de las 5 opciones.");
+            }
+        }
+
+        function eliminarUsuario(idx) {
+            var usuarios = obtenerUsuariosConfig();
+            if (confirm("⚠️ ¿Estás seguro de revocar el acceso a " + usuarios[idx].nombre + "?")) {
+                usuarios.splice(idx, 1);
+                guardarUsuariosConfig(usuarios);
+                renderizarUsuarios();
+            }
+        }
+
+        // --- LÓGICA DE ANS ---
+        function renderizarANS() {
+            var ans = obtenerConfigANS();
+            var tbody = document.getElementById('tbody-ans');
+            tbody.innerHTML = '';
+
+            ans.forEach(function(item, idx) {
+                tbody.innerHTML += '<tr>' +
+                    '<td><strong style="color:#0B1442; font-size:14px;">' + item.nombre + '</strong></td>' +
+                    '<td><span style="font-size:16px; font-weight:bold; color:#1E3A8A;">' + item.maxMontajeMin + ' min</span></td>' +
+                    '<td><span style="font-size:16px; font-weight:bold; color:#6B21A8;">' + item.maxAprobacionMin + ' min</span></td>' +
+                    '<td><span style="display:inline-block; width:20px; height:20px; background:' + item.alertaColor + '; border-radius:50%; vertical-align:middle;"></span> <code style="font-size:11px;">' + item.alertaColor + '</code></td>' +
+                    '<td><button class="btn" style="background:#334155; color:white;" onclick="editarANS(' + idx + ')">⚙️ Modificar Tiempos</button></td>' +
+                '</tr>';
+            });
+        }
+
+        function editarANS(idx) {
+            var ans = obtenerConfigANS();
+            var item = ans[idx];
+            var nuevoMontaje = prompt("⏱️ TIEMPO MÁXIMO DE MONTAJE (PREPARADOR):\n\nIngresa el límite en minutos para " + item.nombre + ":", item.maxMontajeMin);
+            if (nuevoMontaje !== null && !isNaN(nuevoMontaje) && Number(nuevoMontaje) > 0) {
+                var nuevoAprob = prompt("⏱️ TIEMPO MÁXIMO DE APROBACIÓN (KATE):\n\nIngresa el límite en minutos para el check final:", item.maxAprobacionMin);
+                if (nuevoAprob !== null && !isNaN(nuevoAprob) && Number(nuevoAprob) > 0) {
+                    item.maxMontajeMin = Number(nuevoMontaje);
+                    item.maxAprobacionMin = Number(nuevoAprob);
+                    guardarConfigANS(ans);
+                    alert("✅ ¡Matriz de ANS actualizada con éxito!");
+                    renderizarANS();
+                }
+            }
+        }
+
+        function restaurarANSPorDefecto() {
+            if (confirm("🔄 ¿Deseas restaurar la configuración original de ANS en minutos?")) {
+                localStorage.removeItem("bold_config_ans");
+                renderizarANS();
+                alert("✅ Parámetros restaurados al estándar de tesorería.");
+            }
+        }
+
+        // INICIALIZAR AL CARGAR
+        window.onload = function() {
+            renderizarUsuarios();
+            renderizarANS();
+        };
+    </script>
+</body>
+</html>

@@ -1,10 +1,11 @@
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
+const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 const cors = require("cors")({ origin: true });
 
 // Inicializamos el SDK de administrador de Firebase
 admin.initializeApp();
-const db = admin.firestore();
+const db = getFirestore();
 
 /**
  * 🚀 CLOUD FUNCTION: Radicación Segura de Operaciones de Tesorería
@@ -33,10 +34,10 @@ exports.apiRadicarOperacion = functions.https.onRequest((req, res) => {
             const nuevaOperacionDB = {
                 ...datos,
                 estado: "Pendiente Validación", // Forzamos el estado inicial legítimo
-                fechaServidor: admin.firestore.FieldValue.serverTimestamp(),
+                fechaServidor: FieldValue.serverTimestamp(),
                 creadoEnCloud: true,
                 auditoriaBackend: {
-                    ipOrigen: req.headers["x-forwarded-for"] || req.connection.remoteAddress,
+                    ipOrigen: req.headers["x-forwarded-for"] || req.connection.remoteAddress || "Desconocida",
                     producidoPor: "Bold Cloud Functions Node.js"
                 }
             };

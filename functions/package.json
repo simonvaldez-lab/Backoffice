@@ -1,0 +1,13 @@
+{
+  "name": "functions",
+  "description": "Bold Treasury Backoffice Cloud Functions",
+  "main": "index.js",
+  "engines": {
+    "node": "24"
+  },
+  "dependencies": {
+    "cors": "^2.8.6",
+    "firebase-admin": "^14.2.0",
+    "firebase-functions": "^7.3.2-rc.0"
+  }
+}

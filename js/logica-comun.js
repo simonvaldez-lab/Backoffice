@@ -830,3 +830,58 @@ if (typeof guardarOperaciones === "function") {
         } catch(errCloud) {}
     };
 }
+
+// === MOTOR DE GOBIERNO: GESTIÓN DE ROLES (RBAC) Y MATRIZ DE ANS ===
+// 1. GESTIÓN DE USUARIOS Y ROLES
+function obtenerUsuariosConfig() {
+    var def = [
+        { nombre: "Laura (Bogotá)", correo: "lau@bold.co", rol: "solicitante", estado: "Activo", creado: "2026-01-10" },
+        { nombre: "Felipe (Preparador Banco)", correo: "fel@bold.co", rol: "preparador", estado: "Activo", creado: "2026-01-10" },
+        { nombre: "Kate (Check Final)", correo: "kat@bold.co", rol: "aprobador", estado: "Activo", creado: "2026-01-10" },
+        { nombre: "María (Compliance)", correo: "mar@bold.co", rol: "validador", estado: "Activo", creado: "2026-01-10" },
+        { nombre: "Simon Valdez (Director)", correo: "simon.valdez@bold.co", rol: "maestro", estado: "Activo", creado: "2026-01-01" }
+    ];
+    var guardados = localStorage.getItem("bold_usuarios_config");
+    if (!guardados) {
+        localStorage.setItem("bold_usuarios_config", JSON.stringify(def));
+        return def;
+    }
+    try { return JSON.parse(guardados); } catch(e) { return def; }
+}
+
+function guardarUsuariosConfig(lista) {
+    localStorage.setItem("bold_usuarios_config", JSON.stringify(lista));
+    if (typeof refrescarPantallasUniversales === 'function') refrescarPantallasUniversales();
+}
+
+// 2. GESTIÓN DE MATRIZ DE ANS (SLA DE TESORERÍA EN MINUTOS)
+function obtenerConfigANS() {
+    var def = [
+        { prioridad: 1, nombre: "🔥 Prioridad 1 - Alta (Nómina/Impuestos/Urgente)", maxMontajeMin: 15, maxAprobacionMin: 10, alertaColor: "#991B1B" },
+        { prioridad: 2, nombre: "⚡ Prioridad 2 - Media (Proveedores/Estándar)", maxMontajeMin: 30, maxAprobacionMin: 20, alertaColor: "#D97706" },
+        { prioridad: 3, nombre: "☕ Prioridad 3 - Baja (OPEX Interno/Caja Menor)", maxMontajeMin: 60, maxAprobacionMin: 45, alertaColor: "#475569" }
+    ];
+    var guardados = localStorage.getItem("bold_config_ans");
+    if (!guardados) {
+        localStorage.setItem("bold_config_ans", JSON.stringify(def));
+        return def;
+    }
+    try { return JSON.parse(guardados); } catch(e) { return def; }
+}
+
+function guardarConfigANS(lista) {
+    localStorage.setItem("bold_config_ans", JSON.stringify(lista));
+    if (typeof refrescarPantallasUniversales === 'function') refrescarPantallasUniversales();
+}
+
+// Función para calcular si una operación está vencida según la configuración real
+function auditarCumplimientoANS(operacion) {
+    if (!operacion || !operacion.fechaRadicacion) return { vencido: false, minTranscurridos: 0, limiteMin: 30 };
+    var config = obtenerConfigANS();
+    var prio = operacion.prioridad || 2;
+    var regla = config.find(function(c) { return c.prioridad === prio; }) || config[1];
+    
+    // Si está en preparación, medimos contra maxMontajeMin; si está en aprobación, contra maxAprobacionMin
+    var limite = (operacion.estado === "En Aprobación") ? regla.maxAprobacionMin : regla.maxMontajeMin;
+    return { vencido: false, limiteMin: limite, regla: regla };
+}
