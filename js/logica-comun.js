@@ -1038,3 +1038,58 @@ enviarRadicadoACloudFunction = function(operacion) {
         }
     } catch(e) { console.error("Fallo en puente Firestore:", e.message); }
 };
+
+
+// =====================================================================
+// 🧹 OVERRIDE DEFINITIVO: CONEXIÓN PURA COMPAT (SIN MODULAR)
+// =====================================================================
+
+window.enviarRadicadoACloudFunction = function(operacion) {
+    try {
+        if (!operacion || !operacion.radicado) return;
+        if (operacion.estado !== "Pendiente Validación" && operacion.estado !== "Pendiente Preparación") return;
+
+        // 1. Limpiar el ID: Firebase prohíbe las diagonales (/)
+        var docIdSeguro = operacion.radicado.replace(/\//g, "-");
+        operacion.radicado = docIdSeguro; 
+        
+        console.log("☁️ [PUENTE DIRECTO] Escribiendo radicado en Firestore: " + docIdSeguro);
+
+        // 2. Conexión explícita usando el SDK Compat (Garantizado)
+        if (typeof firebase !== "undefined" && firebase.app) {
+            var db = firebase.app().firestore("treasurybackoffice");
+            
+            db.collection("operaciones").doc(docIdSeguro).set(operacion)
+            .then(function() {
+                console.log("🟢 [FIRESTORE OK]: ¡Operación " + docIdSeguro + " guardada exitosamente en la nube!");
+            })
+            .catch(function(err) {
+                console.error("⚠️ [FIRESTORE ERROR]: " + err.message);
+            });
+        } else {
+            console.error("⚠️ [ERROR]: Las librerías de Firebase no están cargadas.");
+        }
+    } catch(e) { console.error("Fallo en puente Firestore:", e.message); }
+};
+
+window.invocarCloudAPI = function(url, payload, callbackExito) {
+    if (typeof firebase === "undefined" || !firebase.app) return alert("Firebase no está conectado.");
+    
+    var docIdSeguro = payload.radicado.replace(/\//g, "-");
+    var actualizacion = {};
+    
+    if (url.includes("apiValidarKYC")) actualizacion = { estado: "En Preparación" };
+    else if (url.includes("apiRegistrarMontaje")) actualizacion = { estado: "En Aprobación", archivoScreenshot: payload.archivoScreenshot };
+    else if (url.includes("apiAprobarMontaje")) actualizacion = { estado: "APROBADO" };
+    else if (url.includes("apiCerrarComprobante")) actualizacion = { estado: "COMPLETADA / CERRADA ✓", archivoPDF: payload.archivoPDF, comprobanteCerrado: true };
+    else if (url.includes("apiRechazarOperacion")) actualizacion = { estado: "RECHAZADO", motivoRechazo: payload.motivo || "" };
+
+    var db = firebase.app().firestore("treasurybackoffice");
+    db.collection("operaciones").doc(docIdSeguro).update(actualizacion)
+    .then(function() {
+        if (callbackExito) callbackExito({ exito: true });
+    })
+    .catch(function(err) {
+        alert("⚠️ Error al actualizar en Firestore: " + err.message);
+    });
+};
