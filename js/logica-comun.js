@@ -1004,3 +1004,59 @@ if (typeof finalizarYCerrarComprobante === "function") {
         });
     };
 }
+
+
+
+// =====================================================================
+// 🚀 PARCHE SERVERLESS: ESCRITURA DIRECTA A FIRESTORE
+// =====================================================================
+
+// 1. Radicación de Solicitante directo a la base de datos
+enviarRadicadoACloudFunction = function(operacion) {
+    try {
+        if (!operacion || !operacion.radicado) return;
+        if (operacion.estado !== "Pendiente Validación" && operacion.estado !== "Pendiente Preparación") return;
+
+        console.log("☁️ [PUENTE DIRECTO] Escribiendo radicado en Firestore: " + operacion.radicado);
+
+        if (typeof firebase !== "undefined" && firebase.app) {
+            var db = firebase.app().firestore("treasurybackoffice");
+            db.collection("operaciones").doc(operacion.radicado).set(operacion)
+            .then(function() {
+                console.log("🟢 [FIRESTORE OK]: Operación guardada en la nube.");
+            })
+            .catch(function(err) {
+                console.error("⚠️ [FIRESTORE ERROR]: " + err.message);
+            });
+        }
+    } catch(e) { console.error("Fallo en puente Firestore:", e.message); }
+};
+
+// 2. Acciones del equipo (KYC, Montaje, Aprobación) directo a base de datos
+invocarCloudAPI = function(url, payload, callbackExito) {
+    if (typeof firebase === "undefined" || !firebase.app) return alert("Firebase no está conectado.");
+    
+    var db = firebase.app().firestore("treasurybackoffice");
+    var docRef = db.collection("operaciones").doc(payload.radicado);
+
+    var actualizacion = {};
+    if (url.includes("apiValidarKYC")) {
+        actualizacion = { estado: "En Preparación" };
+    } else if (url.includes("apiRegistrarMontaje")) {
+        actualizacion = { estado: "En Aprobación", archivoScreenshot: payload.archivoScreenshot };
+    } else if (url.includes("apiAprobarMontaje")) {
+        actualizacion = { estado: "APROBADO" };
+    } else if (url.includes("apiCerrarComprobante")) {
+        actualizacion = { estado: "COMPLETADA / CERRADA ✓", archivoPDF: payload.archivoPDF, comprobanteCerrado: true };
+    } else if (url.includes("apiRechazarOperacion")) {
+        actualizacion = { estado: "RECHAZADO" };
+    }
+
+    docRef.update(actualizacion)
+    .then(function() {
+        if (callbackExito) callbackExito({ exito: true });
+    })
+    .catch(function(err) {
+        alert("⚠️ Error al actualizar en Firestore: " + err.message);
+    });
+};
