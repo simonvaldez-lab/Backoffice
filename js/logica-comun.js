@@ -69,10 +69,10 @@ const arbolOperaciones = {
 // 2. PERMISOS Y BLOQUEO POR ROL (RBAC)
 const permisos = {
     "Solicitante": ["solicitante.html", "historial.html"],
-    "Validador": ["validador.html", "historial.html"],
+    "Validador": ["historial.html"],
     "Preparador": ["preparador.html", "historial.html"],
     "Aprobador": ["aprobador.html", "historial.html"],
-    "Maestro": ["solicitante.html", "validador.html", "preparador.html", "aprobador.html", "historial.html"]
+    "Maestro": ["solicitante.html", "preparador.html", "aprobador.html", "historial.html"]
 };
 
 // 3. AUXILIARES DE FECHA
@@ -354,10 +354,10 @@ function aplicarSeguridadYMenu() {
         // 2. BLOQUEO ESTRICTO DE MENÚ POR ROL (RBAC)
         var mapaPermisos = {
             "Solicitante": ["solicitante.html", "historial.html"],
-            "Validador": ["validador.html", "historial.html"],
+            "Validador": ["historial.html"],
             "Preparador": ["preparador.html", "historial.html"],
             "Aprobador": ["aprobador.html", "historial.html"],
-            "Maestro": ["solicitante.html", "validador.html", "preparador.html", "aprobador.html", "historial.html"]
+            "Maestro": ["solicitante.html", "preparador.html", "aprobador.html", "historial.html"]
         };
         var rol = usuario.rol || "Solicitante";
         var permitidos = mapaPermisos[rol] || ["solicitante.html", "historial.html"];
@@ -615,10 +615,10 @@ function aplicarSeguridadYMenuUniversal() {
         var rol = String(usuario.rol || "solicitante").toLowerCase().trim();
         var mapaPermisos = {
             "solicitante": ["solicitante.html", "historial.html"],
-            "validador": ["validador.html", "historial.html"],
+            "validador": ["historial.html"],
             "preparador": ["preparador.html", "historial.html"],
             "aprobador": ["aprobador.html", "historial.html"],
-            "maestro": ["solicitante.html", "validador.html", "preparador.html", "aprobador.html", "historial.html"]
+            "maestro": ["solicitante.html", "preparador.html", "aprobador.html", "historial.html"]
         };
         
         var permitidos = mapaPermisos[rol] || ["solicitante.html", "historial.html"];
@@ -628,7 +628,7 @@ function aplicarSeguridadYMenuUniversal() {
         if (paginaActual !== "index.html" && paginaActual !== "" && !permitidos.includes(paginaActual) && rol !== "maestro") {
             var urlNativa = {
                 "solicitante": "solicitante.html",
-                "validador": "validador.html",
+                "validador": ,
                 "preparador": "preparador.html",
                 "aprobador": "aprobador.html"
             }[rol] || "solicitante.html";
