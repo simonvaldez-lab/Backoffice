@@ -1008,55 +1008,65 @@ if (typeof finalizarYCerrarComprobante === "function") {
 
 
 // =====================================================================
-// 🚀 PARCHE SERVERLESS: ESCRITURA DIRECTA A FIRESTORE
+
+
+// =====================================================================
+// 🚀 PARCHE SERVERLESS V2: FIRESTORE MODULAR Y ANTI-RUTAS FANTASMA
 // =====================================================================
 
-// 1. Radicación de Solicitante directo a la base de datos
 enviarRadicadoACloudFunction = function(operacion) {
     try {
         if (!operacion || !operacion.radicado) return;
         if (operacion.estado !== "Pendiente Validación" && operacion.estado !== "Pendiente Preparación") return;
 
-        console.log("☁️ [PUENTE DIRECTO] Escribiendo radicado en Firestore: " + operacion.radicado);
+        // 1. Limpiar el ID: Convertir diagonales (/) prohibidas en guiones (-)
+        var docIdSeguro = operacion.radicado.replace(/\//g, "-");
+        console.log("☁️ [PUENTE DIRECTO] Escribiendo radicado en Firestore: " + docIdSeguro);
 
-        if (typeof firebase !== "undefined" && firebase.app) {
-            var db = firebase.app().firestore("treasurybackoffice");
-            db.collection("operaciones").doc(operacion.radicado).set(operacion)
+        // 2. Importar SDK Modular en tiempo real para apuntar directo a treasurybackoffice
+        import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js")
+        .then(function(firestore) {
+            var app = firebase.app();
+            var db = firestore.getFirestore(app, "treasurybackoffice");
+            var docRef = firestore.doc(db, "operaciones", docIdSeguro);
+            
+            firestore.setDoc(docRef, operacion)
             .then(function() {
-                console.log("🟢 [FIRESTORE OK]: Operación guardada en la nube.");
+                console.log("🟢 [FIRESTORE OK]: Operación guardada exitosamente en la nube.");
             })
             .catch(function(err) {
                 console.error("⚠️ [FIRESTORE ERROR]: " + err.message);
             });
-        }
+        }).catch(function(e) { console.error("Error importando SDK Modular:", e); });
+
     } catch(e) { console.error("Fallo en puente Firestore:", e.message); }
 };
 
-// 2. Acciones del equipo (KYC, Montaje, Aprobación) directo a base de datos
 invocarCloudAPI = function(url, payload, callbackExito) {
     if (typeof firebase === "undefined" || !firebase.app) return alert("Firebase no está conectado.");
     
-    var db = firebase.app().firestore("treasurybackoffice");
-    var docRef = db.collection("operaciones").doc(payload.radicado);
+    // Limpiar también las diagonales en las actualizaciones de Kate y Felipe
+    var docIdSeguro = payload.radicado.replace(/\//g, "-");
 
     var actualizacion = {};
-    if (url.includes("apiValidarKYC")) {
-        actualizacion = { estado: "En Preparación" };
-    } else if (url.includes("apiRegistrarMontaje")) {
-        actualizacion = { estado: "En Aprobación", archivoScreenshot: payload.archivoScreenshot };
-    } else if (url.includes("apiAprobarMontaje")) {
-        actualizacion = { estado: "APROBADO" };
-    } else if (url.includes("apiCerrarComprobante")) {
-        actualizacion = { estado: "COMPLETADA / CERRADA ✓", archivoPDF: payload.archivoPDF, comprobanteCerrado: true };
-    } else if (url.includes("apiRechazarOperacion")) {
-        actualizacion = { estado: "RECHAZADO" };
-    }
+    if (url.includes("apiValidarKYC")) actualizacion = { estado: "En Preparación" };
+    else if (url.includes("apiRegistrarMontaje")) actualizacion = { estado: "En Aprobación", archivoScreenshot: payload.archivoScreenshot };
+    else if (url.includes("apiAprobarMontaje")) actualizacion = { estado: "APROBADO" };
+    else if (url.includes("apiCerrarComprobante")) actualizacion = { estado: "COMPLETADA / CERRADA ✓", archivoPDF: payload.archivoPDF, comprobanteCerrado: true };
+    else if (url.includes("apiRechazarOperacion")) actualizacion = { estado: "RECHAZADO" };
 
-    docRef.update(actualizacion)
-    .then(function() {
-        if (callbackExito) callbackExito({ exito: true });
-    })
-    .catch(function(err) {
-        alert("⚠️ Error al actualizar en Firestore: " + err.message);
+    import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js")
+    .then(function(firestore) {
+        var app = firebase.app();
+        var db = firestore.getFirestore(app, "treasurybackoffice");
+        var docRef = firestore.doc(db, "operaciones", docIdSeguro);
+
+        firestore.updateDoc(docRef, actualizacion)
+        .then(function() {
+            if (callbackExito) callbackExito({ exito: true });
+        })
+        .catch(function(err) {
+            alert("⚠️ Error al actualizar en Firestore: " + err.message);
+        });
     });
 };
