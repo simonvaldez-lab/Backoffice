@@ -913,7 +913,7 @@ function iniciarEscuchadoresNubeEnVivo() {
                 var opsNube = [];
                 snapshot.forEach(function(doc) { opsNube.push(doc.data()); });
                 if (opsNube.length > 0) {
-                    localStorage.setItem("bold_operaciones_backup", JSON.stringify(opsNube));
+                    localStorage.setItem("bold_operaciones_bd", JSON.stringify(opsNube));
                     if (typeof refrescarPantallasUniversales === "function") refrescarPantallasUniversales();
                     else if (typeof renderizarTabla === "function") renderizarTabla();
                 }
@@ -1092,4 +1092,20 @@ window.invocarCloudAPI = function(url, payload, callbackExito) {
     .catch(function(err) {
         alert("⚠️ Error al actualizar en Firestore: " + err.message);
     });
+};
+
+// ==========================================
+// FILTRO DE FECHAS GLOBAL
+// ==========================================
+window.coincideFechaFiltro = function(op) {
+    var input = document.getElementById("filtro-fecha");
+    var fechaInput = input ? input.value : "";
+    if (!fechaInput) return true;
+    if (!op || !op.fechaRadicacion) return false;
+    
+    var limpiaOp = String(op.fechaRadicacion).split(" - ")[0].trim();
+    var partes = limpiaOp.split("/");
+    if (partes.length !== 3) return false;
+    var fNorm = partes[2] + "-" + String(partes[1]).padStart(2, "0") + "-" + String(partes[0]).padStart(2, "0");
+    return fNorm === fechaInput;
 };
