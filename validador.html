@@ -44,31 +44,46 @@
     </script>
     <script src="js/logica-comun.js"></script>
     <script>
-        function renderizarTabla() {
-            var tb = document.getElementById('tabla-validador');
-            if (tb) {
-                tb.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#64748B; padding:40px; background:#F8FAFC;">' +
-                    '<div style="font-size:24px; margin-bottom:8px;">ℹ️</div>' +
-                    '<strong style="color:#0B1442; font-size:14px; display:block;">Bandeja de Validación Sin Operaciones Asignadas</strong>' +
-                    '<span style="font-size:12px; color:#475569; display:block; margin-top:4px;">Por definición actual del flujo de trabajo, la revisión inicial de Compliance ha sido trasladada al equipo <strong>Preparador</strong> para unificar la validación y el montaje bancario en un solo paso.</span>' +
-                'td>tr>';
-            }
+    function renderizarTabla() {
+        var ops = typeof obtenerOperaciones === "function" ? obtenerOperaciones() : [];
+        var tb = document.getElementById("tabla-validador");
+        if (!tb) return;
+        
+        // Filtrar las operaciones que esperan validación KYC
+        var cola = ops.filter(function(o) {
+            return o.estado === "Pendiente Validación";
         });
+        
+        tb.innerHTML = "";
+        if (cola.length === 0) {
+            tb.innerHTML = "<tr><td colspan='7' style='text-align:center; color:#64748B; padding:30px;'>✅ No hay radicados pendientes de validación KYC.</td></tr>";
+            return;
         }
-        function changingEstado(rad, est) { changingEstado(rad, est); }
-        function cambiarEstado(rad, est) {
-            const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : [];
-            const op = ops.find(o => o.radicado === rad);
-            const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}');
-            if(op) {
-                op.estado = est;
-                op.historial.push({ fecha: obtenerFechaHoraMilitar(), paso: "2. VALIDACIÓN KYC COMPLETA", detalle: `Revisión de soportes aprobada por ${usr.nombre || 'Preparador'}. Pasa a pestaña Ejecución Banco.` });
-                guardarOperaciones(ops);
-                crearNotificacion(rad, `➡️ ¡VALIDADO! El radicado ${rad} fue verificado por ${usr.nombre || 'Preparador'} y está Listo para Banco.`);
-                alert("✅ Radicado validado con éxito.\nAhora haz clic en el menú izquierdo en 'Ejecución Banco' para proceder con el montaje del pago.");
-                renderizarTabla();
-            }
-        }
-    </script>
+        
+        cola.forEach(function(o) {
+            var prioBadge = o.prioridad === 1 ? "<span class='badge' style='background:#FEE2E2; color:#991B1B;'>🔥 1 - Alta</span>" : o.prioridad === 3 ? "<span class='badge' style='background:#F1F5F9; color:#475569;'>☕ 3 - Baja</span>" : "<span class='badge' style='background:#FEF3C7; color:#92400E;'>⚡ 2 - Media</span>";
+            var monto = Number(o.montoPrep || o.montoSol || 0).toLocaleString();
+            var moneda = o.moneda || "COP";
+            var estado = obtenerBadgeEstado(o.estado);
+            
+            var btnRevisar = "<button class='btn btn-detalle' onclick="auditarRadicado('" + o.radicado + "')">🔍 Revisar Soportes</button>";
+            var btnAprobar = "<button class='btn btn-primario' style='background:#0284C7;' onclick="validarKYCOperacion('" + o.radicado + "')">🛡️ Aprobar KYC</button>";
+            var btnRechazar = "<button class='btn btn-rechazar' onclick="ejecutarRechazoSeguro('" + o.radicado + "')">✕ Devolver</button>";
+            
+            tb.innerHTML += "<tr>" +
+                "<td><strong>" + o.radicado + "</strong><br>" + prioBadge + "</td>" +
+                "<td style='font-size:12px; font-weight:700; color:#475569;'>📅 " + (o.fechaRadicacion || "") + "</td>" +
+                "<td>" + o.empresa + "<br><span class='badge badge-opex' style='margin-top:4px;'>" + o.tipo + "</span></td>" +
+                "<td>" + o.solicitante + "</td>" +
+                "<td><strong>$ " + monto + "</strong> <span class='badge badge-moneda'>" + moneda + "</span></td>" +
+                "<td>" + estado + "</td>" +
+                "<td style='display: flex; gap: 8px;'>" + btnRevisar + btnAprobar + btnRechazar + "</td>" +
+            "</tr>";
+        });
+    }
+    
+    // Auto-dibujar la tabla al entrar a la página
+    document.addEventListener("DOMContentLoaded", renderizarTabla);
+</script>
 </body>
 </html>
