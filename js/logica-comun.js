@@ -1006,12 +1006,8 @@ if (typeof finalizarYCerrarComprobante === "function") {
 }
 
 
-
 // =====================================================================
-
-
-// =====================================================================
-// 🚀 PARCHE SERVERLESS V2: FIRESTORE MODULAR Y ANTI-RUTAS FANTASMA
+// 🚀 CONEXIÓN DIRECTA Y SEGURA A FIRESTORE (TREASURYBACKOFFICE)
 // =====================================================================
 
 enviarRadicadoACloudFunction = function(operacion) {
@@ -1019,54 +1015,26 @@ enviarRadicadoACloudFunction = function(operacion) {
         if (!operacion || !operacion.radicado) return;
         if (operacion.estado !== "Pendiente Validación" && operacion.estado !== "Pendiente Preparación") return;
 
-        // 1. Limpiar el ID: Convertir diagonales (/) prohibidas en guiones (-)
+        // 1. Limpiar el ID: Firebase prohíbe las diagonales (/)
         var docIdSeguro = operacion.radicado.replace(/\//g, "-");
+        operacion.radicado = docIdSeguro; // Actualizamos el objeto también
+        
         console.log("☁️ [PUENTE DIRECTO] Escribiendo radicado en Firestore: " + docIdSeguro);
 
-        // 2. Importar SDK Modular en tiempo real para apuntar directo a treasurybackoffice
-        import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js")
-        .then(function(firestore) {
-            var app = firebase.app();
-            var db = firestore.getFirestore(app, "treasurybackoffice");
-            var docRef = firestore.doc(db, "operaciones", docIdSeguro);
+        // 2. Conexión explícita a la base de datos correcta
+        if (typeof firebase !== "undefined" && firebase.app) {
+            // Aquí obligamos a Firebase a ignorar (default) y usar treasurybackoffice
+            var db = firebase.app().firestore("treasurybackoffice");
             
-            firestore.setDoc(docRef, operacion)
+            db.collection("operaciones").doc(docIdSeguro).set(operacion)
             .then(function() {
-                console.log("🟢 [FIRESTORE OK]: Operación guardada exitosamente en la nube.");
+                console.log("🟢 [FIRESTORE OK]: ¡Operación " + docIdSeguro + " guardada exitosamente en la nube!");
             })
             .catch(function(err) {
                 console.error("⚠️ [FIRESTORE ERROR]: " + err.message);
             });
-        }).catch(function(e) { console.error("Error importando SDK Modular:", e); });
-
+        } else {
+            console.error("⚠️ [ERROR]: Las librerías de Firebase no están cargadas.");
+        }
     } catch(e) { console.error("Fallo en puente Firestore:", e.message); }
-};
-
-invocarCloudAPI = function(url, payload, callbackExito) {
-    if (typeof firebase === "undefined" || !firebase.app) return alert("Firebase no está conectado.");
-    
-    // Limpiar también las diagonales en las actualizaciones de Kate y Felipe
-    var docIdSeguro = payload.radicado.replace(/\//g, "-");
-
-    var actualizacion = {};
-    if (url.includes("apiValidarKYC")) actualizacion = { estado: "En Preparación" };
-    else if (url.includes("apiRegistrarMontaje")) actualizacion = { estado: "En Aprobación", archivoScreenshot: payload.archivoScreenshot };
-    else if (url.includes("apiAprobarMontaje")) actualizacion = { estado: "APROBADO" };
-    else if (url.includes("apiCerrarComprobante")) actualizacion = { estado: "COMPLETADA / CERRADA ✓", archivoPDF: payload.archivoPDF, comprobanteCerrado: true };
-    else if (url.includes("apiRechazarOperacion")) actualizacion = { estado: "RECHAZADO" };
-
-    import("https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js")
-    .then(function(firestore) {
-        var app = firebase.app();
-        var db = firestore.getFirestore(app, "treasurybackoffice");
-        var docRef = firestore.doc(db, "operaciones", docIdSeguro);
-
-        firestore.updateDoc(docRef, actualizacion)
-        .then(function() {
-            if (callbackExito) callbackExito({ exito: true });
-        })
-        .catch(function(err) {
-            alert("⚠️ Error al actualizar en Firestore: " + err.message);
-        });
-    });
 };
