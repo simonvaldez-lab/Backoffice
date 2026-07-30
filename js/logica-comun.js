@@ -930,6 +930,7 @@ function iniciarEscuchadoresNubeEnVivo() {
                 console.log("⚡ [WEBSOCKET ANS] Cambio detectado en tiempo real desde Google Cloud!");
                 if (doc.exists && doc.data().lista) {
                     localStorage.setItem("bold_config_ans", JSON.stringify(doc.data().lista));
+        if (typeof renderizarTablaANS === "function") renderizarTablaANS(doc.data().lista);
                     if (typeof renderizarANS === "function") renderizarANS();
                 }
             }, function(e) {});

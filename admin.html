@@ -276,5 +276,34 @@
             renderizarANS();
         };
     </script>
+
+    <script>
+        function renderizarTablaANS(matriz) {
+            if (!matriz || !Array.isArray(matriz)) return;
+            var tbody = document.querySelector("#tablaANS tbody") || document.querySelector("table tbody");
+            if (!tbody) return;
+            
+            // Buscar la fila de Prioridad 1 y actualizar sus celdas
+            var itemP1 = matriz.find(m => m.prioridad == 1 || m.prioridad == "1");
+            if (itemP1) {
+                var filas = tbody.querySelectorAll("tr");
+                if (filas.length > 0) {
+                    var celdas = filas[0].querySelectorAll("td");
+                    if (celdas.length >= 3) {
+                        celdas[1].innerHTML = "<strong>" + (itemP1.maxMontajeMin || 15) + " min</strong>";
+                        celdas[2].innerHTML = "<strong>" + (itemP1.maxAprobacionMin || 10) + " min</strong>";
+                    }
+                }
+            }
+        }
+        
+        // Ejecutar al cargar si hay datos guardados
+        document.addEventListener("DOMContentLoaded", function() {
+            var ansGuardado = localStorage.getItem("bold_config_ans");
+            if (ansGuardado) {
+                try { renderizarTablaANS(JSON.parse(ansGuardado)); } catch(e) {}
+            }
+        });
+    </script>
 </body>
 </html>
