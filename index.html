@@ -41,6 +41,11 @@
     </div>
 
     <script>
+        // LIMPIEZA DE EMERGENCIA PARA RECUPERAR USUARIOS
+        localStorage.removeItem("bold_usuarios_config");
+        sessionStorage.removeItem("usuarioLogueado");
+        localStorage.removeItem("bold_ultimo_usuario_backup");
+
         function fuerzaLogin() {
             const email = document.getElementById('login-email').value.toLowerCase().trim();
             const pass = document.getElementById('login-pass').value;
