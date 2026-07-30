@@ -185,6 +185,16 @@
     <!-- Modal Compartido -->
     <div class="modal-overlay" id="modalDetalles"><div class="modal modal-grande"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;"><h2 id="mod-radicado-titulo" style="margin:0; border:none; padding:0;">Módulo de Auditoría</h2><button class="btn" style="background:#3B82F6; color:white;" onclick="alternarVisor()">👁 Visor Dual</button></div><div class="modal-layout-split"><div class="seccion-datos"><div class="grid-detalles"><div class="dato-grupo"><span class="dato-label">Compañía</span><span class="dato-valor" id="mod-origen"></span></div><div class="dato-grupo"><span class="dato-label">Moneda</span><span class="dato-valor" id="mod-moneda"></span></div><div class="dato-grupo"><span class="dato-label">Valor Solicitado</span><span class="dato-valor" id="mod-val-sol"></span><div class="auditor-data auditor-alerta" id="mod-val-prep"></div></div><div class="dato-grupo"><span class="dato-label">Registros</span><span class="dato-valor" id="mod-regs"></span></div></div><div class="timeline" id="mod-timeline"></div></div><div class="seccion-visor" id="contenedorVisor"><div class="tab-container"><button class="tab active" id="tabSol" onclick="cambiarPestana('solicitante')">📄 Factura</button><button class="tab" id="tabPrep" onclick="cambiarPestana('preparador')">🖼 Screen Banco</button></div><div class="marco-visor"><div class="documento-simulado" id="vistaSolicitante"><h4>SOPORTE ORIGINAL</h4><p>Proveedor: <strong id="vis-sol-prov"></strong></p><p style="margin-top:40px; text-align:right; font-weight:bold;" id="vis-sol-total"></p></div><div class="documento-simulado hidden" id="vistaPreparador" style="background:#0F172A; color:#22C55E;"><h4>PORTAL BANCARIO</h4><p style="margin-top:40px; text-align:right; font-weight:bold; font-size:15px;" id="vis-prep-total"></p></div></div></div></div><div style="text-align: right; margin-top: 20px; border-top: 1px solid #E2E8F0; padding-top: 15px;"><button class="btn btn-detalle" onclick="cerrarModal('modalDetalles')">Cerrar</button></div></div></div>
     
+    
+    <!-- 🔥 LIBRERÍAS DE FIREBASE (CONEXIÓN A LA NUBE) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script>
+        if (typeof firebase !== "undefined" && !firebase.apps.length) {
+            firebase.initializeApp({ projectId: "black-hulling-462522-j2" });
+            console.log("🟢 [FIREBASE CORE]: Conectado exitosamente al motor en vivo.");
+        }
+    </script>
     <script src="js/logica-comun.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
