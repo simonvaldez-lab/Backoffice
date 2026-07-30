@@ -46,48 +46,40 @@
     <script>
         function renderizarTabla() {
     const ops = typeof obtenerOperacionesActivas === "function" ? obtenerOperacionesActivas() : obtenerOperaciones();
-    // Filtramos para que atrape AMBOS estados
-    const cola = ops.filter(o => (o.estado === "Pendiente Validación" || o.estado === "En Preparación") && coincideFechaFiltro(o));
+    // Volvemos a filtrar solo los que están en preparación (aprobados por el Validador)
+    const listos = ops.filter(o => o.estado === "En Preparación" && coincideFechaFiltro(o));
     const tb = document.getElementById("tabla-preparador");
     const usr = JSON.parse(sessionStorage.getItem("usuarioLogueado") || "{}");
     
     tb.innerHTML = "";
-    if(cola.length === 0) { tb.innerHTML = "<tr><td colspan="7" style="text-align:center; color:#64748B; padding:30px;">✅ Bandeja limpia. No hay operaciones en cola.</td></tr>"; return; }
+    if(listos.length === 0) { tb.innerHTML = "<tr><td colspan="7" style="text-align:center; color:#64748B; padding:30px;">No hay dispersiones listas para montaje en esta fecha.</td></tr>"; return; }
     
-    cola.forEach(o => {
+    listos.forEach(o => {
         const prioBadge = o.prioridad === 1 ? "<span class="badge" style="background:#FEE2E2; color:#991B1B;">🔥 1 - Alta</span>" : o.prioridad === 3 ? "<span class="badge" style="background:#F1F5F9; color:#475569;">☕ 3 - Baja</span>" : "<span class="badge" style="background:#FEF3C7; color:#92400E;">⚡ 2 - Media</span>";
         
         let candadoHtml = "";
-        let accionesHtml = "";
+        let btnDispersarStyle = "background:#15803D;";
+        let btnDispersarAttr = "";
         
         if (o.apartadaPor) {
-            candadoHtml = "<span style="background:#FEF3C7; color:#92400E; border:1px solid #FDE68A; padding:5px 8px; border-radius:6px; font-size:11px; font-weight:bold; display:inline-block;">🔒 Apartada: " + o.apartadaPor + "</span>";
-        } else {
-            candadoHtml = "<button class="btn" style="background:#FEF9C3; color:#A16207; border:1px dashed #CA8A04;" onclick="apartarRadicado('" + o.radicado + "')">🔓 Apartar</button>";
-        }
-
-        // BOTONES MUTABLES SEGÚN EL ESTADO
-        if (o.estado === "Pendiente Validación") {
-             accionesHtml = "<button class="btn btn-primario" style="background:#0284C7;" onclick="validarKYCOperacion('" + o.radicado + "')">🛡️ 1. Aprobar KYC</button>";
-        } else if (o.estado === "En Preparación") {
-             let btnDispersarStyle = "background:#15803D;";
-             let btnDispersarAttr = "";
-             if (o.apartadaPor && o.apartadaPor !== (usr.nombre || usr.correo) && usr.rol !== "maestro") {
+            candadoHtml = `<span style="background:#FEF3C7; color:#92400E; border:1px solid #FDE68A; padding:5px 8px; border-radius:6px; font-size:11px; font-weight:bold; display:inline-block;">🔒 Apartada: ${o.apartadaPor}</span>`;
+            if (o.apartadaPor !== (usr.nombre || usr.correo) && usr.rol !== "maestro") {
                 btnDispersarStyle = "background:#94A3B8; cursor:not-allowed;";
-                btnDispersarAttr = "disabled title="Bloqueado"";
-             }
-             accionesHtml = "<button class="btn btn-primario" style="" + btnDispersarStyle + "" " + btnDispersarAttr + " onclick="enviarAAprobador('" + o.radicado + "')">🚀 2. Montar Banco</button>";
+                btnDispersarAttr = "disabled title="Bloqueado por otro analista preparador"";
+            }
+        } else {
+            candadoHtml = `<button class="btn" style="background:#FEF9C3; color:#A16207; border:1px dashed #CA8A04;" onclick="apartarRadicado('${o.radicado}')">🔓 Apartar (Bloquear)</button>`;
         }
 
-        tb.innerHTML += "<tr>" +
-            "<td><strong>" + o.radicado + "</strong><br>" + prioBadge + "</td>" +
-            "<td style="font-size:12px; font-weight:700; color:#475569;">📅 " + (o.fechaRadicacion || "") + "</td>" +
-            "<td>" + o.empresa + "<br><span class="badge badge-opex" style="margin-top:3px;">" + o.tipo + "</span></td>" +
-            "<td><strong>$ " + Number(o.montoPrep || o.montoSol || 0).toLocaleString() + "</strong> <span class="badge badge-moneda">" + (o.moneda || "COP") + "</span></td>" +
-            "<td>" + candadoHtml + "</td>" +
-            "<td><button class="btn btn-detalle" onclick="auditarRadicado('" + o.radicado + "')">📄 Docs</button></td>" +
-            "<td style="display:flex; gap:8px;">" + accionesHtml + "<button class="btn btn-rechazar" onclick="ejecutarRechazoSeguro('" + o.radicado + "')">✕</button></td>" +
-        "</tr>";
+        tb.innerHTML += `<tr>
+            <td><strong>${o.radicado}</strong><br>${prioBadge}</td>
+            <td style="font-size:12px; font-weight:700; color:#475569;">📅 ${o.fechaRadicacion || ""}</td>
+            <td>${o.empresa}<br><span class="badge badge-opex" style="margin-top:3px;">${o.tipo}</span></td>
+            <td><strong>$ ${Number(o.montoPrep || o.montoSol || 0).toLocaleString()}</strong> <span class="badge badge-moneda">${o.moneda || "COP"}</span></td>
+            <td>${candadoHtml}</td>
+            <td><button class="btn btn-detalle" onclick="auditarRadicado('${o.radicado}')">📄 Subir Screen</button></td>
+            <td><button class="btn btn-primario" style="${btnDispersarStyle}" ${btnDispersarAttr} onclick="enviarAAprobador('${o.radicado}')">🚀 Montar Pago y Enviar</button></td>
+        </tr>`;
     });
 }
 
