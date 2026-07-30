@@ -35,16 +35,6 @@
         .rol-aprobador { background: #F3E8FF; color: #6B21A8; border: 1px solid #D8B4FE; }
         .rol-maestro { background: #DCFCE7; color: #166534; border: 1px solid #BBF7D0; }
     </style>
-
-    <!-- 🛡️ INTERCEPTOR DB -->
-    <script id="interceptor-db">
-        if (typeof firebase !== "undefined") {
-            const _origFs = firebase.firestore;
-            firebase.firestore = function(dbName) {
-                return firebase.app().firestore(dbName || "treasurybackoffice");
-            };
-        }
-    </script>
 </head>
 <body>
     <div class="navbar">
@@ -138,20 +128,23 @@
         </div>
     </div>
 
-    <!-- CARGA DE LÓGICA COMÚN -->
-    
-    <!-- 🔥 LIBRERÍAS OFICIALES DE FIREBASE & WEBSOCKETS -->
+    <!-- 🔥 LIBRERÍAS OFICIALES DE FIREBASE (EN ORDEN CORRECTO) -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    
     <script>
         if (typeof firebase !== "undefined" && !firebase.apps.length) {
-            firebase.initializeApp({
-                projectId: "black-hulling-462522-j2"
-            });
-            console.log("🟢 [FIREBASE CORE]: Conectado exitosamente por WebSocket al proyecto black-hulling-462522-j2");
+            firebase.initializeApp({ projectId: "black-hulling-462522-j2" });
+            console.log("🟢 [FIREBASE CORE]: Conectado exitosamente.");
+        }
+
+        function getDb() {
+            return firebase.app().firestore("treasurybackoffice");
         }
     </script>
+
     <script src="js/logica-comun.js"></script>
+
     <script>
         function cambiarPestaña(idPanel, btn) {
             document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
@@ -160,10 +153,10 @@
             btn.classList.add('active');
         }
 
-        // --- LÓGICA DE ROLES ---
         function renderizarUsuarios() {
-            var usuarios = obtenerUsuariosConfig();
+            var usuarios = typeof obtenerUsuariosConfig === 'function' ? obtenerUsuariosConfig() : [];
             var tbody = document.getElementById('tbody-usuarios');
+            if (!tbody) return;
             tbody.innerHTML = '';
             
             usuarios.forEach(function(u, idx) {
@@ -182,57 +175,10 @@
             });
         }
 
-        function crearUsuario() {
-            var nombre = document.getElementById('new-nombre').value.trim();
-            var correo = document.getElementById('new-correo').value.trim();
-            var rol = document.getElementById('new-rol').value;
-            var estado = document.getElementById('new-estado').value;
-
-            if (!nombre || !correo) return alert("⚠️ Por favor ingresa el nombre y correo del analista.");
-            if (!correo.includes("@")) return alert("⚠️ El correo debe ser un email corporativo válido.");
-
-            var usuarios = obtenerUsuariosConfig();
-            if (usuarios.some(u => u.correo.toLowerCase() === correo.toLowerCase())) {
-                return alert("❌ Este correo corporativo ya se encuentra registrado.");
-            }
-
-            var hoy = new Date().toISOString().split('T')[0];
-            usuarios.push({ nombre: nombre, correo: correo, rol: rol, estado: estado, creado: hoy });
-            guardarUsuariosConfig(usuarios);
-            
-            document.getElementById('new-nombre').value = '';
-            document.getElementById('new-correo').value = '';
-            alert("✅ ¡Usuario " + nombre + " añadido y autorizado con éxito!");
-            renderizarUsuarios();
-        }
-
-        function editarRol(idx) {
-            var usuarios = obtenerUsuariosConfig();
-            var u = usuarios[idx];
-            var nuevoRol = prompt("✏️ CAMBIAR ROL PARA: " + u.nombre + "\n\nOpciones válidas: solicitante, validador, preparador, aprobador, maestro", u.rol);
-            if (nuevoRol && ['solicitante', 'validador', 'preparador', 'aprobador', 'maestro'].includes(nuevoRol.toLowerCase().trim())) {
-                u.rol = nuevoRol.toLowerCase().trim();
-                guardarUsuariosConfig(usuarios);
-                alert("✅ Rol actualizado a: " + u.rol.toUpperCase());
-                renderizarUsuarios();
-            } else if (nuevoRol) {
-                alert("⚠️ Rol no válido. Debes escribir una de las 5 opciones.");
-            }
-        }
-
-        function eliminarUsuario(idx) {
-            var usuarios = obtenerUsuariosConfig();
-            if (confirm("⚠️ ¿Estás seguro de revocar el acceso a " + usuarios[idx].nombre + "?")) {
-                usuarios.splice(idx, 1);
-                guardarUsuariosConfig(usuarios);
-                renderizarUsuarios();
-            }
-        }
-
-        // --- LÓGICA DE ANS ---
-        function renderizarANS() {
-            var ans = obtenerConfigANS();
+        function renderizarANS(matriz) {
+            var ans = matriz || (typeof obtenerConfigANS === 'function' ? obtenerConfigANS() : []);
             var tbody = document.getElementById('tbody-ans');
+            if (!tbody) return;
             tbody.innerHTML = '';
 
             ans.forEach(function(item, idx) {
@@ -247,62 +193,48 @@
         }
 
         function editarANS(idx) {
-            var ans = obtenerConfigANS();
+            var ans = typeof obtenerConfigANS === 'function' ? obtenerConfigANS() : [];
             var item = ans[idx];
+            if (!item) return;
+
             var nuevoMontaje = prompt("⏱️ TIEMPO MÁXIMO DE MONTAJE (PREPARADOR):\n\nIngresa el límite en minutos para " + item.nombre + ":", item.maxMontajeMin);
             if (nuevoMontaje !== null && !isNaN(nuevoMontaje) && Number(nuevoMontaje) > 0) {
                 var nuevoAprob = prompt("⏱️ TIEMPO MÁXIMO DE APROBACIÓN (KATE):\n\nIngresa el límite en minutos para el check final:", item.maxAprobacionMin);
                 if (nuevoAprob !== null && !isNaN(nuevoAprob) && Number(nuevoAprob) > 0) {
                     item.maxMontajeMin = Number(nuevoMontaje);
                     item.maxAprobacionMin = Number(nuevoAprob);
-                    guardarConfigANS(ans);
-                    alert("✅ ¡Matriz de ANS actualizada con éxito!");
-                    renderizarANS();
+                    
+                    localStorage.setItem("bold_config_ans", JSON.stringify(ans));
+                    renderizarANS(ans);
+
+                    getDb().collection("configuracion").doc("ans").set({
+                        lista: ans
+                    }).then(function() {
+                        alert("✅ ¡Matriz de ANS actualizada y guardada exitosamente en Google Cloud!");
+                    }).catch(function(err) {
+                        alert("⚠️ Guardado en pantalla pero falló la nube: " + err.message);
+                    });
                 }
             }
         }
 
-        function restaurarANSPorDefecto() {
-            if (confirm("🔄 ¿Deseas restaurar la configuración original de ANS en minutos?")) {
-                localStorage.removeItem("bold_config_ans");
-                renderizarANS();
-                alert("✅ Parámetros restaurados al estándar de tesorería.");
-            }
+        function activarEscuchadorANSRealTime() {
+            try {
+                getDb().collection("configuracion").doc("ans").onSnapshot(function(doc) {
+                    if (doc.exists && doc.data().lista) {
+                        var matrizNube = doc.data().lista;
+                        localStorage.setItem("bold_config_ans", JSON.stringify(matrizNube));
+                        renderizarANS(matrizNube);
+                        console.log("⚡ [WEBSOCKET ADMIN]: Matriz ANS sincronizada desde Firestore en vivo.");
+                    }
+                });
+            } catch(e) { console.error("Error activando WebSocket ANS:", e); }
         }
 
-        // INICIALIZAR AL CARGAR
-        window.onload = function() {
+        window.addEventListener('DOMContentLoaded', function() {
             renderizarUsuarios();
             renderizarANS();
-        };
-    </script>
-
-    <script>
-        function renderizarTablaANS(matriz) {
-            if (!matriz || !Array.isArray(matriz)) return;
-            var tbody = document.querySelector("#tablaANS tbody") || document.querySelector("table tbody");
-            if (!tbody) return;
-            
-            // Buscar la fila de Prioridad 1 y actualizar sus celdas
-            var itemP1 = matriz.find(m => m.prioridad == 1 || m.prioridad == "1");
-            if (itemP1) {
-                var filas = tbody.querySelectorAll("tr");
-                if (filas.length > 0) {
-                    var celdas = filas[0].querySelectorAll("td");
-                    if (celdas.length >= 3) {
-                        celdas[1].innerHTML = "<strong>" + (itemP1.maxMontajeMin || 15) + " min</strong>";
-                        celdas[2].innerHTML = "<strong>" + (itemP1.maxAprobacionMin || 10) + " min</strong>";
-                    }
-                }
-            }
-        }
-        
-        // Ejecutar al cargar si hay datos guardados
-        document.addEventListener("DOMContentLoaded", function() {
-            var ansGuardado = localStorage.getItem("bold_config_ans");
-            if (ansGuardado) {
-                try { renderizarTablaANS(JSON.parse(ansGuardado)); } catch(e) {}
-            }
+            activarEscuchadorANSRealTime();
         });
     </script>
 </body>
