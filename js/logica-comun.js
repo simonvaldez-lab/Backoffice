@@ -907,7 +907,7 @@ var NUBE_API = {
 function iniciarEscuchadoresNubeEnVivo() {
     try {
         if (typeof firebase !== "undefined" && firebase.firestore) {
-            var db = firebase.app().firestore("treasurybackoffice");
+            var db = firebase.app().firestore();
             console.log("🟢 [INTERCEPTOR]: Conectado a la base de datos oficial: treasurybackoffice");
             db.collection("operaciones").orderBy("fechaServidor", "desc").onSnapshot(function(snapshot) {
                 var opsNube = [];
@@ -1024,7 +1024,7 @@ enviarRadicadoACloudFunction = function(operacion) {
         // 2. Conexión explícita a la base de datos correcta
         if (typeof firebase !== "undefined" && firebase.app) {
             // Aquí obligamos a Firebase a ignorar (default) y usar treasurybackoffice
-            var db = firebase.app().firestore("treasurybackoffice");
+            var db = firebase.app().firestore();
             
             db.collection("operaciones").doc(docIdSeguro).set(operacion)
             .then(function() {
@@ -1057,7 +1057,7 @@ window.enviarRadicadoACloudFunction = function(operacion) {
 
         // 2. Conexión explícita usando el SDK Compat (Garantizado)
         if (typeof firebase !== "undefined" && firebase.app) {
-            var db = firebase.app().firestore("treasurybackoffice");
+            var db = firebase.app().firestore();
             
             db.collection("operaciones").doc(docIdSeguro).set(operacion)
             .then(function() {
@@ -1084,7 +1084,7 @@ window.invocarCloudAPI = function(url, payload, callbackExito) {
     else if (url.includes("apiCerrarComprobante")) actualizacion = { estado: "COMPLETADA / CERRADA ✓", archivoPDF: payload.archivoPDF, comprobanteCerrado: true };
     else if (url.includes("apiRechazarOperacion")) actualizacion = { estado: "RECHAZADO", motivoRechazo: payload.motivo || "" };
 
-    var db = firebase.app().firestore("treasurybackoffice");
+    var db = firebase.app().firestore();
     db.collection("operaciones").doc(docIdSeguro).update(actualizacion)
     .then(function() {
         if (callbackExito) callbackExito({ exito: true });
