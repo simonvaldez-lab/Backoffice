@@ -95,25 +95,36 @@
             });
         }
 
-        // MONTAJE DEL PAGO: ENVÍA AL APROBADOR FINAL
+        // 🚀 PASO 2: MONTAJE DEL PAGO Y SUBIDA DE SCREENSHOT
         function enviarAAprobador(rad) {
             const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : [];
             const op = ops.find(o => o.radicado === rad);
             const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}');
 
             if(op) {
+                // 🛑 Validación: Pedimos el link de la captura de pantalla (Pruebas)
+                let linkScreenshot = prompt(`📸 MONTAJE BANCARIO - Radicado ${rad}\n\nPor favor, pega aquí el enlace de la captura de pantalla (Screenshot) del montaje en el portal bancario para que el Aprobador pueda revisarlo:`);
+                
+                if (!linkScreenshot || linkScreenshot.trim() === "") {
+                    alert("⚠️ Operación cancelada. Es obligatorio adjuntar las pruebas del montaje para enviarlo al Aprobador.");
+                    return; // Detiene el proceso si no hay pruebas
+                }
+
+                // Si hay pruebas, actualizamos la operación
                 op.estado = "En Aprobación";
+                op.soportePreparador = linkScreenshot; // Guardamos el link en la base de datos
+                
                 op.historial.push({ 
                     fecha: obtenerFechaHoraMilitar(), 
-                    paso: "3. MONTAJE EN PORTAL BANCARIO COMPLETE", 
-                    detalle: `Dispersión montada en banco por ${usr.nombre || 'Preparador'}. Enviada al Aprobador Final (Kate) para doble control.` 
+                    paso: "2. MONTAJE Y PRUEBAS COMPLETADAS", 
+                    detalle: `Dispersión montada en banco por ${usr.nombre || 'Preparador'}. Screenshot adjunto. Enviada al Aprobador (Kate).` 
                 });
                 
                 guardarOperaciones(ops);
-                crearNotificacion(rad, `⏳ ¡MONTAJE REALIZADO! El radicado ${rad} fue montado en el portal bancario por ${usr.nombre || 'Preparador'} y espera Check Final del Aprobador.`);
+                alert(`🚀 ¡Montaje bancario completado!\nEl radicado ${rad} ha sido enviado a la Bandeja del Aprobador con sus respectivas pruebas.`);
                 
-                alert(`🚀 ¡Montaje bancario completado!\nEl radicado ${rad} ha sido enviado a la Bandeja de Aprobador para el Check Final y cierre.`);
-                renderizarTabla();
+                // Forzamos a la tabla a redibujarse para que desaparezca la operación (ya que pasó al Aprobador)
+                renderizarTabla(); 
             }
         }
     </script>
