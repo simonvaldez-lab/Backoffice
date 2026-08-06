@@ -762,8 +762,7 @@ if (typeof auditarRadicado === "function") {
 
 // === PUENTE ASÍNCRONO CON FIREBASE CLOUD FUNCTIONS ===
 // ⚙️ CONFIGURACIÓN DE TU ENDPOINT EN LA NUBE
-// Enlazamos directamente al diccionario NUBE_API para evitar URLs duplicadas
-var CLOUD_FUNCTION_URL = NUBE_API.radicar;
+var CLOUD_FUNCTION_URL = "https://apiradicaroperacion-625642864594.us-central1.run.app";
 
 function enviarRadicadoACloudFunction(operacion) {
     try {
