@@ -762,8 +762,8 @@ if (typeof auditarRadicado === "function") {
 
 // === PUENTE ASÍNCRONO CON FIREBASE CLOUD FUNCTIONS ===
 // ⚙️ CONFIGURACIÓN DE TU ENDPOINT EN LA NUBE
-// Nota: Cuando despliegues con 'firebase deploy --only functions', reemplaza esta URL por la que te dé tu consola
-var CLOUD_FUNCTION_URL = "https://us-central1-black-hulling-462522-j2.cloudfunctions.net/apiRadicarOperacion";
+// Enlazamos directamente al diccionario NUBE_API para evitar URLs duplicadas
+var CLOUD_FUNCTION_URL = NUBE_API.radicar;
 
 function enviarRadicadoACloudFunction(operacion) {
     try {
