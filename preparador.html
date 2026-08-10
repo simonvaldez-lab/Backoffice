@@ -95,36 +95,38 @@
             });
         }
 
-        // 🚀 PASO 2: MONTAJE DEL PAGO Y SUBIDA DE SCREENSHOT
-        function enviarAAprobador(rad) {
-            const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : [];
-            const op = ops.find(o => o.radicado === rad);
+       // 🚀 PASO 2: MONTAJE DEL PAGO Y SUBIDA DE SCREENSHOT (CONECTADO A LA NUBE)
+        async function enviarAAprobador(rad) {
             const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}');
 
-            if(op) {
-                // 🛑 Validación: Pedimos el link de la captura de pantalla (Pruebas)
-                let linkScreenshot = prompt(`📸 MONTAJE BANCARIO - Radicado ${rad}\n\nPor favor, pega aquí el enlace de la captura de pantalla (Screenshot) del montaje en el portal bancario para que el Aprobador pueda revisarlo:`);
-                
-                if (!linkScreenshot || linkScreenshot.trim() === "") {
-                    alert("⚠️ Operación cancelada. Es obligatorio adjuntar las pruebas del montaje para enviarlo al Aprobador.");
-                    return; // Detiene el proceso si no hay pruebas
-                }
+            // 🛑 Mantenemos el prompt temporalmente (en la Fase 2 lo cambiaremos por el Modal real)
+            let linkScreenshot = prompt(`📸 MONTAJE BANCARIO - Radicado ${rad}\n\nPor favor, pega aquí el enlace temporal de tu captura de pantalla (Screenshot) del portal bancario:`);
+            
+            if (!linkScreenshot || linkScreenshot.trim() === "") {
+                alert("⚠️ Operación cancelada. Es obligatorio adjuntar las pruebas del montaje para enviarlo al Aprobador.");
+                return; // Detiene el proceso si no hay pruebas
+            }
 
-                // Si hay pruebas, actualizamos la operación
-                op.estado = "En Aprobación";
-                op.soportePreparador = linkScreenshot; // Guardamos el link en la base de datos
-                
-                op.historial.push({ 
-                    fecha: obtenerFechaHoraMilitar(), 
-                    paso: "2. MONTAJE Y PRUEBAS COMPLETADAS", 
-                    detalle: `Dispersión montada en banco por ${usr.nombre || 'Preparador'}. Screenshot adjunto. Enviada al Aprobador (Kate).` 
+            try {
+                // 🔥 MAGIA EN LA NUBE: Guardamos directamente en Firestore
+                await db.collection("operaciones").doc(rad).update({
+                    estado: "En Aprobación", // Cambia de estado para que le aparezca a Kate
+                    soportePreparador: linkScreenshot,
+                    historial: firebase.firestore.FieldValue.arrayUnion({
+                        fecha: typeof obtenerFechaHoraMilitar === 'function' ? obtenerFechaHoraMilitar() : new Date().toLocaleString(),
+                        paso: "2. MONTAJE BANCARIO",
+                        detalle: `Dispersión montada en banco por ${usr.nombre || 'Preparador'}. Screenshot adjunto. Enviada al Aprobador.`
+                    })
                 });
                 
-                guardarOperaciones(ops);
-                alert(`🚀 ¡Montaje bancario completado!\nEl radicado ${rad} ha sido enviado a la Bandeja del Aprobador con sus respectivas pruebas.`);
+                alert(`🚀 ¡Montaje bancario completado en la Nube!\nEl radicado ${rad} ha sido enviado a la Bandeja del Aprobador.`);
                 
-                // Forzamos a la tabla a redibujarse para que desaparezca la operación (ya que pasó al Aprobador)
+                // Redibujamos la tabla (la operación desaparecerá de aquí porque ya no es tarea del Preparador)
                 renderizarTabla(); 
+
+            } catch (error) {
+                console.error("Error al actualizar en la nube:", error);
+                alert("❌ Hubo un error al enviar los datos a Google Cloud. Revisa la consola (F12).");
             }
         }
     </script>
