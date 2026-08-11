@@ -1088,4 +1088,20 @@ window.coincideFechaFiltro = function(op) {
     if (partes.length !== 3) return false;
     var fNorm = partes[2] + "-" + String(partes[1]).padStart(2, "0") + "-" + String(partes[0]).padStart(2, "0");
     return fNorm === fechaInput;
+// ============================================================================
+// 🔄 SINCRONIZADOR GLOBAL DE PANTALLAS (Aplica para todos los roles)
+// ============================================================================
+
+window.refrescarPantallasUniversales = function() {
+    // Si la página en la que estamos tiene una tabla, la redibuja
+    if (typeof renderizarTabla === 'function') {
+        renderizarTabla();
+    }
 };
+
+// Apenas cargue cualquier página (Solicitante, Preparador, Aprobador), dibuja la tabla inicial
+document.addEventListener("DOMContentLoaded", function() {
+    if (typeof renderizarTabla === 'function') {
+        renderizarTabla();
+    }
+});    

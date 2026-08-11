@@ -47,17 +47,6 @@
     
     <script>
 
-    // 🔄 Escuchador de Firebase: Redibuja la tabla apenas llegan los datos de la nube
-        window.refrescarPantallasUniversales = function() {
-            if (typeof renderizarTabla === 'function') {
-                renderizarTabla();
-            }
-        };
-        
-        // Al cargar la página, pinta lo que haya y espera a Firebase
-        window.onload = function() {
-            renderizarTabla();
-        };    
         function renderizarTabla() {
             const ops = typeof obtenerOperacionesActivas === 'function' ? obtenerOperacionesActivas() : obtenerOperaciones();
             
