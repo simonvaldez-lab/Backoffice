@@ -1073,7 +1073,6 @@ window.invocarCloudAPI = function(url, payload, callbackExito) {
         alert("⚠️ Error al actualizar en Firestore: " + err.message);
     });
 };
-
 // ==========================================
 // FILTRO DE FECHAS GLOBAL
 // ==========================================
@@ -1088,6 +1087,8 @@ window.coincideFechaFiltro = function(op) {
     if (partes.length !== 3) return false;
     var fNorm = partes[2] + "-" + String(partes[1]).padStart(2, "0") + "-" + String(partes[0]).padStart(2, "0");
     return fNorm === fechaInput;
+}; // 👈 ¡Esta era la llave de cierre que faltaba!
+
 // ============================================================================
 // 🔄 SINCRONIZADOR GLOBAL DE PANTALLAS (Aplica para todos los roles)
 // ============================================================================
@@ -1104,4 +1105,4 @@ document.addEventListener("DOMContentLoaded", function() {
     if (typeof renderizarTabla === 'function') {
         renderizarTabla();
     }
-});    
+});
