@@ -350,14 +350,16 @@ function aplicarSeguridadYMenu() {
             '</div>';
         }
 
-        // 2. BLOQUEO ESTRICTO DE MENÚ POR ROL (RBAC)
+      // 2. PERMISOS ESTRICTOS POR ROL (ACTUALIZADO A SPA)
+        var rol = String(usuario.rol || "solicitante").toLowerCase().trim();
         var mapaPermisos = {
-        "solicitante": ["solicitante.html", "historial.html"],
-        "validador": ["validador.html", "historial.html"],
-        "preparador": ["preparador.html", "historial.html"],
-        "aprobador": ["aprobador.html", "historial.html"],
-        "maestro": ["solicitante.html", "validador.html", "preparador.html", "aprobador.html", "historial.html", "admin.html"]
-    };
+            "solicitante": ["dashboard.html", "historial.html"],
+            "validador": ["dashboard.html", "historial.html"],
+            "preparador": ["dashboard.html", "historial.html"],
+            "aprobador": ["dashboard.html", "historial.html"],
+            "maestro": ["dashboard.html", "historial.html", "admin.html"]
+        };
+        var permitidos = mapaPermisos[rol] || [];
         var rol = usuario.rol || "Solicitante";
         var permitidos = mapaPermisos[rol] || ["solicitante.html", "historial.html"];
 
