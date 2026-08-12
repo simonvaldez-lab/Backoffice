@@ -1106,3 +1106,42 @@ document.addEventListener("DOMContentLoaded", function() {
         renderizarTabla();
     }
 });
+// ============================================================================
+// 🚦 MOTOR DE ENRUTAMIENTO SPA (SINGLE PAGE APPLICATION)
+// ============================================================================
+function activarVistaPorRol() {
+    var usrRaw = sessionStorage.getItem("usuarioLogueado") || localStorage.getItem("bold_ultimo_usuario_backup") || "{}";
+    var usr = JSON.parse(usrRaw);
+    var rol = String(usr.rol || "solicitante").toLowerCase().trim();
+
+    // 1. Apagamos TODAS las cajas de la pantalla
+    var vistas = document.querySelectorAll(".vista-rol");
+    vistas.forEach(function(v) { v.style.display = "none"; });
+
+    // 2. Encendemos SOLO la caja correspondiente al rol
+    if (rol === "solicitante") {
+        var vSol = document.getElementById("vista-solicitante");
+        if (vSol) vSol.style.display = "block";
+        
+    } else if (rol === "preparador" || rol === "validador") {
+        var vPrep = document.getElementById("vista-preparador");
+        if (vPrep) vPrep.style.display = "block";
+        if (typeof renderizarTabla === "function") renderizarTabla(); // Obliga a pintar su tabla
+        
+    } else if (rol === "aprobador") {
+        var vApro = document.getElementById("vista-aprobador");
+        if (vApro) vApro.style.display = "block";
+        if (typeof renderizarTabla === "function") renderizarTabla(); // Obliga a pintar su tabla
+        
+    } else if (rol === "maestro") {
+        // El Maestro ve todo
+        vistas.forEach(function(v) { v.style.display = "block"; });
+    }
+}
+
+// Enganchamos el enrutador para que se ejecute apenas cargue la página
+document.addEventListener("DOMContentLoaded", function() {
+    if (window.location.pathname.includes("dashboard.html")) {
+        activarVistaPorRol();
+    }
+});

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Central - Bold Treasury</title>
+    <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+    <header class="topbar"><a href="dashboard.html" class="logo">bold</a><div class="topbar-derecha"></div></header>
+    
+    <div class="contenedor-principal">
+        <!-- BARRA LATERAL UNIFICADA -->
+        <aside class="sidebar">
+            <div class="menu-categoria">Mesa de Dinero</div>
+            <a href="#" class="menu-item activo" id="btn-menu-panel" onclick="location.reload()">Panel Principal</a>
+            <a href="historial.html" class="menu-item" id="btn-menu-historial">Historial y Expedientes</a>
+        </aside>
+
+        <main class="contenido">
+            
+            <!-- 🟢 CAJA DEL SOLICITANTE (LAURA) -->
+            <div id="vista-solicitante" class="vista-rol" style="display: none;">
+                <h1 class="titulo-seccion">Paso 1: Carga y Radicación de Operaciones</h1>
+                <p class="subtitulo">Configura el enrutamiento bancario, define el valor del pago y gestiona los tiempos de atención.</p>
+                <!-- Aquí mudaremos todo tu formulario de solicitante.html -->
+                <div style="background:white; padding:20px; border-radius:10px; border:1px solid #CBD5E1; text-align:center;">
+                    <h3>Formulario de Radicación (Próximamente migrado)</h3>
+                </div>
+            </div>
+
+            <!-- 🔵 CAJA DEL PREPARADOR (FELIPE) -->
+            <div id="vista-preparador" class="vista-rol" style="display: none;">
+                <h1 class="titulo-seccion">Paso 1 y 2: Validación Compliance & Montaje Bancario</h1>
+                <p class="subtitulo">Revisa la legitimidad del radicado y realiza el montaje en banco.</p>
+                <!-- Aquí mudaremos tu tabla de preparador.html -->
+                <div class="tabla-contenedor">
+                    <table style="width: 100%;">
+                        <thead><tr><th>Control / Radicado</th><th>Fecha</th><th>Gasto</th><th>Valor</th><th>Acción</th></tr></thead>
+                        <tbody id="tabla-preparador"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 🔴 CAJA DEL APROBADOR (KATE) -->
+            <div id="vista-aprobador" class="vista-rol" style="display: none;">
+                <h1 class="titulo-seccion">Paso 3: Check Final y Cierre de Comprobante</h1>
+                <p class="subtitulo">Control dual: Revisa la captura de pantalla del montaje y autoriza el pago.</p>
+                <!-- Aquí mudaremos tu tabla de aprobador.html -->
+                <div class="tabla-contenedor">
+                    <table style="width: 100%;">
+                        <thead><tr><th>Control / Radicado</th><th>Fecha</th><th>Gasto</th><th>Valor</th><th>Check Final</th></tr></thead>
+                        <tbody id="tabla-aprobador"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- 🔥 LIBRERÍAS DE FIREBASE -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script>
+        if (!firebase.apps.length) {
+            firebase.initializeApp({ projectId: "black-hulling-462522-j2" });
+        }
+    </script>
+    
+    <!-- CONEXIÓN AL CEREBRO -->
+    <script src="js/logica-comun.js?v=5"></script>
+</body>
+</html>
