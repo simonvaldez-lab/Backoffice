@@ -69,7 +69,6 @@ const arbolOperaciones = {
 // 2. PERMISOS Y BLOQUEO POR ROL (RBAC)
 const permisos = {
     "Solicitante": ["solicitante.html", "historial.html"],
-    "Validador": ["validador.html", "historial.html"],
     "Preparador": ["preparador.html", "historial.html"],
     "Aprobador": ["aprobador.html", "historial.html"],
     "Maestro": ["solicitante.html", "validador.html", "preparador.html", "aprobador.html", "historial.html"]
