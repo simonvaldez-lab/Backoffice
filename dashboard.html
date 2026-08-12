@@ -214,7 +214,7 @@
             const rol = String(usr.rol || "solicitante").toLowerCase().trim();
             const ops = typeof obtenerOperacionesActivas === 'function' ? obtenerOperacionesActivas() : (typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : []);
             
-            if (rol === "preparador" || rol === "validador" || rol === "maestro") {
+            if (rol === "preparador" || rol === "maestro") {
                 const listos = ops.filter(o => (o.estado === "Pendiente Validación" || o.estado === "En Preparación") && coincideFechaFiltro(o));
                 const tb = document.getElementById('tabla-preparador');
                 if(!tb) return;

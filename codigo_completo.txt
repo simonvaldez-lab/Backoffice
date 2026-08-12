@@ -40,7 +40,6 @@
         input, select { padding: 8px 10px; border: 1px solid #CBD5E1; border-radius: 6px; font-size: 13px; width: 100%; box-sizing: border-box; }
         .badge-rol { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: bold; text-transform: uppercase; display: inline-block; }
         .rol-solicitante { background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; }
-        .rol-validador { background: #E0E7FF; color: #3730A3; border: 1px solid #C7D2FE; }
         .rol-preparador { background: #E0F2FE; color: #075985; border: 1px solid #BAE6FD; }
         .rol-aprobador { background: #F3E8FF; color: #6B21A8; border: 1px solid #D8B4FE; }
         .rol-maestro { background: #DCFCE7; color: #166534; border: 1px solid #BBF7D0; }
@@ -82,7 +81,6 @@
                     <label>Rol Asignado en Flujo</label>
                     <select id="new-rol">
                         <option value="solicitante">🟡 Solicitante (Radicador)</option>
-                        <option value="validador">🔵 Validador (Compliance)</option>
                         <option value="preparador">🔵 Preparador (Montaje Banco)</option>
                         <option value="aprobador">🟣 Aprobador (Check Final)</option>
                         <option value="maestro">🟢 Maestro / Administrador</option>
@@ -264,7 +262,7 @@
     <div class="contenedor-principal">
         <aside class="sidebar">
             <div class="menu-categoria">Operaciones</div><a href="solicitante.html" class="menu-item">Carga de Operaciones</a><a href="historial.html" class="menu-item">Historial y Expedientes</a>
-            <div class="menu-categoria">Validación y Ejecución</div><a href="validador.html" class="menu-item">Validación (Compliance)</a><a href="preparador.html" class="menu-item">Ejecución Banco</a>
+            <div class="menu-categoria">Ejecución</div><a href="preparador.html" class="menu-item">Ejecución Banco</a>
             <div class="menu-categoria">Cierre Final</div><a href="aprobador.html" class="menu-item activo">Bandeja de Aprobador</a>
         </aside>
         <main class="contenido">
@@ -635,7 +633,7 @@ exports.apiValidarKYC = functions.https.onRequest((req, res) => {
             const { radicado, usuario } = req.body;
             
             // 🛡️ RBAC: Ahora el PREPARADOR está autorizado para ejecutar la validación inicial
-            const usrValidado = await validarPermiso(usuario, ["preparador", "validador"]);
+            const usrValidado = await validarPermiso(usuario, ["preparador"]);
             if (!radicado) return res.status(400).json({ exito: false, error: "Falta radicado." });
 
             const docRef = db.collection("operaciones").doc(radicado);
@@ -744,7 +742,7 @@ exports.apiRechazarOperacion = functions.https.onRequest((req, res) => {
         try {
             if (req.method !== "POST") return res.status(405).json({ exito: false });
             const { radicado, motivo, usuario } = req.body;
-            const usrValidado = await validarPermiso(usuario, ["solicitante", "validador", "preparador", "aprobador"]);
+            const usrValidado = await validarPermiso(usuario, ["solicitante", "preparador", "aprobador"]);
             if (!radicado || !motivo || motivo.trim() === "") return res.status(400).json({ exito: false, error: "Motivo obligatorio." });
 
             const docRef = db.collection("operaciones").doc(radicado);
@@ -779,8 +777,7 @@ exports.apiRechazarOperacion = functions.https.onRequest((req, res) => {
     <div class="contenedor-principal">
         <aside class="sidebar">
             <div class="menu-categoria">Operaciones</div><a href="solicitante.html" class="menu-item">Carga de Operaciones</a><a href="historial.html" class="menu-item activo">Historial y Expedientes</a>
-            <div class="menu-categoria">Validación y Aprobación</div><a href="validador.html" class="menu-item">Validación (Compliance)</a><a href="aprobador.html" class="menu-item">Bandeja de Aprobador</a>
-            <div class="menu-categoria">Ejecución</div><a href="preparador.html" class="menu-item">Ejecución Banco</a>
+            <div class="menu-categoria">Aprobación</div><a href="aprobador.html" class="menu-item">Bandeja de Aprobador</a>
         </aside>
         <main class="contenido">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
@@ -879,8 +876,7 @@ exports.apiRechazarOperacion = functions.https.onRequest((req, res) => {
         
         <div style="margin-top: 20px; font-size: 11px; color: #64748B; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 15px; line-height: 1.6;">
             <strong>Credenciales de Prueba (Clave: 12)</strong><br>
-            lau@bold.co (Solicitante) | mar@bold.co (Validador)<br>
-            kat@bold.co (Aprobador) | fel@bold.co (Preparador)<br>
+            lau@bold.co (Solicitante) | kat@bold.co (Aprobador) | fel@bold.co (Preparador)<br>
             <span style="color: #4F46E5; font-weight: 800; font-size: 12px; display: block; margin-top: 4px;">👑 simo@bold.co (Maestro - Acceso Total)</span>
         </div>
     </div>
@@ -899,8 +895,9 @@ exports.apiRechazarOperacion = functions.https.onRequest((req, res) => {
             const usuariosPrueba = {
                 "simo@bold.co": { rol: "maestro", url: "historial.html", nombre: "👑 Simon (Usuario Maestro)" },
                 "lau@bold.co": { rol: "solicitante", url: "solicitante.html", nombre: "👋 Laura (Solicitante)" },
-                "mar@bold.co": { rol: "validador", url: "validador.html", nombre: "👋 María (Validador)" },
                 "kat@bold.co": { rol: "aprobador", url: "aprobador.html", nombre: "👋 Kate (Aprobador)" },
+                "fel@bold.co": { rol: "preparador", url: "preparador.html", nombre: "👋 Felipe (Preparador)" }
+            };
                 "fel@bold.co": { rol: "preparador", url: "preparador.html", nombre: "👋 Felipe (Preparador)" }
             };
 
@@ -1014,10 +1011,9 @@ const arbolOperaciones = {
 // 2. PERMISOS Y BLOQUEO POR ROL (RBAC)
 const permisos = {
     "Solicitante": ["solicitante.html", "historial.html"],
-    "Validador": ["validador.html", "historial.html"],
     "Preparador": ["preparador.html", "historial.html"],
     "Aprobador": ["aprobador.html", "historial.html"],
-    "Maestro": ["solicitante.html", "validador.html", "preparador.html", "aprobador.html", "historial.html"]
+    "Maestro": ["solicitante.html", "preparador.html", "aprobador.html", "historial.html"]
 };
 
 // 3. AUXILIARES DE FECHA
@@ -1299,10 +1295,9 @@ function aplicarSeguridadYMenu() {
         // 2. BLOQUEO ESTRICTO DE MENÚ POR ROL (RBAC)
         var mapaPermisos = {
             "Solicitante": ["solicitante.html", "historial.html"],
-            "Validador": ["validador.html", "historial.html"],
             "Preparador": ["preparador.html", "historial.html"],
             "Aprobador": ["aprobador.html", "historial.html"],
-            "Maestro": ["solicitante.html", "validador.html", "preparador.html", "aprobador.html", "historial.html"]
+            "Maestro": ["solicitante.html", "preparador.html", "aprobador.html", "historial.html"]
         };
         var rol = usuario.rol || "Solicitante";
         var permitidos = mapaPermisos[rol] || ["solicitante.html", "historial.html"];
@@ -1560,12 +1555,9 @@ function aplicarSeguridadYMenuUniversal() {
         var rol = String(usuario.rol || "solicitante").toLowerCase().trim();
         var mapaPermisos = {
             "solicitante": ["solicitante.html", "historial.html"],
-            "validador": ["validador.html", "historial.html"],
-            "preparador": ["preparador.html", "historial.html"],
-            "aprobador": ["aprobador.html", "historial.html"],
-            "maestro": ["solicitante.html", "validador.html", "preparador.html", "aprobador.html", "historial.html"]
-        };
-        
+                "preparador": ["preparador.html", "historial.html"],
+                "aprobador": ["aprobador.html", "historial.html"],
+                "maestro": ["solicitante.html", "preparador.html", "aprobador.html", "historial.html"]
         var permitidos = mapaPermisos[rol] || ["solicitante.html", "historial.html"];
         var paginaActual = window.location.pathname.split("/").pop() || "solicitante.html";
 
@@ -1573,7 +1565,6 @@ function aplicarSeguridadYMenuUniversal() {
         if (paginaActual !== "index.html" && paginaActual !== "" && !permitidos.includes(paginaActual) && rol !== "maestro") {
             var urlNativa = {
                 "solicitante": "solicitante.html",
-                "validador": "validador.html",
                 "preparador": "preparador.html",
                 "aprobador": "aprobador.html"
             }[rol] || "solicitante.html";
@@ -1645,7 +1636,7 @@ function guardiaRolRechazo(usr) {
         alert("⛔ ACCESO DENEGADO (RBAC):" + "\n" + "El rol Solicitante solo puede iniciar solicitudes y monitorear su estado. No tiene permisos para rechazar, modificar ni aprobar operaciones.");
         throw new Error("Violación RBAC: Solicitante intentando rechazar.");
     }
-    if (rol !== "preparador" && rol !== "validador" && rol !== "aprobador" && rol !== "maestro") {
+    if (rol !== "preparador" && rol !== "aprobador" && rol !== "maestro") {
         alert("⛔ ACCESO DENEGADO (RBAC):" + "\n" + "Tu rol no cuenta con privilegios para modificar el ciclo de vida de este radicado.");
         throw new Error("Violación RBAC: Rol no autorizado.");
     }
@@ -1789,7 +1780,6 @@ function obtenerUsuariosConfig() {
         { nombre: "Laura (Bogotá)", correo: "lau@bold.co", rol: "solicitante", estado: "Activo", creado: "2026-01-10" },
         { nombre: "Felipe (Preparador Banco)", correo: "fel@bold.co", rol: "preparador", estado: "Activo", creado: "2026-01-10" },
         { nombre: "Kate (Check Final)", correo: "kat@bold.co", rol: "aprobador", estado: "Activo", creado: "2026-01-10" },
-        { nombre: "María (Compliance)", correo: "mar@bold.co", rol: "validador", estado: "Activo", creado: "2026-01-10" },
         { nombre: "Simon Valdez (Director)", correo: "simon.valdez@bold.co", rol: "maestro", estado: "Activo", creado: "2026-01-01" }
     ];
     var guardados = localStorage.getItem("bold_usuarios_config");
@@ -1964,7 +1954,7 @@ if (typeof finalizarYCerrarComprobante === "function") {
     <div class="contenedor-principal">
         <aside class="sidebar">
             <div class="menu-categoria">Operaciones</div><a href="solicitante.html" class="menu-item">Carga de Operaciones</a><a href="historial.html" class="menu-item">Historial y Expedientes</a>
-            <div class="menu-categoria">Validación y Ejecución</div><a href="validador.html" class="menu-item">Validación (Compliance)</a><a href="preparador.html" class="menu-item activo">Ejecución Banco</a>
+            <div class="menu-categoria">Ejecución</div><a href="preparador.html" class="menu-item activo">Ejecución Banco</a>
             <div class="menu-categoria">Cierre Final</div><a href="aprobador.html" class="menu-item">Bandeja de Aprobador</a>
         </aside>
         <main class="contenido">
@@ -2074,7 +2064,7 @@ if (typeof finalizarYCerrarComprobante === "function") {
     <div class="contenedor-principal">
         <aside class="sidebar">
             <div class="menu-categoria">Operaciones</div><a href="solicitante.html" class="menu-item activo">Carga de Operaciones</a><a href="historial.html" class="menu-item">Historial y Expedientes</a>
-            <div class="menu-categoria">Validación y Ejecución</div><a href="validador.html" class="menu-item">Validación (Compliance)</a><a href="preparador.html" class="menu-item">Ejecución Banco</a>
+            <div class="menu-categoria">Ejecución</div><a href="preparador.html" class="menu-item">Ejecución Banco</a>
             <div class="menu-categoria">Cierre Final</div><a href="aprobador.html" class="menu-item">Bandeja de Aprobador</a>
         </aside>
         <main class="contenido">
@@ -2603,75 +2593,3 @@ if (typeof finalizarYCerrarComprobante === "function") {
         }
     </script>
 </body>
-</html>
-
-
-
-//////////////////////////////////////////////////////
-📁 ARCHIVO: validador.html
-//////////////////////////////////////////////////////
-
-<!DOCTYPE html>
-<html lang="es">
-<head><meta charset="UTF-8"><title>Validación Compliance - Bold</title><link rel="stylesheet" href="css/estilos.css"></head>
-<body>
-    <header class="topbar"><a href="solicitante.html" class="logo">bold</a><div class="topbar-derecha"></div></header>
-    <div class="contenedor-principal">
-        <aside class="sidebar">
-            <div class="menu-categoria">Operaciones</div><a href="solicitante.html" class="menu-item">Carga de Operaciones</a><a href="historial.html" class="menu-item">Historial y Expedientes</a>
-            <div class="menu-categoria">Validación y Ejecución</div><a href="validador.html" class="menu-item activo">Validación (Compliance)</a><a href="preparador.html" class="menu-item">Ejecución Banco</a>
-            <div class="menu-categoria">Cierre Final</div><a href="aprobador.html" class="menu-item">Bandeja de Aprobador</a>
-        </aside>
-        <main class="contenido">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <div>
-                    <h1 class="titulo-seccion" style="margin: 0;">Paso 1: Validación y Revisión KYC</h1>
-                    <p class="subtitulo" style="margin: 4px 0 0 0;">Revisa que los soportes y cuentas sean correctos antes de pasar al montaje en el portal bancario.</p>
-                </div>
-                <div style="display: flex; gap: 8px; align-items: center; background: white; padding: 6px 12px; border-radius: 8px; border: 1px solid #CBD5E1;">
-                    <label style="font-size: 12px; font-weight: bold; color: #0B1442; margin: 0;">📅 Filtrar por Fecha:</label>
-                    <input type="date" id="filtro-fecha" class="form-control" style="width: 140px; padding: 4px 8px; height: 32px;" onchange="renderizarTabla()">
-                    <button class="btn btn-detalle" onclick="limpiarFiltroFecha()" style="padding: 4px 10px; height: 32px;">Limpiar</button>
-                </div>
-            </div>
-            
-            <div class="tabla-contenedor">
-                <table>
-                    <thead><tr><th>Control ANS / Radicado</th><th>Fecha</th><th>Compañía & Tipo</th><th>Solicitante</th><th>Valor Radicado</th><th>Estado</th><th>Acción Preparador</th></tr></thead>
-                    <tbody id="tabla-validador"></tbody>
-                </table>
-            </div>
-        </main>
-    </div>
-    <!-- Modal Compartido -->
-    <div class="modal-overlay" id="modalDetalles"><div class="modal modal-grande"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;"><h2 id="mod-radicado-titulo" style="margin:0; border:none; padding:0;">Módulo de Auditoría</h2><button class="btn" style="background:#3B82F6; color:white;" onclick="alternarVisor()">👁 Visor Dual</button></div><div class="modal-layout-split"><div class="seccion-datos"><div class="grid-detalles"><div class="dato-grupo"><span class="dato-label">Compañía</span><span class="dato-valor" id="mod-origen"></span></div><div class="dato-grupo"><span class="dato-label">Moneda</span><span class="dato-valor" id="mod-moneda"></span></div><div class="dato-grupo"><span class="dato-label">Valor Solicitado</span><span class="dato-valor" id="mod-val-sol"></span><div class="auditor-data auditor-alerta" id="mod-val-prep"></div></div><div class="dato-grupo"><span class="dato-label">Registros</span><span class="dato-valor" id="mod-regs"></span></div></div><div class="timeline" id="mod-timeline"></div></div><div class="seccion-visor" id="contenedorVisor"><div class="tab-container"><button class="tab active" id="tabSol" onclick="cambiarPestana('solicitante')">📄 Factura</button><button class="tab" id="tabPrep" onclick="cambiarPestana('preparador')">🖼 Screen Banco</button></div><div class="marco-visor"><div class="documento-simulado" id="vistaSolicitante"><h4>SOPORTE ORIGINAL</h4><p>Proveedor: <strong id="vis-sol-prov"></strong></p><p style="margin-top:40px; text-align:right; font-weight:bold;" id="vis-sol-total"></p></div><div class="documento-simulado hidden" id="vistaPreparador" style="background:#0F172A; color:#22C55E;"><h4>PORTAL BANCARIO</h4><p style="margin-top:40px; text-align:right; font-weight:bold; font-size:15px;" id="vis-prep-total"></p></div></div></div></div><div style="text-align: right; margin-top: 20px; border-top: 1px solid #E2E8F0; padding-top: 15px;"><button class="btn btn-detalle" onclick="cerrarModal('modalDetalles')">Cerrar</button></div></div></div>
-    <script src="js/logica-comun.js"></script>
-    <script>
-        function renderizarTabla() {
-            var tb = document.getElementById('tabla-validador');
-            if (tb) {
-                tb.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#64748B; padding:40px; background:#F8FAFC;">' +
-                    '<div style="font-size:24px; margin-bottom:8px;">ℹ️</div>' +
-                    '<strong style="color:#0B1442; font-size:14px; display:block;">Bandeja de Validación Sin Operaciones Asignadas</strong>' +
-                    '<span style="font-size:12px; color:#475569; display:block; margin-top:4px;">Por definición actual del flujo de trabajo, la revisión inicial de Compliance ha sido trasladada al equipo <strong>Preparador</strong> para unificar la validación y el montaje bancario en un solo paso.</span>' +
-                'td>tr>';
-            }
-        });
-        }
-        function changingEstado(rad, est) { changingEstado(rad, est); }
-        function cambiarEstado(rad, est) {
-            const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : [];
-            const op = ops.find(o => o.radicado === rad);
-            const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}');
-            if(op) {
-                op.estado = est;
-                op.historial.push({ fecha: obtenerFechaHoraMilitar(), paso: "2. VALIDACIÓN KYC COMPLETA", detalle: `Revisión de soportes aprobada por ${usr.nombre || 'Preparador'}. Pasa a pestaña Ejecución Banco.` });
-                guardarOperaciones(ops);
-                crearNotificacion(rad, `➡️ ¡VALIDADO! El radicado ${rad} fue verificado por ${usr.nombre || 'Preparador'} y está Listo para Banco.`);
-                alert("✅ Radicado validado con éxito.\nAhora haz clic en el menú izquierdo en 'Ejecución Banco' para proceder con el montaje del pago.");
-                renderizarTabla();
-            }
-        }
-    </script>
-</body>
-</html>

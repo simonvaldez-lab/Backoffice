@@ -71,7 +71,7 @@ const permisos = {
     "Solicitante": ["solicitante.html", "historial.html"],
     "Preparador": ["preparador.html", "historial.html"],
     "Aprobador": ["aprobador.html", "historial.html"],
-    "Maestro": ["solicitante.html", "validador.html", "preparador.html", "aprobador.html", "historial.html"]
+    "Maestro": ["solicitante.html", "preparador.html", "aprobador.html", "historial.html"]
 };
 
 // 3. AUXILIARES DE FECHA
@@ -354,7 +354,6 @@ function aplicarSeguridadYMenu() {
         var rol = String(usuario.rol || "solicitante").toLowerCase().trim();
         var mapaPermisos = {
             "solicitante": ["dashboard.html", "historial.html"],
-            "validador": ["dashboard.html", "historial.html"],
             "preparador": ["dashboard.html", "historial.html"],
             "aprobador": ["dashboard.html", "historial.html"],
             "maestro": ["dashboard.html", "historial.html", "admin.html"]
@@ -618,10 +617,9 @@ function aplicarSeguridadYMenuUniversal() {
         var rol = String(usuario.rol || "solicitante").toLowerCase().trim();
         var mapaPermisos = {
             "solicitante": ["solicitante.html", "historial.html"],
-            "validador": ["validador.html", "historial.html"],
             "preparador": ["preparador.html", "historial.html"],
             "aprobador": ["aprobador.html", "historial.html"],
-            "maestro": ["solicitante.html", "validador.html", "preparador.html", "aprobador.html", "historial.html", "admin.html"]
+            "maestro": ["solicitante.html", "preparador.html", "aprobador.html", "historial.html", "admin.html"]
         };
         var permitidos = mapaPermisos[rol] || [];
 
@@ -682,7 +680,7 @@ function guardiaRolRechazo(usr) {
         alert("⛔ ACCESO DENEGADO (RBAC):" + "\n" + "El rol Solicitante solo puede iniciar solicitudes y monitorear su estado. No tiene permisos para rechazar, modificar ni aprobar operaciones.");
         throw new Error("Violación RBAC: Solicitante intentando rechazar.");
     }
-    if (rol !== "preparador" && rol !== "validador" && rol !== "aprobador" && rol !== "maestro") {
+    if (rol !== "preparador" && rol !== "aprobador" && rol !== "maestro") {
         alert("⛔ ACCESO DENEGADO (RBAC):" + "\n" + "Tu rol no cuenta con privilegios para modificar el ciclo de vida de este radicado.");
         throw new Error("Violación RBAC: Rol no autorizado.");
     }
@@ -825,7 +823,6 @@ function obtenerUsuariosConfig() {
         { nombre: "Laura (Bogotá)", correo: "lau@bold.co", rol: "solicitante", estado: "Activo", creado: "2026-01-10" },
         { nombre: "Felipe (Preparador Banco)", correo: "fel@bold.co", rol: "preparador", estado: "Activo", creado: "2026-01-10" },
         { nombre: "Kate (Check Final)", correo: "kat@bold.co", rol: "aprobador", estado: "Activo", creado: "2026-01-10" },
-        { nombre: "María (Compliance)", correo: "mar@bold.co", rol: "validador", estado: "Activo", creado: "2026-01-10" },
         { nombre: "Simon Valdez (Director)", correo: "simon.valdez@bold.co", rol: "maestro", estado: "Activo", creado: "2026-01-01" }
     ];
     var guardados = localStorage.getItem("bold_usuarios_config");
@@ -1124,7 +1121,7 @@ function activarVistaPorRol() {
         var vSol = document.getElementById("vista-solicitante");
         if (vSol) vSol.style.display = "block";
         
-    } else if (rol === "preparador" || rol === "validador") {
+    } else if (rol === "preparador") {
         var vPrep = document.getElementById("vista-preparador");
         if (vPrep) vPrep.style.display = "block";
         if (typeof renderizarTabla === "function") renderizarTabla(); // Obliga a pintar su tabla

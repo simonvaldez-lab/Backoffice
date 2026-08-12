@@ -118,7 +118,7 @@ exports.apiValidarKYC = functions.https.onRequest((req, res) => {
             const { radicado, usuario } = req.body;
             
             // 🛡️ RBAC: Ahora el PREPARADOR está autorizado para ejecutar la validación inicial
-            const usrValidado = await validarPermiso(usuario, ["preparador", "validador"]);
+            const usrValidado = await validarPermiso(usuario, ["preparador"]);
             if (!radicado) return res.status(400).json({ exito: false, error: "Falta radicado." });
 
             const docRef = db.collection("operaciones").doc(radicado);
@@ -227,7 +227,7 @@ exports.apiRechazarOperacion = functions.https.onRequest((req, res) => {
         try {
             if (req.method !== "POST") return res.status(405).json({ exito: false });
             const { radicado, motivo, usuario } = req.body;
-            const usrValidado = await validarPermiso(usuario, ["solicitante", "validador", "preparador", "aprobador"]);
+            const usrValidado = await validarPermiso(usuario, ["solicitante", "preparador", "aprobador"]);
             if (!radicado || !motivo || motivo.trim() === "") return res.status(400).json({ exito: false, error: "Motivo obligatorio." });
 
             const docRef = db.collection("operaciones").doc(radicado);
