@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <title>Dashboard Central - Bold Treasury</title>
     <link rel="stylesheet" href="css/estilos.css">
+    <style>
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
 </head>
 <body>
     <header class="topbar"><a href="dashboard.html" class="logo">bold</a><div class="topbar-derecha"></div></header>
@@ -12,61 +15,259 @@
         <!-- BARRA LATERAL UNIFICADA -->
         <aside class="sidebar">
             <div class="menu-categoria">Mesa de Dinero</div>
-            <a href="#" class="menu-item activo" id="btn-menu-panel" onclick="location.reload()">Panel Principal</a>
-            <a href="historial.html" class="menu-item" id="btn-menu-historial">Historial y Expedientes</a>
+            <a href="dashboard.html" class="menu-item activo">Panel Principal</a>
+            <a href="historial.html" class="menu-item">Historial y Expedientes</a>
         </aside>
 
         <main class="contenido">
             
-            <!-- 🟢 CAJA DEL SOLICITANTE (LAURA) -->
+            <!-- ========================================== -->
+            <!-- 🟢 CAJA DEL SOLICITANTE (LAURA)            -->
+            <!-- ========================================== -->
             <div id="vista-solicitante" class="vista-rol" style="display: none;">
-                <h1 class="titulo-seccion">Paso 1: Carga y Radicación de Operaciones</h1>
-                <p class="subtitulo">Configura el enrutamiento bancario, define el valor del pago y gestiona los tiempos de atención.</p>
-                <!-- Aquí mudaremos todo tu formulario de solicitante.html -->
-                <div style="background:white; padding:20px; border-radius:10px; border:1px solid #CBD5E1; text-align:center;">
-                    <h3>Formulario de Radicación (Próximamente migrado)</h3>
+                <h1 class="titulo-seccion" style="margin: 0;">Paso 1: Carga y Radicación de Operaciones</h1>
+                <p class="subtitulo" style="margin: 4px 0 15px 0;">Configura el enrutamiento bancario, define el valor del pago y gestiona los tiempos de atención (ANS).</p>
+
+                <div style="background: #EEF2FF; border: 1px solid #C7D2FE; padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong style="color: #1E1B4B; font-size: 13px;">⚡ Cargar Plantilla Frecuente:</strong>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <select id="select-plantilla" class="form-control" style="width: 260px; font-size: 12px; height: 34px;"><option value="">-- Seleccionar Plantilla Guardada --</option></select>
+                        <button class="btn btn-primario" style="background: #3730A3; height: 34px; padding: 0 14px;" onclick="cargarPlantilla()">Cargar Modelo</button>
+                    </div>
+                </div>
+
+                <div style="background: white; border: 1px solid #CBD5E1; border-radius: 10px; padding: 16px; margin-bottom: 15px;">
+                    <h3 style="margin: 0 0 12px 0; font-size: 14px; color: #0B1442; border-bottom: 1px solid #F1F5F9; padding-bottom: 8px;">1. Identificación y Parámetros</h3>
+                    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px;">
+                        <div>
+                            <label style="font-size: 11px; font-weight: bold;">🏷️ Nombre de Operación <span style="color:#EF4444;">*</span></label>
+                            <input type="text" id="nombre-op" class="form-control" placeholder="Ej: Nómina Quincenal Bold CO" style="width: 100%; font-weight: bold;" required>
+                        </div>
+                        <div>
+                            <label style="font-size: 11px; font-weight: bold;">🔥 Prioridad <span style="color:#EF4444;">*</span></label>
+                            <select id="prioridad-op" class="form-control" style="width: 100%;" onchange="ajustarANS()">
+                                <option value="1">1 - Alta (Urgente)</option><option value="2" selected>2 - Media (Normal)</option><option value="3">3 - Baja (Flexible)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-size: 11px; font-weight: bold;">⏱️ Tiempo ANS (SLA)</label>
+                            <input type="text" id="ans-op" class="form-control" value="2 Horas" style="width: 100%; background: #F8FAFC; font-weight: bold;" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background: white; border: 1px solid #CBD5E1; border-radius: 10px; padding: 16px; margin-bottom: 15px;">
+                    <h3 style="margin: 0 0 12px 0; font-size: 14px; color: #0B1442; border-bottom: 1px solid #F1F5F9; padding-bottom: 8px;">2. Enrutamiento Bancario</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                        <div><label style="font-size: 11px; font-weight: bold;">Nivel 1: Categoría</label><select id="niv-cat" class="form-control" style="width:100%;"><option value="">-- Seleccione Categoría --</option></select></div>
+                        <div><label style="font-size: 11px; font-weight: bold;">Nivel 2: Subtipo</label><select id="niv-sub" class="form-control" style="width:100%;" disabled><option value="">-- Primero Categoría --</option></select></div>
+                        <div><label style="font-size: 11px; font-weight: bold;">Nivel 3: Detalle</label><select id="niv-det" class="form-control" style="width:100%;" disabled><option value="">-- Primero Subtipo --</option></select></div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                        <div><label style="font-size: 11px; font-weight: bold; color: #15803D;">Empresa Origen</label><select id="niv-emp-ori" class="form-control" style="width:100%;" disabled></select></div>
+                        <div><label style="font-size: 11px; font-weight: bold; color: #15803D;">Cuenta Origen</label><select id="niv-cta-ori" class="form-control" style="width:100%;" disabled></select></div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                        <div><label style="font-size: 11px; font-weight: bold; color: #2563EB;">Empresa Destino</label><select id="niv-emp-des" class="form-control" style="width:100%;" disabled></select></div>
+                        <div><label style="font-size: 11px; font-weight: bold; color: #2563EB;">Cuenta Destino</label><select id="niv-cta-des" class="form-control" style="width:100%;" disabled></select></div>
+                    </div>
+
+                    <div id="panel-excel-dinamico" style="display: none; margin-bottom: 16px;"><div id="contenido-excel-dinamico"></div></div>
+
+                    <div style="background: #F8FAFC; border: 1px dashed #CBD5E1; padding: 12px 16px; border-radius: 8px; display: grid; grid-template-columns: 2fr 1fr; gap: 15px; align-items: center;">
+                        <div>
+                            <label style="font-size: 12px; font-weight: 800;">💰 Monto Solicitado <span style="color:#EF4444;">*</span></label>
+                            <input type="number" id="monto-sol" class="form-control" placeholder="Ej: 15000000" style="width: 100%; font-weight: bold; font-size: 14px; margin-top: 4px;">
+                        </div>
+                        <div>
+                            <label style="font-size: 12px; font-weight: 800;">💱 Moneda</label>
+                            <select id="moneda-op" class="form-control" style="width: 100%; font-weight: bold; font-size: 14px; margin-top: 4px;"><option value="COP">COP ($)</option><option value="USD">USD ($)</option></select>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                    <button class="btn" style="background: white; border: 1px solid #64748B; padding: 10px 18px;" onclick="guardarComoPlantilla()">💾 Guardar Plantilla</button>
+                    <button class="btn btn-primario" style="background: #15803D; font-size: 15px; padding: 12px 28px;" onclick="procesarRadicacion()">🚀 Radicar Operación</button>
+                </div>
+
+                <div style="background: white; border: 1px solid #CBD5E1; border-radius: 10px; padding: 16px;">
+                    <h3 style="margin: 0 0 10px 0; font-size: 14px;">📋 Mis Últimos Radicados</h3>
+                    <div class="tabla-contenedor">
+                        <table style="width: 100%;">
+                            <thead><tr><th>Radicado</th><th>Operación</th><th>Valor</th><th>Prioridad</th><th>Estado</th></tr></thead>
+                            <tbody id="tabla-recientes"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
-            <!-- 🔵 CAJA DEL PREPARADOR (FELIPE) -->
+            <!-- ========================================== -->
+            <!-- 🔵 CAJA DEL PREPARADOR (FELIPE)            -->
+            <!-- ========================================== -->
             <div id="vista-preparador" class="vista-rol" style="display: none;">
-                <h1 class="titulo-seccion">Paso 1 y 2: Validación Compliance & Montaje Bancario</h1>
-                <p class="subtitulo">Revisa la legitimidad del radicado y realiza el montaje en banco.</p>
-                <!-- Aquí mudaremos tu tabla de preparador.html -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <div>
+                        <h1 class="titulo-seccion" style="margin: 0;">Paso 1 y 2: Validación Compliance & Montaje</h1>
+                        <p class="subtitulo" style="margin: 4px 0 0 0;">Revisa la legitimidad del radicado y realiza el montaje en banco.</p>
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center; background: white; padding: 6px 12px; border-radius: 8px; border: 1px solid #CBD5E1;">
+                        <label style="font-size: 12px; font-weight: bold;">📅 Filtro:</label>
+                        <input type="date" id="filtro-fecha-prep" class="form-control" style="width: 140px; height: 32px;" onchange="renderizarTabla()">
+                        <button class="btn btn-detalle" onclick="document.getElementById('filtro-fecha-prep').value=''; renderizarTabla();" style="height: 32px;">Limpiar</button>
+                    </div>
+                </div>
+                
                 <div class="tabla-contenedor">
                     <table style="width: 100%;">
-                        <thead><tr><th>Control / Radicado</th><th>Fecha</th><th>Gasto</th><th>Valor</th><th>Acción</th></tr></thead>
+                        <thead><tr><th>Radicado</th><th>Fecha</th><th>Gasto</th><th>Valor</th><th>Soporte</th><th>Acción</th></tr></thead>
                         <tbody id="tabla-preparador"></tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- 🔴 CAJA DEL APROBADOR (KATE) -->
+            <!-- ========================================== -->
+            <!-- 🔴 CAJA DEL APROBADOR (KATE)               -->
+            <!-- ========================================== -->
             <div id="vista-aprobador" class="vista-rol" style="display: none;">
-                <h1 class="titulo-seccion">Paso 3: Check Final y Cierre de Comprobante</h1>
-                <p class="subtitulo">Control dual: Revisa la captura de pantalla del montaje y autoriza el pago.</p>
-                <!-- Aquí mudaremos tu tabla de aprobador.html -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <div>
+                        <h1 class="titulo-seccion" style="margin: 0;">Paso 3: Check Final y Cierre</h1>
+                        <p class="subtitulo" style="margin: 4px 0 0 0;">Control dual: Revisa la captura y autoriza la liberación del pago.</p>
+                    </div>
+                    <div style="display: flex; gap: 8px; align-items: center; background: white; padding: 6px 12px; border-radius: 8px; border: 1px solid #CBD5E1;">
+                        <label style="font-size: 12px; font-weight: bold;">📅 Filtro:</label>
+                        <input type="date" id="filtro-fecha-apro" class="form-control" style="width: 140px; height: 32px;" onchange="renderizarTabla()">
+                        <button class="btn btn-detalle" onclick="document.getElementById('filtro-fecha-apro').value=''; renderizarTabla();" style="height: 32px;">Limpiar</button>
+                    </div>
+                </div>
+                
                 <div class="tabla-contenedor">
                     <table style="width: 100%;">
-                        <thead><tr><th>Control / Radicado</th><th>Fecha</th><th>Gasto</th><th>Valor</th><th>Check Final</th></tr></thead>
+                        <thead><tr><th>Radicado</th><th>Fecha</th><th>Gasto</th><th>Valor</th><th>Estado</th><th>Acción</th></tr></thead>
                         <tbody id="tabla-aprobador"></tbody>
                     </table>
                 </div>
             </div>
-
         </main>
     </div>
 
-    <!-- 🔥 LIBRERÍAS DE FIREBASE -->
+    <!-- ========================================== -->
+    <!-- MODALES COMPARTIDOS (Viven fuera de las cajas) -->
+    <!-- ========================================== -->
+    <div class="modal-overlay" id="modalConfirmacion" style="display: none; z-index: 2000;">
+        <div class="modal" style="max-width: 580px; padding: 24px; border-radius: 12px; background: white;">
+            <h2>🛡️ Confirmar Datos</h2>
+            <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px;">
+                <button type="button" class="btn" onclick="document.getElementById('modalConfirmacion').style.display='none'">Cancelar</button>
+                <button type="button" class="btn btn-primario" style="background:#15803D;" onclick="confirmarYRadicar()">✅ Radicar Pago</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalDetalles" style="display: none;">
+        <div class="modal modal-grande">
+            <h2 id="mod-radicado-titulo">Módulo de Auditoría</h2>
+            <div id="mod-doc-contenido"></div>
+            <div style="text-align: right; margin-top: 20px;"><button class="btn btn-detalle" onclick="cerrarModal('modalDetalles')">Cerrar</button></div>
+        </div>
+    </div>
+
+    <!-- 🔥 LIBRERÍAS DE FIREBASE Y CEREBRO LOGICO -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script>
-        if (!firebase.apps.length) {
-            firebase.initializeApp({ projectId: "black-hulling-462522-j2" });
+        if (!firebase.apps.length) { firebase.initializeApp({ projectId: "black-hulling-462522-j2" }); }
+    </script>
+    <script src="js/logica-comun.js?v=8"></script>
+    
+    <!-- ⚙️ SCRIPTS UNIFICADOS DE LAS PANTALLAS -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof inicializarArbol === "function") inicializarArbol();
+            if (typeof cargarListaPlantillas === "function") cargarListaPlantillas();
+        });
+
+        // SOBREESCRIBIMOS EL FILTRO DE FECHAS PARA QUE LEA EL INPUT DE CADA CAJA
+        window.coincideFechaFiltro = function(op) {
+            var usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}');
+            var rol = String(usr.rol || "solicitante").toLowerCase().trim();
+            var idInput = rol === "preparador" ? "filtro-fecha-prep" : "filtro-fecha-apro";
+            var input = document.getElementById(idInput);
+            var fechaInput = input ? input.value : "";
+            
+            if (!fechaInput) return true;
+            if (!op || !op.fechaRadicacion) return false;
+            
+            var limpiaOp = String(op.fechaRadicacion).split(" - ")[0].trim();
+            var partes = limpiaOp.split("/");
+            if (partes.length !== 3) return false;
+            var fNorm = partes[2] + "-" + String(partes[1]).padStart(2, "0") + "-" + String(partes[0]).padStart(2, "0");
+            return fNorm === fechaInput;
+        };
+
+        // RENDERIZADOR INTELIGENTE: Dibuja la tabla correcta dependiendo de tu rol
+        window.renderizarTabla = function() {
+            const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}');
+            const rol = String(usr.rol || "solicitante").toLowerCase().trim();
+            const ops = typeof obtenerOperacionesActivas === 'function' ? obtenerOperacionesActivas() : (typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : []);
+            
+            if (rol === "preparador" || rol === "validador" || rol === "maestro") {
+                const listos = ops.filter(o => (o.estado === "Pendiente Validación" || o.estado === "En Preparación") && coincideFechaFiltro(o));
+                const tb = document.getElementById('tabla-preparador');
+                if(!tb) return;
+                tb.innerHTML = '';
+                if(listos.length === 0) { tb.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px;">No hay dispersiones en cola.</td></tr>'; return; }
+                listos.forEach(o => {
+                    tb.innerHTML += `<tr>
+                        <td><strong>${o.radicado}</strong></td>
+                        <td>📅 ${o.fechaRadicacion || ''}</td>
+                        <td>${o.empresa}</td>
+                        <td><strong>$ ${o.montoPrep.toLocaleString()}</strong></td>
+                        <td><button class="btn btn-detalle" onclick="auditarRadicado('${o.radicado}')">🔍 Auditar</button></td>
+                        <td>
+                            ${o.estado === "Pendiente Validación" 
+                                ? `<button class="btn btn-primario" style="background:#0284C7;" onclick="validarKYCOperacion('${o.radicado}')">🛡️ KYC</button>`
+                                : `<button class="btn btn-primario" style="background:#15803D;" onclick="enviarAAprobador('${o.radicado}')">🚀 Montar</button>`
+                            }
+                        </td>
+                    </tr>`;
+                });
+            }
+
+            if (rol === "aprobador" || rol === "maestro") {
+                const cola = ops.filter(o => o.estado === "En Aprobación" && coincideFechaFiltro(o));
+                const tb = document.getElementById('tabla-aprobador');
+                if(!tb) return;
+                tb.innerHTML = '';
+                if(cola.length === 0) { tb.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px;">No hay radicados en Check Final.</td></tr>'; return; }
+                cola.forEach(o => {
+                    tb.innerHTML += `<tr>
+                        <td><strong>${o.radicado}</strong></td>
+                        <td>📅 ${o.fechaRadicacion || ''}</td>
+                        <td>${o.empresa}</td>
+                        <td><strong>$ ${o.montoPrep.toLocaleString()}</strong></td>
+                        <td><span class="badge" style="background:#E0F2FE; color:#075985;">🔵 Pendiente</span></td>
+                        <td style="display: flex; gap: 8px;">
+                            <button class="btn btn-detalle" onclick="auditarRadicado('${o.radicado}')">🔍</button>
+                            <button class="btn btn-primario" style="background:#15803D;" onclick="confirmarPagoFinal('${o.radicado}')">🏁 Check Final</button>
+                            <button class="btn btn-rechazar" style="background:#EF4444; color:white; border:none;" onclick="ejecutarRechazoSeguro('${o.radicado}')">✕ Devolver</button>
+                        </td>
+                    </tr>`;
+                });
+            }
+        };
+
+        // Lógica de Formulario Solicitante (Minificada por espacio)
+        function ajustarANS() { document.getElementById('ans-op').value = document.getElementById('prioridad-op').value === "1" ? "1 Hora" : "2 Horas"; }
+        function procesarRadicacion() { document.getElementById('modalConfirmacion').style.display = 'flex'; }
+        function confirmarYRadicar() {
+            document.getElementById('modalConfirmacion').style.display = 'none';
+            alert("Operación simulada con éxito. (El backend procesará el guardado en Firebase)");
+            // Aquí llamas a tu función original finalizarGuardadoOperacion()
         }
     </script>
-    
-    <!-- CONEXIÓN AL CEREBRO -->
-    <script src="js/logica-comun.js?v=5"></script>
 </body>
 </html>
