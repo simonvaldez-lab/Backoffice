@@ -2,17 +2,18 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard Central - Bold Treasury</title>
+    <title>Dashboard Central - Bold Treasury SPA</title>
     <link rel="stylesheet" href="css/estilos.css">
     <style>
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+        .vista-rol { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .vista-rol.activa { display: block; }
     </style>
 </head>
 <body>
     <header class="topbar"><a href="dashboard.html" class="logo">bold</a><div class="topbar-derecha"></div></header>
     
     <div class="contenedor-principal">
-        <!-- BARRA LATERAL UNIFICADA -->
         <aside class="sidebar">
             <div class="menu-categoria">Mesa de Dinero</div>
             <a href="dashboard.html" class="menu-item activo">Panel Principal</a>
@@ -20,254 +21,303 @@
         </aside>
 
         <main class="contenido">
-            
-            <!-- ========================================== -->
-            <!-- 🟢 CAJA DEL SOLICITANTE (LAURA)            -->
-            <!-- ========================================== -->
-            <div id="vista-solicitante" class="vista-rol" style="display: none;">
+            <!-- VISTA SOLICITANTE -->
+            <div id="vista-solicitante" class="vista-rol">
                 <h1 class="titulo-seccion" style="margin: 0;">Paso 1: Carga y Radicación de Operaciones</h1>
                 <p class="subtitulo" style="margin: 4px 0 15px 0;">Configura el enrutamiento bancario, define el valor del pago y gestiona los tiempos de atención (ANS).</p>
-
                 <div style="background: #EEF2FF; border: 1px solid #C7D2FE; padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <strong style="color: #1E1B4B; font-size: 13px;">⚡ Cargar Plantilla Frecuente:</strong>
-                    </div>
+                    <div><strong style="color: #1E1B4B; font-size: 13px;">⚡ Cargar Plantilla Frecuente (Modelo de Trabajo):</strong></div>
                     <div style="display: flex; gap: 8px;">
                         <select id="select-plantilla" class="form-control" style="width: 260px; font-size: 12px; height: 34px;"><option value="">-- Seleccionar Plantilla Guardada --</option></select>
                         <button class="btn btn-primario" style="background: #3730A3; height: 34px; padding: 0 14px;" onclick="cargarPlantilla()">Cargar Modelo</button>
                     </div>
                 </div>
-
                 <div style="background: white; border: 1px solid #CBD5E1; border-radius: 10px; padding: 16px; margin-bottom: 15px;">
-                    <h3 style="margin: 0 0 12px 0; font-size: 14px; color: #0B1442; border-bottom: 1px solid #F1F5F9; padding-bottom: 8px;">1. Identificación y Parámetros</h3>
+                    <h3 style="margin: 0 0 12px 0; font-size: 14px; color: #0B1442; border-bottom: 1px solid #F1F5F9; padding-bottom: 8px;">1. Identificación y Parámetros de Atención</h3>
                     <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px;">
-                        <div>
-                            <label style="font-size: 11px; font-weight: bold;">🏷️ Nombre de Operación <span style="color:#EF4444;">*</span></label>
-                            <input type="text" id="nombre-op" class="form-control" placeholder="Ej: Nómina Quincenal Bold CO" style="width: 100%; font-weight: bold;" required>
-                        </div>
-                        <div>
-                            <label style="font-size: 11px; font-weight: bold;">🔥 Prioridad <span style="color:#EF4444;">*</span></label>
-                            <select id="prioridad-op" class="form-control" style="width: 100%;" onchange="ajustarANS()">
-                                <option value="1">1 - Alta (Urgente)</option><option value="2" selected>2 - Media (Normal)</option><option value="3">3 - Baja (Flexible)</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label style="font-size: 11px; font-weight: bold;">⏱️ Tiempo ANS (SLA)</label>
-                            <input type="text" id="ans-op" class="form-control" value="2 Horas" style="width: 100%; background: #F8FAFC; font-weight: bold;" readonly>
-                        </div>
+                        <div><label style="font-size: 11px; font-weight: bold;">🏷️ Nombre de Operación / Plantilla <span style="color:#EF4444;">*</span></label><input type="text" id="nombre-op" class="form-control" placeholder="Ej: Nómina Quincenal Bold CO" style="width: 100%; font-weight: bold;" required></div>
+                        <div><label style="font-size: 11px; font-weight: bold;">🔥 Prioridad <span style="color:#EF4444;">*</span></label><select id="prioridad-op" class="form-control" style="width: 100%;" onchange="ajustarANS()"><option value="1">1 - Alta (Urgente)</option><option value="2" selected>2 - Media (Normal)</option><option value="3">3 - Baja (Flexible)</option></select></div>
+                        <div><label style="font-size: 11px; font-weight: bold;">⏱️ Tiempo ANS (SLA)</label><input type="text" id="ans-op" class="form-control" value="2 Horas" style="width: 100%; background: #F8FAFC; font-weight: bold;" readonly></div>
                     </div>
                 </div>
-
                 <div style="background: white; border: 1px solid #CBD5E1; border-radius: 10px; padding: 16px; margin-bottom: 15px;">
-                    <h3 style="margin: 0 0 12px 0; font-size: 14px; color: #0B1442; border-bottom: 1px solid #F1F5F9; padding-bottom: 8px;">2. Enrutamiento Bancario</h3>
+                    <h3 style="margin: 0 0 12px 0; font-size: 14px; color: #0B1442; border-bottom: 1px solid #F1F5F9; padding-bottom: 8px;">2. Enrutamiento Bancario y Valor del Pago</h3>
                     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 12px;">
                         <div><label style="font-size: 11px; font-weight: bold;">Nivel 1: Categoría</label><select id="niv-cat" class="form-control" style="width:100%;"><option value="">-- Seleccione Categoría --</option></select></div>
                         <div><label style="font-size: 11px; font-weight: bold;">Nivel 2: Subtipo</label><select id="niv-sub" class="form-control" style="width:100%;" disabled><option value="">-- Primero Categoría --</option></select></div>
-                        <div><label style="font-size: 11px; font-weight: bold;">Nivel 3: Detalle</label><select id="niv-det" class="form-control" style="width:100%;" disabled><option value="">-- Primero Subtipo --</option></select></div>
+                        <div><label style="font-size: 11px; font-weight: bold;">Nivel 3: Detalle / Canal</label><select id="niv-det" class="form-control" style="width:100%;" disabled><option value="">-- Primero Subtipo --</option></select></div>
                     </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
-                        <div><label style="font-size: 11px; font-weight: bold; color: #15803D;">Empresa Origen</label><select id="niv-emp-ori" class="form-control" style="width:100%;" disabled></select></div>
-                        <div><label style="font-size: 11px; font-weight: bold; color: #15803D;">Cuenta Origen</label><select id="niv-cta-ori" class="form-control" style="width:100%;" disabled></select></div>
+                        <div><label style="font-size: 11px; font-weight: bold;">Nivel 4: Empresa Origen</label><select id="niv-emp-ori" class="form-control" style="width:100%;" disabled></select></div>
+                        <div><label style="font-size: 11px; font-weight: bold;">Nivel 5: Cuenta Origen (Débito)</label><select id="niv-cta-ori" class="form-control" style="width:100%;" disabled></select></div>
                     </div>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
-                        <div><label style="font-size: 11px; font-weight: bold; color: #2563EB;">Empresa Destino</label><select id="niv-emp-des" class="form-control" style="width:100%;" disabled></select></div>
-                        <div><label style="font-size: 11px; font-weight: bold; color: #2563EB;">Cuenta Destino</label><select id="niv-cta-des" class="form-control" style="width:100%;" disabled></select></div>
+                        <div><label style="font-size: 11px; font-weight: bold;">Nivel 6: Empresa Destino</label><select id="niv-emp-des" class="form-control" style="width:100%;" disabled></select></div>
+                        <div><label style="font-size: 11px; font-weight: bold;">Nivel 7: Cuenta Destino (Crédito)</label><select id="niv-cta-des" class="form-control" style="width:100%;" disabled></select></div>
                     </div>
-
                     <div id="panel-excel-dinamico" style="display: none; margin-bottom: 16px;"><div id="contenido-excel-dinamico"></div></div>
-
                     <div style="background: #F8FAFC; border: 1px dashed #CBD5E1; padding: 12px 16px; border-radius: 8px; display: grid; grid-template-columns: 2fr 1fr; gap: 15px; align-items: center;">
-                        <div>
-                            <label style="font-size: 12px; font-weight: 800;">💰 Monto Solicitado <span style="color:#EF4444;">*</span></label>
-                            <input type="number" id="monto-sol" class="form-control" placeholder="Ej: 15000000" style="width: 100%; font-weight: bold; font-size: 14px; margin-top: 4px;">
-                        </div>
-                        <div>
-                            <label style="font-size: 12px; font-weight: 800;">💱 Moneda</label>
-                            <select id="moneda-op" class="form-control" style="width: 100%; font-weight: bold; font-size: 14px; margin-top: 4px;"><option value="COP">COP ($)</option><option value="USD">USD ($)</option></select>
-                        </div>
+                        <div><label style="font-size: 12px; font-weight: 800;">💰 Monto Solicitado a Transferir <span style="color:#EF4444;">*</span></label><input type="number" id="monto-sol" class="form-control" placeholder="Ej: 15000000" style="width: 100%; font-weight: bold; font-size: 14px; margin-top: 4px;"></div>
+                        <div><label style="font-size: 12px; font-weight: 800;">💱 Moneda</label><select id="moneda-op" class="form-control" style="width: 100%; font-weight: bold; font-size: 14px; margin-top: 4px;"><option value="COP">COP ($)</option><option value="PEN">PEN (S/)</option><option value="USD">USD ($)</option></select></div>
                     </div>
                 </div>
-
+                <div style="margin-bottom: 20px;">
+                    <button type="button" class="btn" style="background: white; border: 1px dashed #3B82F6; color: #2563EB; font-weight: bold; width: 100%; padding: 10px; text-align: left; display: flex; justify-content: space-between; align-items: center;" onclick="alternarSeccionDocs()"><span>📎 ¿Deseas adjuntar archivos, links u observaciones?</span><span id="flecha-docs">▼</span></button>
+                    <div id="caja-docs-opcional" style="display: none; background: #F8FAFC; border: 1px solid #CBD5E1; border-top: none; border-radius: 0 0 10px 10px; padding: 16px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 12px;">
+                            <div><label style="font-size: 11px; font-weight: bold;">📁 Adjuntar Soporte / Archivo (Opcional):</label><input type="file" id="doc-archivo" class="form-control" accept=".txt,.pdf,.xlsx,.csv,.png,.xlsm,.pgp" style="width:100%; font-size:11px; padding: 6px; background:white;"></div>
+                            <div><label style="font-size: 11px; font-weight: bold;">🔗 Link de Referencia / Portal Bancario (Opcional):</label><input type="url" id="doc-link" class="form-control" placeholder="https://drive.google.com/... o portal del banco" style="width:100%; font-size:12px;"></div>
+                        </div>
+                        <div><label style="font-size: 11px; font-weight: bold;">📝 Observaciones (Opcional):</label><textarea id="doc-instrucciones" class="form-control" rows="2" placeholder="Ej: Dispersar antes de las 11:00 AM" style="width:100%; font-size:12px; resize:vertical;"></textarea></div>
+                    </div>
+                </div>
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-                    <button class="btn" style="background: white; border: 1px solid #64748B; padding: 10px 18px;" onclick="guardarComoPlantilla()">💾 Guardar Plantilla</button>
-                    <button class="btn btn-primario" style="background: #15803D; font-size: 15px; padding: 12px 28px;" onclick="procesarRadicacion()">🚀 Radicar Operación</button>
+                    <button class="btn" style="background: white; border: 1px solid #64748B; color: #334155; font-weight: bold; padding: 10px 18px;" onclick="guardarComoPlantilla()">💾 Guardar Modelo como Plantilla</button>
+                    <button class="btn btn-primario" style="background: #15803D; font-size: 15px; padding: 12px 28px; box-shadow: 0 4px 12px rgba(21,128,61,0.2);" onclick="procesarRadicacion()">🚀 Radicar Operación en Cascada</button>
                 </div>
-
-                <div style="background: white; border: 1px solid #CBD5E1; border-radius: 10px; padding: 16px;">
-                    <h3 style="margin: 0 0 10px 0; font-size: 14px;">📋 Mis Últimos Radicados</h3>
-                    <div class="tabla-contenedor">
-                        <table style="width: 100%;">
-                            <thead><tr><th>Radicado</th><th>Operación</th><th>Valor</th><th>Prioridad</th><th>Estado</th></tr></thead>
-                            <tbody id="tabla-recientes"></tbody>
-                        </table>
-                    </div>
+                <div style="background: white; border: 1px solid #CBD5E1; border-radius: 10px; padding: 16px; margin-top: 20px;">
+                    <h3 style="margin: 0 0 10px 0; font-size: 14px; color: #0B1442;">📋 Mis Últimos Radicados (Sincronizados en Nube)</h3>
+                    <div class="tabla-contenedor"><table><thead><tr><th>Radicado / Hora</th><th>Operación & Ruta</th><th>Valor Solicitado</th><th>Prioridad</th><th>Estado Actual</th></tr></thead><tbody id="tabla-recientes"></tbody></table></div>
                 </div>
             </div>
 
-            <!-- ========================================== -->
-            <!-- 🔵 CAJA DEL PREPARADOR (FELIPE)            -->
-            <!-- ========================================== -->
-            <div id="vista-preparador" class="vista-rol" style="display: none;">
+            <!-- VISTA PREPARADOR -->
+            <div id="vista-preparador" class="vista-rol">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <div>
-                        <h1 class="titulo-seccion" style="margin: 0;">Paso 1 y 2: Validación Compliance & Montaje</h1>
-                        <p class="subtitulo" style="margin: 4px 0 0 0;">Revisa la legitimidad del radicado y realiza el montaje en banco.</p>
-                    </div>
+                    <div><h1 class="titulo-seccion" style="margin: 0;">Paso 1 y 2: Validación Compliance & Montaje Bancario</h1><p class="subtitulo" style="margin: 4px 0 0 0;">Revisa la legitimidad del radicado (Compliance), realiza el montaje en banco y envíalo a Kate (Aprobador) para el Check Final.</p></div>
                     <div style="display: flex; gap: 8px; align-items: center; background: white; padding: 6px 12px; border-radius: 8px; border: 1px solid #CBD5E1;">
-                        <label style="font-size: 12px; font-weight: bold;">📅 Filtro:</label>
-                        <input type="date" id="filtro-fecha-prep" class="form-control" style="width: 140px; height: 32px;" onchange="renderizarTabla()">
-                        <button class="btn btn-detalle" onclick="document.getElementById('filtro-fecha-prep').value=''; renderizarTabla();" style="height: 32px;">Limpiar</button>
+                        <label style="font-size: 12px; font-weight: bold; color: #0B1442; margin: 0;">📅 Filtrar por Fecha:</label>
+                        <input type="date" id="filtro-fecha-prep" class="form-control" style="width: 140px; padding: 4px 8px; height: 32px;" onchange="renderizarTabla()">
+                        <button class="btn btn-detalle" onclick="limpiarFiltroPreprador()" style="padding: 4px 10px; height: 32px;">Limpiar</button>
                     </div>
                 </div>
-                
-                <div class="tabla-contenedor">
-                    <table style="width: 100%;">
-                        <thead><tr><th>Radicado</th><th>Fecha</th><th>Gasto</th><th>Valor</th><th>Soporte</th><th>Acción</th></tr></thead>
-                        <tbody id="tabla-preparador"></tbody>
-                    </table>
-                </div>
+                <div class="tabla-contenedor"><table><thead><tr><th>Control ANS / Radicado</th><th>Fecha</th><th>Compañía & Gasto</th><th>Valor a Transferir</th><th>Titularidad (Candado)</th><th>Soporte Banco</th><th>Acción Montaje</th></tr></thead><tbody id="tabla-preparador"></tbody></table></div>
             </div>
 
-            <!-- ========================================== -->
-            <!-- 🔴 CAJA DEL APROBADOR (KATE)               -->
-            <!-- ========================================== -->
-            <div id="vista-aprobador" class="vista-rol" style="display: none;">
+            <!-- VISTA APROBADOR -->
+            <div id="vista-aprobador" class="vista-rol">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <div>
-                        <h1 class="titulo-seccion" style="margin: 0;">Paso 3: Check Final y Cierre</h1>
-                        <p class="subtitulo" style="margin: 4px 0 0 0;">Control dual: Revisa la captura y autoriza la liberación del pago.</p>
-                    </div>
+                    <div><h1 class="titulo-seccion" style="margin: 0;">Paso 3: Check Final y Cierre de Comprobante</h1><p class="subtitulo" style="margin: 4px 0 0 0;">Control dual: Revisa la captura de pantalla del montaje bancario, autoriza la liberación definitiva del pago y cierra el comprobante.</p></div>
                     <div style="display: flex; gap: 8px; align-items: center; background: white; padding: 6px 12px; border-radius: 8px; border: 1px solid #CBD5E1;">
-                        <label style="font-size: 12px; font-weight: bold;">📅 Filtro:</label>
-                        <input type="date" id="filtro-fecha-apro" class="form-control" style="width: 140px; height: 32px;" onchange="renderizarTabla()">
-                        <button class="btn btn-detalle" onclick="document.getElementById('filtro-fecha-apro').value=''; renderizarTabla();" style="height: 32px;">Limpiar</button>
+                        <label style="font-size: 12px; font-weight: bold; color: #0B1442; margin: 0;">📅 Filtrar por Fecha:</label>
+                        <input type="date" id="filtro-fecha-apro" class="form-control" style="width: 140px; padding: 4px 8px; height: 32px;" onchange="renderizarTabla()">
+                        <button class="btn btn-detalle" onclick="limpiarFiltroAprobador()" style="padding: 4px 10px; height: 32px;">Limpiar</button>
                     </div>
                 </div>
-                
-                <div class="tabla-contenedor">
-                    <table style="width: 100%;">
-                        <thead><tr><th>Radicado</th><th>Fecha</th><th>Gasto</th><th>Valor</th><th>Estado</th><th>Acción</th></tr></thead>
-                        <tbody id="tabla-aprobador"></tbody>
-                    </table>
-                </div>
+                <div class="tabla-contenedor"><table><thead><tr><th>Control ANS / Radicado</th><th>Fecha</th><th>Compañía & Operación</th><th>Solicitante</th><th>Valor Montado</th><th>Estado</th><th>Acción Check Final</th></tr></thead><tbody id="tabla-aprobador"></tbody></table></div>
             </div>
+
         </main>
     </div>
 
-    <!-- ========================================== -->
-    <!-- MODALES COMPARTIDOS (Viven fuera de las cajas) -->
-    <!-- ========================================== -->
+    <!-- MODALES COMPARTIDOS -->
     <div class="modal-overlay" id="modalConfirmacion" style="display: none; z-index: 2000;">
-        <div class="modal" style="max-width: 580px; padding: 24px; border-radius: 12px; background: white;">
-            <h2>🛡️ Confirmar Datos</h2>
-            <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px;">
-                <button type="button" class="btn" onclick="document.getElementById('modalConfirmacion').style.display='none'">Cancelar</button>
-                <button type="button" class="btn btn-primario" style="background:#15803D;" onclick="confirmarYRadicar()">✅ Radicar Pago</button>
+        <div class="modal" style="max-width: 580px; padding: 24px; border-radius: 12px; background: white; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15);">
+            <div style="border-bottom: 1px solid #E2E8F0; padding-bottom: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="margin: 0; font-size: 18px; color: #0B1442;">🛡️ Revisión y Confirmación de Datos</h2>
+                <span style="background: #FEF3C7; color: #92400E; font-size: 11px; font-weight: bold; padding: 4px 8px; border-radius: 6px; border: 1px solid #FDE68A;">Paso Previo</span>
+            </div>
+            <p style="font-size: 13px; color: #475569; margin-top: 0; margin-bottom: 16px;">Por favor verifica los parámetros del pago y el enrutamiento bancario antes de emitir el radicado oficial:</p>
+            <div style="background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 8px; padding: 16px; margin-bottom: 20px; font-size: 13px; display: grid; gap: 10px;">
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #E2E8F0; padding-bottom: 6px;"><span style="color: #64748B;">🏷️ Operación:</span><strong id="conf-nom" style="color: #0B1442; text-align: right;"></strong></div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #E2E8F0; padding-bottom: 6px;"><span style="color: #64748B;">🔥 Prioridad / ANS:</span><strong id="conf-prio" style="color: #D97706;"></strong></div>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #E2E8F0; padding-bottom: 6px;"><span style="color: #64748B;">💰 Valor a Dispersar:</span><strong id="conf-monto" style="color: #15803D; font-size: 15px;"></strong></div>
+                <div style="display: flex; flex-direction: column; gap: 2px; border-bottom: 1px dashed #E2E8F0; padding-bottom: 6px;"><span style="color: #64748B; font-size: 11px;">🏦 Cuenta Origen (Débito):</span><strong id="conf-ori" style="color: #1E293B; font-size: 12px; word-break: break-all;"></strong></div>
+                <div style="display: flex; flex-direction: column; gap: 2px; border-bottom: 1px dashed #E2E8F0; padding-bottom: 6px;"><span style="color: #64748B; font-size: 11px;">🎯 Cuenta Destino (Crédito):</span><strong id="conf-des" style="color: #2563EB; font-size: 12px; word-break: break-all;"></strong></div>
+                <div style="display: flex; justify-content: space-between; padding-top: 2px;"><span style="color: #64748B;">📎 Adjuntos / Observaciones:</span><strong id="conf-doc" style="color: #475569; font-size: 12px; text-align: right;"></strong></div>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="button" class="btn" style="background: white; border: 1px solid #94A3B8; color: #475569; padding: 8px 16px; font-weight: bold;" onclick="cerrarModalConfirmacion()">⬅️ Volver a Editar</button>
+                <button type="button" class="btn btn-primario" style="background: #15803D; padding: 8px 20px; font-weight: bold; box-shadow: 0 4px 10px rgba(21,128,61,0.2);" onclick="confirmarYRadicar()">✅ Confirmar y Radicar Pago</button>
             </div>
         </div>
     </div>
 
     <div class="modal-overlay" id="modalDetalles" style="display: none;">
         <div class="modal modal-grande">
-            <h2 id="mod-radicado-titulo">Módulo de Auditoría</h2>
-            <div id="mod-doc-contenido"></div>
-            <div style="text-align: right; margin-top: 20px;"><button class="btn btn-detalle" onclick="cerrarModal('modalDetalles')">Cerrar</button></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h2 id="mod-radicado-titulo" style="margin:0; border:none; padding:0;">Módulo de Auditoría</h2>
+                <button class="btn" style="background:#3B82F6; color:white;" onclick="alternarVisor()">👁 Visor Dual</button>
+            </div>
+            <div class="modal-layout-split">
+                <div class="seccion-datos">
+                    <div class="grid-detalles">
+                        <div class="dato-grupo"><span class="dato-label">Compañía</span><span class="dato-valor" id="mod-origen"></span></div>
+                        <div class="dato-grupo"><span class="dato-label">Moneda</span><span class="dato-valor" id="mod-moneda"></span></div>
+                        <div class="dato-grupo"><span class="dato-label">Valor Solicitado</span><span class="dato-valor" id="mod-val-sol"></span><div class="auditor-data auditor-alerta" id="mod-val-prep"></div></div>
+                        <div class="dato-grupo"><span class="dato-label">Registros</span><span class="dato-valor" id="mod-regs"></span></div>
+                    </div>
+                    <div class="timeline" id="mod-timeline"></div>
+                </div>
+                <div class="seccion-visor" id="contenedorVisor">
+                    <div class="tab-container">
+                        <button class="tab active" id="tabSol" onclick="cambiarPestana('solicitante')">📄 Factura</button>
+                        <button class="tab" id="tabPrep" onclick="cambiarPestana('preparador')">🖼 Screen Banco</button>
+                    </div>
+                    <div class="marco-visor">
+                        <div class="documento-simulado" id="vistaSolicitante"><h4>SOPORTE ORIGINAL</h4><p>Proveedor: <strong id="vis-sol-prov"></strong></p><p style="margin-top:40px; text-align:right; font-weight:bold;" id="vis-sol-total"></p></div>
+                        <div class="documento-simulado hidden" id="vistaPreparador" style="background:#0F172A; color:#22C55E;"><h4>PORTAL BANCARIO</h4><p style="margin-top:40px; text-align:right; font-weight:bold; font-size:15px;" id="vis-prep-total"></p></div>
+                    </div>
+                </div>
+            </div>
+            <div style="text-align: right; margin-top: 20px; border-top: 1px solid #E2E8F0; padding-top: 15px;">
+                <button class="btn btn-detalle" onclick="cerrarModal('modalDetalles')">Cerrar</button>
+            </div>
         </div>
     </div>
 
-    <!-- 🔥 LIBRERÍAS DE FIREBASE Y CEREBRO LOGICO -->
+    <!-- FIREBASE Y LOGICA -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script>
         if (!firebase.apps.length) { firebase.initializeApp({ projectId: "black-hulling-462522-j2" }); }
     </script>
-    <script src="js/logica-comun.js?v=8"></script>
+    <script src="js/logica-comun.js?v=10"></script>
     
-    <!-- ⚙️ SCRIPTS UNIFICADOS DE LAS PANTALLAS -->
+    <!-- MOTOR SPA Y LOGICA COMPLETA -->
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            if (typeof inicializarArbol === "function") inicializarArbol();
-            if (typeof cargarListaPlantillas === "function") cargarListaPlantillas();
-        });
-
-        // SOBREESCRIBIMOS EL FILTRO DE FECHAS PARA QUE LEA EL INPUT DE CADA CAJA
-        window.coincideFechaFiltro = function(op) {
-            var usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}');
-            var rol = String(usr.rol || "solicitante").toLowerCase().trim();
-            var idInput = rol === "preparador" ? "filtro-fecha-prep" : "filtro-fecha-apro";
-            var input = document.getElementById(idInput);
-            var fechaInput = input ? input.value : "";
-            
-            if (!fechaInput) return true;
-            if (!op || !op.fechaRadicacion) return false;
-            
-            var limpiaOp = String(op.fechaRadicacion).split(" - ")[0].trim();
-            var partes = limpiaOp.split("/");
-            if (partes.length !== 3) return false;
-            var fNorm = partes[2] + "-" + String(partes[1]).padStart(2, "0") + "-" + String(partes[0]).padStart(2, "0");
-            return fNorm === fechaInput;
-        };
-
-        // RENDERIZADOR INTELIGENTE: Dibuja la tabla correcta dependiendo de tu rol
-        window.renderizarTabla = function() {
+        // Motor principal de enrutamiento
+        window.activarVistaPorRol = function() {
             const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}');
             const rol = String(usr.rol || "solicitante").toLowerCase().trim();
-            const ops = typeof obtenerOperacionesActivas === 'function' ? obtenerOperacionesActivas() : (typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : []);
+            document.querySelectorAll('.vista-rol').forEach(v => v.classList.remove('activa'));
+            if (rol === "solicitante") { document.getElementById('vista-solicitante').classList.add('activa');
+            } else if (rol === "preparador" || rol === "maestro") { document.getElementById('vista-preparador').classList.add('activa');
+            } else if (rol === "aprobador") { document.getElementById('vista-aprobador').classList.add('activa');
+            } else { document.getElementById('vista-solicitante').classList.add('activa'); }
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            activarVistaPorRol();
+            if (typeof inicializarArbol === "function") inicializarArbol();
+            if (typeof cargarListaPlantillas === "function") cargarListaPlantillas();
+            setTimeout(() => { if (typeof renderizarTabla === "function") renderizarTabla(); }, 500);
+        });
+
+        // Funciones de Solicitante
+        function evaluarReglasExcel() {
+            const cat = document.getElementById('niv-cat').value;
+            const sub = document.getElementById('niv-sub').value;
+            const det = document.getElementById('niv-det').value;
+            const panel = document.getElementById('panel-excel-dinamico');
+            if (!panel) return;
+            let modo = null, icono = "", desc = "";
+            if (cat === "Pago PSE" && sub === "Pago Proveedores" && det === "Pago Proveedores Locales") { modo = "Dispersión Masiva PSE"; icono = "🔄"; desc = "Lote masivo de transferencias por PSE"; }
+            else if (cat === "Pago PSE" && sub === "Pago Impuestos") { modo = "Pago de Impuestos (Taxes)"; icono = "🏛️"; desc = "Liquidación y Pago de Impuestos DIAN"; }
+            else if (cat === "Pago PSE" && sub === "Payroll" && det === "Pacto Colectivo") { modo = "Pactos Bancarios"; icono = "📈"; desc = "Inversión / Pacto Colectivo de Recompra"; }
+            else if (cat === "Dispersión Masiva") { modo = "Dispersión Masiva PSE"; icono = "🔄"; desc = "Dispersión Masiva por Lote ACH"; }
+            else if (cat === "Inversiones y Pactos") { modo = "Pactos Bancarios"; icono = "📈"; desc = "Inversión y Recompras en Excel"; }
+            else if (cat === "Impuestos y Taxes") { modo = "Pago de Impuestos (Taxes)"; icono = "🏛️"; desc = "Impuestos DIAN en Excel"; }
+            if (modo) {
+                panel.querySelector('#contenido-excel-dinamico').innerHTML = `<div style="background: #F0FDF4; border: 2px dashed #22C55E; padding: 14px 18px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center;"><div style="display: flex; align-items: center; gap: 12px;"><span style="font-size: 28px;">${icono}</span><div><strong style="color: #166534; font-size: 13px;">✨ Formato Masivo Detectado</strong><br><span style="color: #15803D; font-size: 11px;">Adjunta el detalle en formato Excel (.xlsx).</span></div></div><button type="button" class="btn" style="background: #166534; color: white; font-weight: bold; font-size: 12px; padding: 8px 16px;" onclick="activarModoExcel('${modo}', '${desc}')">${icono} Adjuntar Plantilla Excel</button></div>`;
+                panel.style.display = 'block';
+            } else { panel.style.display = 'none'; }
+        }
+
+        function activarModoExcel(tipo, desc) {
+            const nom = document.getElementById('nombre-op').value.trim();
+            if (!nom.startsWith("[Excel]")) { document.getElementById('nombre-op').value = `[Excel] ${tipo} - ${new Date().toLocaleDateString('es-CO')}`; }
+            document.getElementById('doc-instrucciones').value = `Operación Excel: ${desc}`;
+            const caja = document.getElementById('caja-docs-opcional');
+            if (caja && caja.style.display === "none") { caja.style.display = "block"; document.getElementById('flecha-docs').innerText = "▲"; }
+            alert(`📊 Modo Excel Activado: ${tipo}`);
+        }
+
+        function alternarSeccionDocs() {
+            const caja = document.getElementById('caja-docs-opcional');
+            const flecha = document.getElementById('flecha-docs');
+            caja.style.display = caja.style.display === "none" ? "block" : "none";
+            flecha.innerText = caja.style.display === "none" ? "▼" : "▲";
+        }
+
+        function ajustarANS() { document.getElementById('ans-op').value = document.getElementById('prioridad-op').value === "1" ? "1 Hora" : document.getElementById('prioridad-op').value === "2" ? "2 Horas" : "4 Horas"; }
+
+        function inicializarArbol() {
+            const catSelect = document.getElementById('niv-cat');
+            if (!catSelect) return;
+            catSelect.innerHTML = '<option value="">-- Seleccione Categoría --</option>';
+            Object.keys(arbolOperaciones).forEach(c => catSelect.innerHTML += `<option value="${c}">${c}</option>`);
+            catSelect.onchange = () => { poblarSubtipos(catSelect.value); evaluarReglasExcel(); };
+        }
+        function poblarSubtipos(cat) { const el = document.getElementById('niv-sub'); el.innerHTML = '<option value="">-- Seleccione Subtipo --</option>'; el.disabled = !cat; if(cat && arbolOperaciones[cat]) Object.keys(arbolOperaciones[cat]).forEach(s => el.innerHTML += `<option value="${s}">${s}</option>`); el.onchange = () => { poblarDetalles(cat, el.value); evaluarReglasExcel(); }; limpiarNivelesDesde(3); }
+        function poblarDetalles(cat, sub) { const el = document.getElementById('niv-det'); el.innerHTML = '<option value="">-- Seleccione Detalle --</option>'; el.disabled = !sub; if(sub && arbolOperaciones[cat][sub]) Object.keys(arbolOperaciones[cat][sub]).forEach(d => el.innerHTML += `<option value="${d}">${d}</option>`); el.onchange = () => { poblarEmpOrigen(cat, sub, el.value); evaluarReglasExcel(); }; limpiarNivelesDesde(4); }
+        function poblarEmpOrigen(cat, sub, det) { const el = document.getElementById('niv-emp-ori'); el.innerHTML = '<option value="">-- Seleccione Empresa Origen --</option>'; el.disabled = !det; if(det && arbolOperaciones[cat][sub][det]) Object.keys(arbolOperaciones[cat][sub][det]).forEach(e => el.innerHTML += `<option value="${e}">${e}</option>`); el.onchange = () => poblarCtaOrigen(cat, sub, det, el.value); limpiarNivelesDesde(5); }
+        function poblarCtaOrigen(cat, sub, det, empOri) { const el = document.getElementById('niv-cta-ori'); el.innerHTML = '<option value="">-- Seleccione Cuenta Origen --</option>'; el.disabled = !empOri; if(empOri && arbolOperaciones[cat][sub][det][empOri]) Object.keys(arbolOperaciones[cat][sub][det][empOri]).forEach(c => el.innerHTML += `<option value="${c}">${c}</option>`); el.onchange = () => poblarEmpDestino(cat, sub, det, empOri, el.value); limpiarNivelesDesde(6); }
+        function poblarEmpDestino(cat, sub, det, empOri, ctaOri) { const el = document.getElementById('niv-emp-des'); el.innerHTML = '<option value="">-- Seleccione Empresa Destino --</option>'; el.disabled = !ctaOri; if(ctaOri && arbolOperaciones[cat][sub][det][empOri][ctaOri]) Object.keys(arbolOperaciones[cat][sub][det][empOri][ctaOri]).forEach(e => el.innerHTML += `<option value="${e}">${e}</option>`); el.onchange = () => poblarCtaDestino(cat, sub, det, empOri, ctaOri, el.value); limpiarNivelesDesde(7); }
+        function poblarCtaDestino(cat, sub, det, empOri, ctaOri, empDes) { const el = document.getElementById('niv-cta-des'); el.innerHTML = '<option value="">-- Seleccione Cuenta Destino --</option>'; el.disabled = !empDes; if(empDes && arbolOperaciones[cat][sub][det][empOri][ctaOri][empDes]) arbolOperaciones[cat][sub][det][empOri][ctaOri][empDes].forEach(c => el.innerHTML += `<option value="${c}">${c}</option>`); }
+        function limpiarNivelesDesde(nv) { if(nv <= 3) { const e = document.getElementById('niv-det'); e.innerHTML='<option value=""></option>'; e.disabled=true; } if(nv <= 4) { const e = document.getElementById('niv-emp-ori'); e.innerHTML='<option value=""></option>'; e.disabled=true; } if(nv <= 5) { const e = document.getElementById('niv-cta-ori'); e.innerHTML='<option value=""></option>'; e.disabled=true; } if(nv <= 6) { const e = document.getElementById('niv-emp-des'); e.innerHTML='<option value=""></option>'; e.disabled=true; } if(nv <= 7) { const e = document.getElementById('niv-cta-des'); e.innerHTML='<option value=""></option>'; e.disabled=true; } }
+
+        function cargarListaPlantillas() { const pls = JSON.parse(localStorage.getItem('bold_plantillas_bd') || '[]'); const sel = document.getElementById('select-plantilla'); if (sel) { sel.innerHTML = '<option value="">-- Seleccionar Plantilla Guardada --</option>'; pls.forEach((p, i) => sel.innerHTML += `<option value="${i}">${p.nombre}</option>`); } }
+
+        function limpiarFormularioCompleto() { ['nombre-op', 'monto-sol', 'doc-link', 'doc-instrucciones', 'doc-archivo'].forEach(f => { const el = document.getElementById(f); if (el) el.value = ""; }); document.getElementById('prioridad-op').value = "2"; ajustarANS(); inicializarArbol(); evaluarReglasExcel(); }
+
+        function cargarPlantilla() { const idx = document.getElementById('select-plantilla').value; if(idx === "") return alert("Selecciona una plantilla del menú primero."); const p = JSON.parse(localStorage.getItem('bold_plantillas_bd') || '[]')[idx]; if(!p) return; limpiarFormularioCompleto(); document.getElementById('nombre-op').value = p.nombre; if(p.monto) document.getElementById('monto-sol').value = p.monto; if(p.moneda) document.getElementById('moneda-op').value = p.moneda; document.getElementById('niv-cat').value = p.cat; poblarSubtipos(p.cat); setTimeout(() => { document.getElementById('niv-sub').value = p.sub; poblarDetalles(p.cat, p.sub); setTimeout(() => { document.getElementById('niv-det').value = p.det; poblarEmpOrigen(p.cat, p.sub, p.det); setTimeout(() => { document.getElementById('niv-emp-ori').value = p.empOri; poblarCtaOrigen(p.cat, p.sub, p.det, p.empOri); setTimeout(() => { document.getElementById('niv-cta-ori').value = p.ctaOri; poblarEmpDestino(p.cat, p.sub, p.det, p.empOri, p.ctaOri); setTimeout(() => { document.getElementById('niv-emp-des').value = p.empDes; poblarCtaDestino(p.cat, p.sub, p.det, p.empOri, p.ctaOri, p.empDes); setTimeout(() => { document.getElementById('niv-cta-des').value = p.ctaDes; evaluarReglasExcel(); }, 40); }, 40); }, 40); }, 40); }, 40); }, 40); alert(`⚡ Plantilla "${p.nombre}" cargada con éxito.`); }
+
+        function guardarComoPlantilla() { const nom = document.getElementById('nombre-op').value.trim(); if(!nom) return alert("Escribe el 'Nombre de Operación / Plantilla'."); const cat = document.getElementById('niv-cat').value; const ctaDes = document.getElementById('niv-cta-des').value; if(!cat || !ctaDes) return alert("Completa los 7 niveles del árbol."); const pls = JSON.parse(localStorage.getItem('bold_plantillas_bd') || '[]'); pls.push({nombre: nom, monto: document.getElementById('monto-sol').value, moneda: document.getElementById('moneda-op').value, cat: cat, sub: document.getElementById('niv-sub').value, det: document.getElementById('niv-det').value, empOri: document.getElementById('niv-emp-ori').value, ctaOri: document.getElementById('niv-cta-ori').value, empDes: document.getElementById('niv-emp-des').value, ctaDes: ctaDes}); localStorage.setItem('bold_plantillas_bd', JSON.stringify(pls)); cargarListaPlantillas(); alert(`💾 ¡Modelo "${nom}" guardado exitosamente!`); }
+
+        function procesarRadicacion() { const nomOp = document.getElementById('nombre-op').value.trim(); const monto = document.getElementById('monto-sol').value; const ctaDes = document.getElementById('niv-cta-des').value; const ctaOri = document.getElementById('niv-cta-ori').value; const prio = document.getElementById('prioridad-op').value; const ans = document.getElementById('ans-op').value; const moneda = document.getElementById('moneda-op').value; const fileInput = document.getElementById('doc-archivo'); const link = document.getElementById('doc-link').value.trim(); const inst = document.getElementById('doc-instrucciones').value.trim(); if(!nomOp) return alert("El 'Nombre de Operación' es obligatorio."); if(!monto || monto <= 0) return alert("Ingresa un monto solicitado válido."); if(!ctaDes) return alert("Completa los 7 niveles de enrutamiento bancario."); document.getElementById('conf-nom').innerText = nomOp; document.getElementById('conf-prio').innerText = (prio === "1" ? "🔥 1 - Alta" : prio === "2" ? "⚡ 2 - Media" : "☕ 3 - Baja") + " | ANS: " + ans; document.getElementById('conf-monto').innerText = `$ ${parseFloat(monto).toLocaleString()} ${moneda}`; document.getElementById('conf-ori').innerText = ctaOri || "No seleccionada"; document.getElementById('conf-des').innerText = ctaDes; let docResumen = []; if (fileInput && fileInput.files[0]) docResumen.push(`📁 ${fileInput.files[0].name}`); if (link) docResumen.push("🔗 Link"); if (inst) docResumen.push("📝 Observaciones"); document.getElementById('conf-doc').innerText = docResumen.length > 0 ? docResumen.join(" | ") : "Ninguno"; document.getElementById('modalConfirmacion').style.display = 'flex'; }
+
+        function cerrarModalConfirmacion() { document.getElementById('modalConfirmacion').style.display = 'none'; }
+
+        function confirmarYRadicar() { cerrarModalConfirmacion(); const fileInput = document.getElementById('doc-archivo'); const file = fileInput ? fileInput.files[0] : null; if (file) { const reader = new FileReader(); reader.onload = function(e) { finalizarGuardadoOperacion(e.target.result, file.name, file.type); }; reader.readAsDataURL(file); } else { finalizarGuardadoOperacion(null, null, null); } }
+
+        function finalizarGuardadoOperacion(fileData, fileName, fileType) { const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : []; const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}'); const sec = String(ops.length + 1).padStart(4, '0'); const rad = `TRAS-${new Date().toLocaleDateString('es-CO').substring(0,5)}-26-${sec}`; const nomOp = document.getElementById('nombre-op').value.trim(); const cat = document.getElementById('niv-cat').value; const sub = document.getElementById('niv-sub').value; const det = document.getElementById('niv-det').value; const empOri = document.getElementById('niv-emp-ori').value; const ctaOri = document.getElementById('niv-cta-ori').value; const empDes = document.getElementById('niv-emp-des').value; const ctaDes = document.getElementById('niv-cta-des').value; const monto = document.getElementById('monto-sol').value; const prio = document.getElementById('prioridad-op').value; const ans = document.getElementById('ans-op').value; const moneda = document.getElementById('moneda-op').value; const link = document.getElementById('doc-link').value.trim(); const inst = document.getElementById('doc-instrucciones').value.trim(); const nueva = {radicado: rad, nombreOperacion: nomOp, pais: usr.pais || "Colombia", empresa: empOri, compDestino: empDes, tipo: `${cat} - ${sub}`, detalle: det, ctaOrigen: ctaOri, ctaDestino: ctaDes, solicitante: usr.correo || "lau@bold.co", montoSol: parseFloat(monto), montoPrep: parseFloat(monto), moneda: moneda, registros: 1, ans: ans, estado: "Pendiente Validación", prioridad: parseInt(prio), fechaRadicacion: typeof obtenerFechaHoraMilitar === 'function' ? obtenerFechaHoraMilitar().split(" - ")[0] : new Date().toLocaleDateString('es-CO'), fechaISO: typeof obtenerFechaISO === 'function' ? obtenerFechaISO() : "2026-07-27", apartadaPor: null, enTransito: true, comprobanteCerrado: false, archivoNombre: fileName || null, archivoTipo: fileType || null, archivoData: fileData || null, archivoLink: link || null, instrucciones: inst || null, historial: [{fecha: typeof obtenerFechaHoraMilitar === 'function' ? obtenerFechaHoraMilitar() : "Hoy", paso: "1. RADICACIÓN EN CASCADA", detalle: `Operación "${nomOp}" radicada por ${usr.nombre || 'Solicitante'}.`}]}; ops.unshift(nueva); if(typeof guardarOperaciones === 'function') guardarOperaciones(ops); if(typeof crearNotificacion === 'function') crearNotificacion(rad, `📝 ¡NUEVA RADICACIÓN! ${usr.nombre || 'Laura'} radicó: "${nomOp}" por $${parseFloat(monto).toLocaleString()} ${moneda}.`); alert(`✅ ¡Operación Radicada con Éxito!\nRadicado: ${rad}\nNombre: ${nomOp}`); limpiarFormularioCompleto(); }
+
+        // Funciones de Preparador y Aprobador
+        function renderizarTabla() {
+            const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}');
+            const rol = String(usr.rol || "solicitante").toLowerCase().trim();
+            const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : [];
             
+            function coincideFecha(op, filtroId) { const input = document.getElementById(filtroId); const fechaInput = input ? input.value : ""; if (!fechaInput) return true; if (!op || !op.fechaRadicacion) return false; var limpiaOp = String(op.fechaRadicacion).split(" - ")[0].trim(); var partes = limpiaOp.split("/"); if (partes.length !== 3) return false; var fNorm = partes[2] + "-" + String(partes[1]).padStart(2, "0") + "-" + String(partes[0]).padStart(2, "0"); return fNorm === fechaInput; }
+
             if (rol === "preparador" || rol === "maestro") {
-                const listos = ops.filter(o => (o.estado === "Pendiente Validación" || o.estado === "En Preparación") && coincideFechaFiltro(o));
+                const listos = ops.filter(o => (o.estado === "Pendiente Validación" || o.estado === "En Preparación") && coincideFecha(o, 'filtro-fecha-prep'));
                 const tb = document.getElementById('tabla-preparador');
                 if(!tb) return;
                 tb.innerHTML = '';
-                if(listos.length === 0) { tb.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px;">No hay dispersiones en cola.</td></tr>'; return; }
+                if(listos.length === 0) { tb.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px;">No hay dispersiones en cola.</td></tr>'; return; }
                 listos.forEach(o => {
-                    tb.innerHTML += `<tr>
-                        <td><strong>${o.radicado}</strong></td>
-                        <td>📅 ${o.fechaRadicacion || ''}</td>
-                        <td>${o.empresa}</td>
-                        <td><strong>$ ${o.montoPrep.toLocaleString()}</strong></td>
-                        <td><button class="btn btn-detalle" onclick="auditarRadicado('${o.radicado}')">🔍 Auditar</button></td>
-                        <td>
-                            ${o.estado === "Pendiente Validación" 
-                                ? `<button class="btn btn-primario" style="background:#0284C7;" onclick="validarKYCOperacion('${o.radicado}')">🛡️ KYC</button>`
-                                : `<button class="btn btn-primario" style="background:#15803D;" onclick="enviarAAprobador('${o.radicado}')">🚀 Montar</button>`
-                            }
-                        </td>
-                    </tr>`;
+                    const prioBadge = o.prioridad === 1 ? '<span class="badge" style="background:#FEE2E2; color:#991B1B;">🔥 1 - Alta</span>' : o.prioridad === 3 ? '<span class="badge" style="background:#F1F5F9;">☕ 3 - Baja</span>' : '<span class="badge" style="background:#FEF3C7;">⚡ 2 - Media</span>';
+                    let candado = "";
+                    let btnStyle = "background:#15803D;";
+                    if (o.apartadaPor) { candado = `<span style="background:#FEF3C7; color:#92400E; padding:5px 8px; border-radius:6px; font-size:11px; font-weight:bold;">🔒 ${o.apartadaPor}</span>`; if (o.apartadaPor !== (usr.nombre || usr.correo) && usr.rol !== 'maestro') { btnStyle = "background:#94A3B8; cursor:not-allowed;"; } } else { candado = `<button class="btn" style="background:#FEF9C3; color:#A16207; border:1px dashed #CA8A04;" onclick="apartarRadicado('${o.radicado}')">🔓 Apartar</button>`; }
+                    let boton = o.estado === "Pendiente Validación" ? `<button class="btn btn-primario" style="background:#0284C7;" onclick="validarKYCOperacion('${o.radicado}')">🛡️ 1. Validar KYC</button>` : `<button class="btn btn-primario" style="${btnStyle}" ${o.apartadaPor && o.apartadaPor !== (usr.nombre || usr.correo) && usr.rol !== 'maestro' ? 'disabled' : ''} onclick="enviarAAprobador('${o.radicado}')">🚀 2. Montar Pago</button>`;
+                    tb.innerHTML += `<tr><td><strong>${o.radicado}</strong><br>${prioBadge}</td><td>📅 ${o.fechaRadicacion}</td><td>${o.empresa}<br><span class="badge" style="margin-top:3px;">${o.tipo}</span></td><td><strong>$ ${o.montoPrep.toLocaleString()}</strong> <span class="badge">${o.moneda}</span></td><td>${candado}</td><td><button class="btn btn-detalle" onclick="auditarRadicado('${o.radicado}')">🔍 Auditar</button></td><td>${boton}</td></tr>`;
                 });
             }
 
             if (rol === "aprobador" || rol === "maestro") {
-                const cola = ops.filter(o => o.estado === "En Aprobación" && coincideFechaFiltro(o));
+                const cola = ops.filter(o => o.estado === "En Aprobación" && coincideFecha(o, 'filtro-fecha-apro'));
                 const tb = document.getElementById('tabla-aprobador');
                 if(!tb) return;
                 tb.innerHTML = '';
-                if(cola.length === 0) { tb.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px;">No hay radicados en Check Final.</td></tr>'; return; }
+                if(cola.length === 0) { tb.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px;">No hay radicados en cola de Check Final.</td></tr>'; return; }
                 cola.forEach(o => {
-                    tb.innerHTML += `<tr>
-                        <td><strong>${o.radicado}</strong></td>
-                        <td>📅 ${o.fechaRadicacion || ''}</td>
-                        <td>${o.empresa}</td>
-                        <td><strong>$ ${o.montoPrep.toLocaleString()}</strong></td>
-                        <td><span class="badge" style="background:#E0F2FE; color:#075985;">🔵 Pendiente</span></td>
-                        <td style="display: flex; gap: 8px;">
-                            <button class="btn btn-detalle" onclick="auditarRadicado('${o.radicado}')">🔍</button>
-                            <button class="btn btn-primario" style="background:#15803D;" onclick="confirmarPagoFinal('${o.radicado}')">🏁 Check Final</button>
-                            <button class="btn btn-rechazar" style="background:#EF4444; color:white; border:none;" onclick="ejecutarRechazoSeguro('${o.radicado}')">✕ Devolver</button>
-                        </td>
-                    </tr>`;
+                    const prioBadge = o.prioridad === 1 ? '<span class="badge" style="background:#FEE2E2;">🔥 1 - Alta</span>' : o.prioridad === 3 ? '<span class="badge" style="background:#F1F5F9;">☕ 3 - Baja</span>' : '<span class="badge" style="background:#FEF3C7;">⚡ 2 - Media</span>';
+                    tb.innerHTML += `<tr><td><span>ANS: ${o.ans}</span><br><strong>${o.radicado}</strong><br>${prioBadge}</td><td>📅 ${o.fechaRadicacion}</td><td>${o.empresa}<br><span class="badge" style="margin-top:4px;">${o.tipo}</span></td><td>${o.solicitante}</td><td><strong>$ ${o.montoPrep.toLocaleString()}</strong> <span class="badge">${o.moneda}</span></td><td><span class="badge" style="background:#E0F2FE; color:#075985;">🔵 Pendiente</span></td><td style="display: flex; gap: 8px;"><button class="btn btn-detalle" onclick="auditarRadicado('${o.radicado}')">🔍</button><button class="btn btn-primario" style="background:#15803D;" onclick="confirmarPagoFinal('${o.radicado}')">🏁 Check Final</button><button class="btn" style="background:#EF4444; color:white;" onclick="cambiarEstadoRechazo('${o.radicado}', 'Rechazado')">✕ Devolver</button></td></tr>`;
                 });
             }
-        };
-
-        // Lógica de Formulario Solicitante (Minificada por espacio)
-        function ajustarANS() { document.getElementById('ans-op').value = document.getElementById('prioridad-op').value === "1" ? "1 Hora" : "2 Horas"; }
-        function procesarRadicacion() { document.getElementById('modalConfirmacion').style.display = 'flex'; }
-        function confirmarYRadicar() {
-            document.getElementById('modalConfirmacion').style.display = 'none';
-            alert("Operación simulada con éxito. (El backend procesará el guardado en Firebase)");
-            // Aquí llamas a tu función original finalizarGuardadoOperacion()
         }
+
+        function limpiarFiltroPreprador() { document.getElementById('filtro-fecha-prep').value = ''; renderizarTabla(); }
+        function limpiarFiltroAprobador() { document.getElementById('filtro-fecha-apro').value = ''; renderizarTabla(); }
+
+        function apartarRadicado(rad) { const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}'); const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : []; const op = ops.find(o => o.radicado === rad); if(op) { op.apartadaPor = usr.nombre || usr.correo; if(typeof guardarOperaciones === 'function') guardarOperaciones(ops); alert(`🔒 Radicado ${rad} apartado por ti.`); renderizarTabla(); } }
+
+        function validarKYCOperacion(rad) { const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}'); const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : []; const op = ops.find(o => o.radicado === rad); if(op) { op.estado = "En Preparación"; op.historial.push({fecha: typeof obtenerFechaHoraMilitar === 'function' ? obtenerFechaHoraMilitar() : new Date().toLocaleString(), paso: "1. VALIDACIÓN KYC", detalle: `KYC validado por ${usr.nombre}.`}); if(typeof guardarOperaciones === 'function') guardarOperaciones(ops); alert(`🛡️ ¡Validación KYC completada!`); renderizarTabla(); } }
+
+        async function enviarAAprobador(rad) { const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}'); let linkScreenshot = prompt(`📸 MONTAJE BANCARIO - Radicado ${rad}\n\nPega el enlace del screenshot del portal bancario:`); if (!linkScreenshot || linkScreenshot.trim() === "") { alert("Es obligatorio adjuntar las pruebas del montaje."); return; } const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : []; const op = ops.find(o => o.radicado === rad); if(op) { op.estado = "En Aprobación"; op.soportePreparador = linkScreenshot; op.historial.push({fecha: typeof obtenerFechaHoraMilitar === 'function' ? obtenerFechaHoraMilitar() : new Date().toLocaleString(), paso: "2. MONTAJE BANCARIO", detalle: `Dispersión montada por ${usr.nombre}.`}); if(typeof guardarOperaciones === 'function') guardarOperaciones(ops); if(typeof crearNotificacion === 'function') crearNotificacion(rad, `🚀 El radicado ${rad} ha sido enviado al Aprobador.`); alert(`🚀 ¡Montaje bancario completado!`); renderizarTabla(); } }
+
+        function confirmarPagoFinal(rad) { const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}'); const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : []; const op = ops.find(o => o.radicado === rad); if(op) { op.estado = "Pagada (Comprobante Cerrado)"; op.enTransito = false; op.comprobanteCerrado = true; op.historial.push({fecha: typeof obtenerFechaHoraMilitar === 'function' ? obtenerFechaHoraMilitar() : new Date().toLocaleString(), paso: "4. CHECK FINAL", detalle: `Liberación final por ${usr.nombre}.`}); if(typeof guardarOperaciones === 'function') guardarOperaciones(ops); if(typeof crearNotificacion === 'function') crearNotificacion(rad, `🏁 ¡PAGO CERRADO! ${rad} quedó Pagado.`, true); alert(`✅ ¡Check Final Exitoso!`); renderizarTabla(); } }
+
+        function cambiarEstadoRechazo(rad, est) { const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : []; const op = ops.find(o => o.radicado === rad); if(op) { op.estado = est; op.historial.push({fecha: typeof obtenerFechaHoraMilitar === 'function' ? obtenerFechaHoraMilitar() : new Date().toLocaleString(), paso: "4. RECHAZADO", detalle: "Devuelto por el Aprobador."}); if(typeof guardarOperaciones === 'function') guardarOperaciones(ops); if(typeof crearNotificacion === 'function') crearNotificacion(rad, `🚨 ¡${rad} fue devuelto!`); alert("Operación devuelta para revisión."); renderizarTabla(); } }
+
+        function auditarRadicado(rad) { const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : []; const op = ops.find(o => o.radicado === rad); if(!op) return alert("Operación no encontrada."); document.getElementById('mod-radicado-titulo').innerText = `Auditoria - ${rad}`; document.getElementById('mod-origen').innerText = op.empresa || '-'; document.getElementById('mod-moneda').innerText = op.moneda || '-'; document.getElementById('mod-val-sol').innerText = `$ ${(op.montoSol || 0).toLocaleString()}`; document.getElementById('mod-val-prep').innerText = `$ ${(op.montoPrep || 0).toLocaleString()}`; document.getElementById('mod-regs').innerText = op.registros || '1'; let timeline = ''; if (op.historial) { op.historial.forEach(h => { timeline += `<div style="padding:8px 0; border-bottom:1px solid #E2E8F0;"><strong style="color:#0B1442; font-size:11px;">${h.paso}</strong><br><span style="color:#64748B; font-size:10px;">${h.fecha}</span><br><span style="color:#475569; font-size:11px;">${h.detalle}</span></div>`; }); } document.getElementById('mod-timeline').innerHTML = timeline; document.getElementById('vis-sol-prov').innerText = op.empresa || '-'; document.getElementById('vis-sol-total').innerText = `$ ${(op.montoSol || 0).toLocaleString()} ${op.moneda}`; document.getElementById('vis-prep-total').innerText = `$ ${(op.montoPrep || 0).toLocaleString()} ${op.moneda}`; document.getElementById('modalDetalles').style.display = 'flex'; }
+
+        function cerrarModal(id) { document.getElementById(id).style.display = 'none'; }
+        function alternarVisor() { const sol = document.getElementById('vistaSolicitante'); const prep = document.getElementById('vistaPreparador'); sol.classList.toggle('hidden'); prep.classList.toggle('hidden'); document.getElementById('tabSol').classList.toggle('active'); document.getElementById('tabPrep').classList.toggle('active'); }
+        function cambiarPestana(p) { const sol = document.getElementById('vistaSolicitante'); const prep = document.getElementById('vistaPreparador'); if (p === 'solicitante') { sol.classList.remove('hidden'); prep.classList.add('hidden'); document.getElementById('tabSol').classList.add('active'); document.getElementById('tabPrep').classList.remove('active'); } else { sol.classList.add('hidden'); prep.classList.remove('hidden'); document.getElementById('tabSol').classList.remove('active'); document.getElementById('tabPrep').classList.add('active'); } }
     </script>
-</body>
+</body></html>
 </html>

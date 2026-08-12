@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"><title>Ejecución Banco - Bold</title><link rel="stylesheet" href="css/estilos.css"></head>
+<body>
+    <header class="topbar"><a href="solicitante.html" class="logo">bold</a><div class="topbar-derecha"></div></header>
+    <div class="contenedor-principal">
+        <aside class="sidebar">
+            <div class="menu-categoria">Operaciones</div><a href="solicitante.html" class="menu-item">Carga de Operaciones</a><a href="historial.html" class="menu-item">Historial y Expedientes</a>
+            <div class="menu-categoria">Ejecución</div><a href="preparador.html" class="menu-item activo">Ejecución Banco</a>
+            <div class="menu-categoria">Cierre Final</div><a href="aprobador.html" class="menu-item">Bandeja de Aprobador</a>
+        </aside>
+        <main class="contenido">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <div>
+                    <h1 class="titulo-seccion" style="margin: 0;">Paso 1 y 2: Validación Compliance & Montaje Bancario</h1>
+                    <p class="subtitulo" style="margin: 4px 0 0 0;">Revisa la legitimidad del radicado (Compliance), realiza el montaje en banco y envíalo a Kate (Aprobador) para el Check Final.</p>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center; background: white; padding: 6px 12px; border-radius: 8px; border: 1px solid #CBD5E1;">
+                    <label style="font-size: 12px; font-weight: bold; color: #0B1442; margin: 0;">📅 Filtrar por Fecha:</label>
+                    <input type="date" id="filtro-fecha" class="form-control" style="width: 140px; padding: 4px 8px; height: 32px;" onchange="renderizarTabla()">
+                    <button class="btn btn-detalle" onclick="limpiarFiltroFecha()" style="padding: 4px 10px; height: 32px;">Limpiar</button>
+                </div>
+            </div>
+            
+            <div class="tabla-contenedor">
+                <table>
+                    <thead><tr><th>Control ANS / Radicado</th><th>Fecha</th><th>Compañía & Gasto</th><th>Valor a Transferir</th><th>Titularidad (Candado)</th><th>Soporte Banco</th><th>Acción Montaje</th></tr></thead>
+                    <tbody id="tabla-preparador"></tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+    <!-- Modal Compartido -->
+    <div class="modal-overlay" id="modalDetalles"><div class="modal modal-grande"><div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;"><h2 id="mod-radicado-titulo" style="margin:0; border:none; padding:0;">Módulo de Auditoría</h2><button class="btn" style="background:#3B82F6; color:white;" onclick="alternarVisor()">👁 Visor Dual</button></div><div class="modal-layout-split"><div class="seccion-datos"><div class="grid-detalles"><div class="dato-grupo"><span class="dato-label">Compañía</span><span class="dato-valor" id="mod-origen"></span></div><div class="dato-grupo"><span class="dato-label">Moneda</span><span class="dato-valor" id="mod-moneda"></span></div><div class="dato-grupo"><span class="dato-label">Valor Solicitado</span><span class="dato-valor" id="mod-val-sol"></span><div class="auditor-data auditor-alerta" id="mod-val-prep"></div></div><div class="dato-grupo"><span class="dato-label">Registros</span><span class="dato-valor" id="mod-regs"></span></div></div><div class="timeline" id="mod-timeline"></div></div><div class="seccion-visor" id="contenedorVisor"><div class="tab-container"><button class="tab active" id="tabSol" onclick="cambiarPestana('solicitante')">📄 Factura</button><button class="tab" id="tabPrep" onclick="cambiarPestana('preparador')">🖼 Screen Banco</button></div><div class="marco-visor"><div class="documento-simulado" id="vistaSolicitante"><h4>SOPORTE ORIGINAL</h4><p>Proveedor: <strong id="vis-sol-prov"></strong></p><p style="margin-top:40px; text-align:right; font-weight:bold;" id="vis-sol-total"></p></div><div class="documento-simulado hidden" id="vistaPreparador" style="background:#0F172A; color:#22C55E;"><h4>PORTAL BANCARIO</h4><p style="margin-top:40px; text-align:right; font-weight:bold; font-size:15px;" id="vis-prep-total"></p></div></div></div></div><div style="text-align: right; margin-top: 20px; border-top: 1px solid #E2E8F0; padding-top: 15px;"><button class="btn btn-detalle" onclick="cerrarModal('modalDetalles')">Cerrar</button></div></div></div>
+    
+    <!-- 🔥 LIBRERÍAS DE FIREBASE (CONEXIÓN A LA NUBE) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script>
+        if (typeof firebase !== "undefined" && !firebase.apps.length) {
+            firebase.initializeApp({ projectId: "black-hulling-462522-j2" });
+            console.log("🟢 [FIREBASE CORE]: Conectado exitosamente al motor en vivo.");
+        }
+    </script>
+    
+    <script src="js/logica-comun.js?v=4"></script>
+    
+    <script>
+
+        function renderizarTabla() {
+            const ops = typeof obtenerOperacionesActivas === 'function' ? obtenerOperacionesActivas() : obtenerOperaciones();
+            
+            // 🚀 CAMBIO CLAVE: Filtramos para que Felipe vea las operaciones que están en Paso 1 y Paso 2
+            const listos = ops.filter(o => (o.estado === "Pendiente Validación" || o.estado === "En Preparación") && coincideFechaFiltro(o));
+            
+            const tb = document.getElementById('tabla-preparador');
+            const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}');
+            
+            tb.innerHTML = '';
+            if(listos.length === 0) { tb.innerHTML = '<tr><td colspan="7" style="text-align:center; color:#64748B; padding:30px;">No hay dispersiones en cola de Compliance o Montaje.</td></tr>'; return; }
+            
+            listos.forEach(o => {
+                const prioBadge = o.prioridad === 1 ? '<span class="badge" style="background:#FEE2E2; color:#991B1B;">🔥 1 - Alta</span>' : o.prioridad === 3 ? '<span class="badge" style="background:#F1F5F9; color:#475569;">☕ 3 - Baja</span>' : '<span class="badge" style="background:#FEF3C7; color:#92400E;">⚡ 2 - Media</span>';
+                
+                let candadoHtml = "";
+                let btnDispersarStyle = "background:#15803D;";
+                let btnDispersarAttr = "";
+                
+                if (o.apartadaPor) {
+                    candadoHtml = `<span style="background:#FEF3C7; color:#92400E; border:1px solid #FDE68A; padding:5px 8px; border-radius:6px; font-size:11px; font-weight:bold; display:inline-block;">🔒 Apartada: ${o.apartadaPor}</span>`;
+                    if (o.apartadaPor !== (usr.nombre || usr.correo) && usr.rol !== 'maestro') {
+                        btnDispersarStyle = "background:#94A3B8; cursor:not-allowed;";
+                        btnDispersarAttr = "disabled title='Bloqueado por otro analista preparador'";
+                    }
+                } else {
+                    candadoHtml = `<button class="btn" style="background:#FEF9C3; color:#A16207; border:1px dashed #CA8A04;" onclick="apartarRadicado('${o.radicado}')">🔓 Apartar (Bloquear)</button>`;
+                }
+
+                // 🎛️ BOTONES DINÁMICOS: Muestra el botón correcto según el paso actual de la operación
+                let botonAccion = "";
+                if (o.estado === "Pendiente Validación") {
+                    botonAccion = `<button class="btn btn-primario" style="background:#0284C7;" onclick="validarKYCOperacion('${o.radicado}')">🛡️ 1. Validar KYC</button>`;
+                } else {
+                    botonAccion = `<button class="btn btn-primario" style="${btnDispersarStyle}" ${btnDispersarAttr} onclick="enviarAAprobador('${o.radicado}')">🚀 2. Montar Pago</button>`;
+                }
+
+                tb.innerHTML += `<tr>
+                    <td><strong>${o.radicado}</strong><br>${prioBadge}</td>
+                    <td style="font-size:12px; font-weight:700; color:#475569;">📅 ${o.fechaRadicacion || ''}</td>
+                    <td>${o.empresa}<br><span class="badge badge-opex" style="margin-top:3px;">${o.tipo}</span></td>
+                    <td><strong>$ ${o.montoPrep.toLocaleString()}</strong> <span class="badge badge-moneda">${o.moneda}</span></td>
+                    <td>${candadoHtml}</td>
+                    <td><button class="btn btn-detalle" onclick="auditarRadicado('${o.radicado}')">🔍 Auditar</button></td>
+                    <td>${botonAccion}</td>
+                </tr>`;
+            });
+        }
+
+       // 🚀 PASO 2: MONTAJE DEL PAGO Y SUBIDA DE SCREENSHOT (CONECTADO A LA NUBE)
+        async function enviarAAprobador(rad) {
+            const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}');
+
+            // 🛑 Mantenemos el prompt temporalmente (en la Fase 2 lo cambiaremos por el Modal real)
+            let linkScreenshot = prompt(`📸 MONTAJE BANCARIO - Radicado ${rad}\n\nPor favor, pega aquí el enlace temporal de tu captura de pantalla (Screenshot) del portal bancario:`);
+            
+            if (!linkScreenshot || linkScreenshot.trim() === "") {
+                alert("⚠️ Operación cancelada. Es obligatorio adjuntar las pruebas del montaje para enviarlo al Aprobador.");
+                return; // Detiene el proceso si no hay pruebas
+            }
+
+            try {
+                // 🔥 MAGIA EN LA NUBE: Guardamos directamente en Firestore
+                await db.collection("operaciones").doc(rad).update({
+                    estado: "En Aprobación", // Cambia de estado para que le aparezca a Kate
+                    soportePreparador: linkScreenshot,
+                    historial: firebase.firestore.FieldValue.arrayUnion({
+                        fecha: typeof obtenerFechaHoraMilitar === 'function' ? obtenerFechaHoraMilitar() : new Date().toLocaleString(),
+                        paso: "2. MONTAJE BANCARIO",
+                        detalle: `Dispersión montada en banco por ${usr.nombre || 'Preparador'}. Screenshot adjunto. Enviada al Aprobador.`
+                    })
+                });
+                
+                alert(`🚀 ¡Montaje bancario completado en la Nube!\nEl radicado ${rad} ha sido enviado a la Bandeja del Aprobador.`);
+                
+                // Redibujamos la tabla (la operación desaparecerá de aquí porque ya no es tarea del Preparador)
+                renderizarTabla(); 
+
+            } catch (error) {
+                console.error("Error al actualizar en la nube:", error);
+                alert("❌ Hubo un error al enviar los datos a Google Cloud. Revisa la consola (F12).");
+            }
+        }
+    </script>
+</body>
+</html>
