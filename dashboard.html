@@ -166,9 +166,26 @@
         </div>
     </div>
 
+    <div class="modal-overlay" id="modalSubidaEvidencia" style="display:none; z-index:3000;">
+        <div class="modal" style="max-width: 520px; padding: 24px; border-radius: 12px; background: white; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15);">
+            <div style="border-bottom: 1px solid #E2E8F0; padding-bottom: 12px; margin-bottom: 16px;">
+                <h2 id="tituloSubidaEvidencia" style="margin: 0; font-size: 18px; color: #0B1442;">📎 Adjuntar evidencia</h2>
+            </div>
+            <p id="textoSubidaEvidencia" style="font-size: 13px; color: #475569; margin: 0 0 12px 0;">
+                Selecciona la imagen o PDF correspondiente.
+            </p>
+            <input type="file" id="inputSubidaEvidencia" accept="image/png,image/jpeg,image/jpg,application/pdf" style="width:100%; margin-bottom:16px; padding:10px; border:1px solid #CBD5E1; border-radius:8px; background:#F8FAFC;">
+            <div style="display:flex; justify-content:flex-end; gap:12px;">
+                <button type="button" class="btn" style="background:white; border:1px solid #94A3B8; color:#475569; padding:8px 16px; font-weight:bold;" onclick="cerrarModalSubidaEvidencia()">Cancelar</button>
+                <button type="button" id="btnConfirmarSubidaEvidencia" class="btn btn-primario" style="background:#2563EB; color:white; padding:8px 20px; font-weight:bold;">Subir archivo</button>
+            </div>
+        </div>
+    </div>
+
     <!-- FIREBASE Y LOGICA -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
     <script>
         if (!firebase.apps.length) { firebase.initializeApp({ projectId: "black-hulling-462522-j2" }); }
     </script>
@@ -259,6 +276,86 @@
 
         function cerrarModalConfirmacion() { document.getElementById('modalConfirmacion').style.display = 'none'; }
 
+        async function subirArchivoAStorage(file, radicado, tipo) {
+            if (!file) throw new Error('No hay archivo para subir.');
+            if (typeof firebase === 'undefined' || !firebase.storage) {
+                throw new Error('Firebase Storage no está inicializado.');
+            }
+            const storage = firebase.storage();
+            const extension = file.name.includes('.') ? file.name.substring(file.name.lastIndexOf('.')) : '';
+            const nombreArchivo = `${radicado}_${tipo}${extension}`;
+            const snapshot = await storage.ref(`evidencias/${nombreArchivo}`).put(file);
+            return await snapshot.ref.getDownloadURL();
+        }
+
+        function abrirModalSubidaEvidencia(radicado, tipo, titulo, descripcion) {
+            const modal = document.getElementById('modalSubidaEvidencia');
+            const input = document.getElementById('inputSubidaEvidencia');
+            const tituloEl = document.getElementById('tituloSubidaEvidencia');
+            const textoEl = document.getElementById('textoSubidaEvidencia');
+            if (!modal || !input || !tituloEl || !textoEl) return;
+            modal.dataset.radicado = radicado;
+            modal.dataset.tipo = tipo;
+            tituloEl.textContent = titulo;
+            textoEl.textContent = descripcion;
+            input.value = '';
+            modal.style.display = 'flex';
+        }
+
+        function cerrarModalSubidaEvidencia() {
+            const modal = document.getElementById('modalSubidaEvidencia');
+            if (modal) modal.style.display = 'none';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const btnSubir = document.getElementById('btnConfirmarSubidaEvidencia');
+            if (!btnSubir) return;
+            btnSubir.addEventListener('click', async function() {
+                const modal = document.getElementById('modalSubidaEvidencia');
+                const input = document.getElementById('inputSubidaEvidencia');
+                if (!modal || !input) return;
+                const radicado = modal.dataset.radicado;
+                const tipo = modal.dataset.tipo;
+                const file = input.files[0];
+                if (!radicado || !tipo) return;
+                if (!file) {
+                    alert('⚠️ Debes seleccionar un archivo antes de continuar.');
+                    return;
+                }
+                try {
+                    btnSubir.disabled = true;
+                    btnSubir.textContent = 'Subiendo...';
+                    const urlArchivo = await subirArchivoAStorage(file, radicado, tipo);
+                    const db = firebase.app().firestore();
+                    const docId = radicado.replace(/\//g, '-');
+                    if (tipo === 'screenshot') {
+                        await db.collection('operaciones').doc(docId).update({
+                            estado: 'En Aprobación',
+                            archivoScreenshot: urlArchivo,
+                            fechaMontaje: new Date().toISOString()
+                        });
+                        alert('✅ Screenshot subido correctamente y la operación pasó a En Aprobación.');
+                    } else if (tipo === 'cierre') {
+                        await db.collection('operaciones').doc(docId).update({
+                            estado: 'COMPLETADA / CERRADA ✓',
+                            archivoPDF: urlArchivo,
+                            comprobanteCerrado: true,
+                            fechaCierre: new Date().toISOString()
+                        });
+                        alert('✅ PDF final subido correctamente y la operación quedó cerrada.');
+                    }
+                    cerrarModalSubidaEvidencia();
+                    if (typeof refrescarPantallasUniversales === 'function') refrescarPantallasUniversales();
+                } catch (error) {
+                    console.error('Error al subir evidencia:', error);
+                    alert('❌ No se pudo subir el archivo: ' + (error.message || error));
+                } finally {
+                    btnSubir.disabled = false;
+                    btnSubir.textContent = 'Subir archivo';
+                }
+            });
+        });
+
         function confirmarYRadicar() { cerrarModalConfirmacion(); const fileInput = document.getElementById('doc-archivo'); const file = fileInput ? fileInput.files[0] : null; if (file) { const reader = new FileReader(); reader.onload = function(e) { finalizarGuardadoOperacion(e.target.result, file.name, file.type); }; reader.readAsDataURL(file); } else { finalizarGuardadoOperacion(null, null, null); } }
 
         function finalizarGuardadoOperacion(fileData, fileName, fileType) { const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : []; const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}'); const sec = String(ops.length + 1).padStart(4, '0'); const rad = `TRAS-${new Date().toLocaleDateString('es-CO').substring(0,5)}-26-${sec}`; const nomOp = document.getElementById('nombre-op').value.trim(); const cat = document.getElementById('niv-cat').value; const sub = document.getElementById('niv-sub').value; const det = document.getElementById('niv-det').value; const empOri = document.getElementById('niv-emp-ori').value; const ctaOri = document.getElementById('niv-cta-ori').value; const empDes = document.getElementById('niv-emp-des').value; const ctaDes = document.getElementById('niv-cta-des').value; const monto = document.getElementById('monto-sol').value; const prio = document.getElementById('prioridad-op').value; const ans = document.getElementById('ans-op').value; const moneda = document.getElementById('moneda-op').value; const link = document.getElementById('doc-link').value.trim(); const inst = document.getElementById('doc-instrucciones').value.trim(); const nueva = {radicado: rad, nombreOperacion: nomOp, pais: usr.pais || "Colombia", empresa: empOri, compDestino: empDes, tipo: `${cat} - ${sub}`, detalle: det, ctaOrigen: ctaOri, ctaDestino: ctaDes, solicitante: usr.correo || "lau@bold.co", montoSol: parseFloat(monto), montoPrep: parseFloat(monto), moneda: moneda, registros: 1, ans: ans, estado: "Pendiente Validación", prioridad: parseInt(prio), fechaRadicacion: typeof obtenerFechaHoraMilitar === 'function' ? obtenerFechaHoraMilitar().split(" - ")[0] : new Date().toLocaleDateString('es-CO'), fechaISO: typeof obtenerFechaISO === 'function' ? obtenerFechaISO() : "2026-07-27", apartadaPor: null, enTransito: true, comprobanteCerrado: false, archivoNombre: fileName || null, archivoTipo: fileType || null, archivoData: fileData || null, archivoLink: link || null, instrucciones: inst || null, historial: [{fecha: typeof obtenerFechaHoraMilitar === 'function' ? obtenerFechaHoraMilitar() : "Hoy", paso: "1. RADICACIÓN EN CASCADA", detalle: `Operación "${nomOp}" radicada por ${usr.nombre || 'Solicitante'}.`}]}; ops.unshift(nueva); if(typeof guardarOperaciones === 'function') guardarOperaciones(ops); if(typeof crearNotificacion === 'function') crearNotificacion(rad, `📝 ¡NUEVA RADICACIÓN! ${usr.nombre || 'Laura'} radicó: "${nomOp}" por $${parseFloat(monto).toLocaleString()} ${moneda}.`); alert(`✅ ¡Operación Radicada con Éxito!\nRadicado: ${rad}\nNombre: ${nomOp}`); limpiarFormularioCompleto(); }
@@ -307,9 +404,40 @@
 
         function validarKYCOperacion(rad) { const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}'); const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : []; const op = ops.find(o => o.radicado === rad); if(op) { op.estado = "En Preparación"; op.historial.push({fecha: typeof obtenerFechaHoraMilitar === 'function' ? obtenerFechaHoraMilitar() : new Date().toLocaleString(), paso: "1. VALIDACIÓN KYC", detalle: `KYC validado por ${usr.nombre}.`}); if(typeof guardarOperaciones === 'function') guardarOperaciones(ops); alert(`🛡️ ¡Validación KYC completada!`); renderizarTabla(); } }
 
-        async function enviarAAprobador(rad) { const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}'); let linkScreenshot = prompt(`📸 MONTAJE BANCARIO - Radicado ${rad}\n\nPega el enlace del screenshot del portal bancario:`); if (!linkScreenshot || linkScreenshot.trim() === "") { alert("Es obligatorio adjuntar las pruebas del montaje."); return; } const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : []; const op = ops.find(o => o.radicado === rad); if(op) { op.estado = "En Aprobación"; op.soportePreparador = linkScreenshot; op.historial.push({fecha: typeof obtenerFechaHoraMilitar === 'function' ? obtenerFechaHoraMilitar() : new Date().toLocaleString(), paso: "2. MONTAJE BANCARIO", detalle: `Dispersión montada por ${usr.nombre}.`}); if(typeof guardarOperaciones === 'function') guardarOperaciones(ops); if(typeof crearNotificacion === 'function') crearNotificacion(rad, `🚀 El radicado ${rad} ha sido enviado al Aprobador.`); alert(`🚀 ¡Montaje bancario completado!`); renderizarTabla(); } }
+        function enviarAAprobador(rad) {
+            abrirModalSubidaEvidencia(
+                rad,
+                'screenshot',
+                '📸 Subir evidencia del montaje bancario',
+                'Adjunta el screenshot del portal bancario para enviar la operación a aprobación.'
+            );
+        }
 
-        function confirmarPagoFinal(rad) { const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}'); const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : []; const op = ops.find(o => o.radicado === rad); if(op) { op.estado = "Pagada (Comprobante Cerrado)"; op.enTransito = false; op.comprobanteCerrado = true; op.historial.push({fecha: typeof obtenerFechaHoraMilitar === 'function' ? obtenerFechaHoraMilitar() : new Date().toLocaleString(), paso: "4. CHECK FINAL", detalle: `Liberación final por ${usr.nombre}.`}); if(typeof guardarOperaciones === 'function') guardarOperaciones(ops); if(typeof crearNotificacion === 'function') crearNotificacion(rad, `🏁 ¡PAGO CERRADO! ${rad} quedó Pagado.`, true); alert(`✅ ¡Check Final Exitoso!`); renderizarTabla(); } }
+        function confirmarPagoFinal(rad) {
+            const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}');
+            const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : [];
+            const op = ops.find(o => o.radicado === rad);
+            if(op) {
+                op.estado = 'APROBADO';
+                op.enTransito = false;
+                op.comprobanteCerrado = false;
+                op.historial = op.historial || [];
+                op.historial.push({fecha: typeof obtenerFechaHoraMilitar === 'function' ? obtenerFechaHoraMilitar() : new Date().toLocaleString(), paso: '4. CHECK FINAL', detalle: `Liberación final por ${usr.nombre || 'Aprobador'}.`});
+                if(typeof guardarOperaciones === 'function') guardarOperaciones(ops);
+                if(typeof crearNotificacion === 'function') crearNotificacion(rad, `🏁 ¡Check Final! ${rad} quedó APROBADO.`, true);
+                alert('✅ ¡Check Final Exitoso! La operación quedó en estado APROBADO.');
+                renderizarTabla();
+            }
+        }
+
+        function finalizarYCerrarComprobante(rad) {
+            abrirModalSubidaEvidencia(
+                rad,
+                'cierre',
+                '📄 Subir PDF definitivo de cierre',
+                'Adjunta el PDF final del comprobante para cerrar la operación y registrar la evidencia definitiva.'
+            );
+        }
 
         function cambiarEstadoRechazo(rad, est) { const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : []; const op = ops.find(o => o.radicado === rad); if(op) { op.estado = est; op.historial.push({fecha: typeof obtenerFechaHoraMilitar === 'function' ? obtenerFechaHoraMilitar() : new Date().toLocaleString(), paso: "4. RECHAZADO", detalle: "Devuelto por el Aprobador."}); if(typeof guardarOperaciones === 'function') guardarOperaciones(ops); if(typeof crearNotificacion === 'function') crearNotificacion(rad, `🚨 ¡${rad} fue devuelto!`); alert("Operación devuelta para revisión."); renderizarTabla(); } }
 

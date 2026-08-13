@@ -949,37 +949,119 @@ function validarKYCOperacion(rad) {
     }
 }
 
+function subirArchivoAStorage(file, radicado, tipo) {
+    if (!file) return Promise.reject(new Error('No hay archivo para subir.'));
+    if (typeof firebase === 'undefined' || !firebase.storage) {
+        return Promise.reject(new Error('Firebase Storage no está inicializado.'));
+    }
+    var storage = firebase.storage();
+    var extension = file.name && file.name.indexOf('.') > -1 ? file.name.substring(file.name.lastIndexOf('.')) : '';
+    var nombreArchivo = radicado + '_' + tipo + extension;
+    return storage.ref('evidencias/' + nombreArchivo).put(file).then(function(snapshot) {
+        return snapshot.ref.getDownloadURL();
+    });
+}
+
+function abrirModalSubidaEvidencia(radicado, tipo, titulo, descripcion) {
+    var modal = document.getElementById('modalSubidaEvidencia');
+    var input = document.getElementById('inputSubidaEvidencia');
+    var tituloEl = document.getElementById('tituloSubidaEvidencia');
+    var textoEl = document.getElementById('textoSubidaEvidencia');
+    if (!modal || !input || !tituloEl || !textoEl) return;
+    modal.dataset.radicado = radicado;
+    modal.dataset.tipo = tipo;
+    tituloEl.textContent = titulo;
+    textoEl.textContent = descripcion;
+    input.value = '';
+    modal.style.display = 'flex';
+}
+
+function cerrarModalSubidaEvidencia() {
+    var modal = document.getElementById('modalSubidaEvidencia');
+    if (modal) modal.style.display = 'none';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    var btn = document.getElementById('btnConfirmarSubidaEvidencia');
+    if (!btn) return;
+    btn.addEventListener('click', function() {
+        var modal = document.getElementById('modalSubidaEvidencia');
+        var input = document.getElementById('inputSubidaEvidencia');
+        if (!modal || !input) return;
+        var radicado = modal.dataset.radicado;
+        var tipo = modal.dataset.tipo;
+        var file = input.files[0];
+        if (!radicado || !tipo) return;
+        if (!file) {
+            alert('⚠️ Debes seleccionar un archivo antes de continuar.');
+            return;
+        }
+        btn.disabled = true;
+        btn.textContent = 'Subiendo...';
+        subirArchivoAStorage(file, radicado, tipo)
+        .then(function(urlArchivo) {
+            var db = firebase.app().firestore();
+            var docId = radicado.replace(/\//g, '-');
+            if (tipo === 'screenshot') {
+                return db.collection('operaciones').doc(docId).update({
+                    estado: 'En Aprobación',
+                    archivoScreenshot: urlArchivo,
+                    fechaMontaje: new Date().toISOString()
+                });
+            }
+            return db.collection('operaciones').doc(docId).update({
+                estado: 'COMPLETADA / CERRADA ✓',
+                archivoPDF: urlArchivo,
+                comprobanteCerrado: true,
+                fechaCierre: new Date().toISOString()
+            });
+        })
+        .then(function() {
+            cerrarModalSubidaEvidencia();
+            if (typeof refrescarPantallasUniversales === 'function') refrescarPantallasUniversales();
+        })
+        .catch(function(error) {
+            console.error('Error al subir evidencia:', error);
+            alert('❌ No se pudo subir el archivo: ' + (error.message || error));
+        })
+        .finally(function() {
+            btn.disabled = false;
+            btn.textContent = 'Subir archivo';
+        });
+    });
+});
+
 if (typeof enviarAAprobador === "function") {
     enviarAAprobador = function(rad) {
-        var ops = typeof obtenerOperaciones === "function" ? obtenerOperaciones() : [];
-        var op = ops.find(function(o) { return o.radicado === rad; });
-        if (!op) return;
-        var screen = prompt("🖼️ PASO 2 - ADJUNTAR SCREENSHOT DE MONTAJE EN NUBE:\n\nNombre de captura o link del portal:", op.archivoScreenshot || "screenshot_banco.png");
-        if (!screen || screen.trim() === "") return alert("⚠️ El screenshot es obligatorio.");
-        invocarCloudAPI(NUBE_API.montar, { radicado: rad, archivoScreenshot: screen }, function(res) {
-            alert("🚀 ¡Montaje bancario registrado en Google Cloud!\nEvidencia: " + screen);
-            if (typeof refrescarPantallasUniversales === "function") refrescarPantallasUniversales();
-        });
+        abrirModalSubidaEvidencia(rad, 'screenshot', '📸 Subir evidencia del montaje bancario', 'Adjunta el screenshot del portal bancario para enviar la operación a aprobación.');
     };
 }
 
 if (typeof confirmarPagoFinal === "function") {
     confirmarPagoFinal = function(rad) {
-        invocarCloudAPI(NUBE_API.aprobar, { radicado: rad }, function(res) {
-            alert("✅ ¡Visto Bueno sellado en la nube!\nDevuelto a Felipe para PDF de cierre.");
-            if (typeof refrescarPantallasUniversales === "function") refrescarPantallasUniversales();
+        var usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}');
+        var ops = typeof obtenerOperaciones === "function" ? obtenerOperaciones() : [];
+        var op = ops.find(function(o) { return o.radicado === rad; });
+        if (!op) return;
+        op.estado = 'APROBADO';
+        op.enTransito = false;
+        op.comprobanteCerrado = false;
+        op.historial = op.historial || [];
+        op.historial.push({
+            fecha: typeof obtenerFechaHoraMilitar === 'function' ? obtenerFechaHoraMilitar() : new Date().toLocaleString(),
+            paso: '4. CHECK FINAL',
+            detalle: 'Liberación final por ' + (usr.nombre || 'Aprobador') + '.'
         });
+        if (typeof guardarOperaciones === 'function') guardarOperaciones(ops);
+        if (typeof crearNotificacion === 'function') crearNotificacion(rad, '🏁 ¡Check Final! ' + rad + ' quedó APROBADO.', true);
+        alert('✅ ¡Check Final Exitoso! La operación quedó en estado APROBADO.');
+        if (typeof refrescarPantallasUniversales === 'function') refrescarPantallasUniversales();
     };
 }
 
 if (typeof finalizarYCerrarComprobante === "function") {
     finalizarYCerrarComprobante = function(rad) {
-        var pdf = prompt("📄 ADJUNTAR COMPROBANTE PDF FINAL:\n\nNombre del archivo bancario:", "comprobante_cierre.pdf");
-        if (!pdf || pdf.trim() === "") return alert("⚠️ El PDF es obligatorio.");
-        invocarCloudAPI(NUBE_API.cerrar, { radicado: rad, archivoPDF: pdf }, function(res) {
-            alert("🏁 ¡Comprobante Cerrado Exitosamente en Google Cloud!\nArchivo: " + pdf);
-            if (typeof refrescarPantallasUniversales === "function") refrescarPantallasUniversales();
-        });
+        abrirModalSubidaEvidencia(rad, 'cierre', '📄 Subir PDF definitivo de cierre', 'Adjunta el PDF final del comprobante para cerrar la operación y registrar la evidencia definitiva.');
     };
 }
 
