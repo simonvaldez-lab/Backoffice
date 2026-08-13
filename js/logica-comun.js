@@ -68,10 +68,10 @@ const arbolOperaciones = {
 
 // 2. PERMISOS Y BLOQUEO POR ROL (RBAC)
 const permisos = {
-    "Solicitante": ["solicitante.html", "historial.html"],
-    "Preparador": ["preparador.html", "historial.html"],
-    "Aprobador": ["aprobador.html", "historial.html"],
-    "Maestro": ["solicitante.html", "preparador.html", "aprobador.html", "historial.html"]
+    "Solicitante": ["dashboard.html", "historial.html"],
+    "Preparador": ["dashboard.html", "historial.html"],
+    "Aprobador": ["dashboard.html", "historial.html"],
+    "Maestro": ["dashboard.html", "historial.html", "admin.html"]
 };
 
 // 3. AUXILIARES DE FECHA
@@ -360,7 +360,7 @@ function aplicarSeguridadYMenu() {
         };
         var permitidos = mapaPermisos[rol] || [];
         var rol = usuario.rol || "Solicitante";
-        var permitidos = mapaPermisos[rol] || ["solicitante.html", "historial.html"];
+        var permitidos = mapaPermisos[rol] || ["dashboard.html", "historial.html"];
 
         document.querySelectorAll(".menu-item").forEach(function(item) {
             var enlace = item.getAttribute("href");
@@ -616,10 +616,10 @@ function aplicarSeguridadYMenuUniversal() {
         // 2. PERMISOS ESTRICTOS POR ROL
         var rol = String(usuario.rol || "solicitante").toLowerCase().trim();
         var mapaPermisos = {
-            "solicitante": ["solicitante.html", "historial.html"],
-            "preparador": ["preparador.html", "historial.html"],
-            "aprobador": ["aprobador.html", "historial.html"],
-            "maestro": ["solicitante.html", "preparador.html", "aprobador.html", "historial.html", "admin.html"]
+            "solicitante": ["dashboard.html", "historial.html"],
+            "preparador": ["dashboard.html", "historial.html"],
+            "aprobador": ["dashboard.html", "historial.html"],
+            "maestro": ["dashboard.html", "historial.html", "admin.html"]
         };
         var permitidos = mapaPermisos[rol] || [];
 
