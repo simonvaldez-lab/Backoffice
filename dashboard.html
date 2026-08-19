@@ -501,8 +501,38 @@
 
         function cambiarEstadoRechazo(rad, est) { const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : []; const op = ops.find(o => o.radicado === rad); if(op) { op.estado = est; op.historial.push({fecha: typeof obtenerFechaHoraMilitar === 'function' ? obtenerFechaHoraMilitar() : new Date().toLocaleString(), paso: "4. RECHAZADO", detalle: "Devuelto por el Aprobador."}); if(typeof guardarOperaciones === 'function') guardarOperaciones(ops); if(typeof crearNotificacion === 'function') crearNotificacion(rad, `🚨 ¡${rad} fue devuelto!`); alert("Operación devuelta para revisión."); renderizarTabla(); } }
 
-        function auditarRadicado(rad) { const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : []; const op = ops.find(o => o.radicado === rad); if(!op) return alert("Operación no encontrada."); document.getElementById('mod-radicado-titulo').innerText = `Auditoria - ${rad}`; document.getElementById('mod-origen').innerText = op.empresa || '-'; document.getElementById('mod-moneda').innerText = op.moneda || '-'; document.getElementById('mod-val-sol').innerText = `$ ${(op.montoSol || 0).toLocaleString()}`; document.getElementById('mod-val-prep').innerText = `$ ${(op.montoPrep || 0).toLocaleString()}`; document.getElementById('mod-regs').innerText = op.registros || '1'; let timeline = ''; if (op.historial) { op.historial.forEach(h => { timeline += `<div style="padding:8px 0; border-bottom:1px solid #E2E8F0;"><strong style="color:#0B1442; font-size:11px;">${h.paso}</strong><br><span style="color:#64748B; font-size:10px;">${h.fecha}</span><br><span style="color:#475569; font-size:11px;">${h.detalle}</span></div>`; }); } document.getElementById('mod-timeline').innerHTML = timeline; document.getElementById('vis-sol-prov').innerText = op.empresa || '-'; document.getElementById('vis-sol-total').innerText = `$ ${(op.montoSol || 0).toLocaleString()} ${op.moneda}`; document.getElementById('vis-prep-total').innerText = `$ ${(op.montoPrep || 0).toLocaleString()} ${op.moneda}`; document.getElementById('modalDetalles').style.display = 'flex'; }
-
+        function auditarRadicado(rad) { 
+            const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : []; 
+            const op = ops.find(o => o.radicado === rad); 
+            if(!op) return alert("Operación no encontrada."); 
+            
+            document.getElementById('mod-radicado-titulo').innerText = `Auditoria - ${rad}`; 
+            document.getElementById('mod-origen').innerText = op.empresa || '-'; 
+            document.getElementById('mod-moneda').innerText = op.moneda || '-'; 
+            document.getElementById('mod-val-sol').innerText = `$ ${(op.montoSol || 0).toLocaleString()}`; 
+            document.getElementById('mod-val-prep').innerText = `$ ${(op.montoPrep || 0).toLocaleString()}`; 
+            document.getElementById('mod-regs').innerText = op.registros || '1'; 
+            
+            let timeline = ''; 
+            if (op.historial) { 
+                op.historial.forEach(h => { timeline += `<div style="padding:8px 0; border-bottom:1px solid #E2E8F0;"><strong style="color:#0B1442; font-size:11px;">${h.paso}</strong><br><span style="color:#64748B; font-size:10px;">${h.fecha}</span><br><span style="color:#475569; font-size:11px;">${h.detalle}</span></div>`; }); 
+            } 
+            document.getElementById('mod-timeline').innerHTML = timeline; 
+            document.getElementById('vis-sol-prov').innerText = op.empresa || '-'; 
+            document.getElementById('vis-sol-total').innerText = `$ ${(op.montoSol || 0).toLocaleString()} ${op.moneda}`; 
+            
+            // 🖼️ NUEVA LÓGICA: DIBUJAR LA IMAGEN DEL BANCO
+            const vistaPreparador = document.getElementById('vistaPreparador');
+            if (op.archivoScreenshot) {
+                vistaPreparador.style.background = "transparent";
+                vistaPreparador.innerHTML = `<h4>EVIDENCIA DEL BANCO</h4><img src="${op.archivoScreenshot}" style="width:100%; border-radius:8px; margin-top:15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" alt="Screenshot Banco">`;
+            } else {
+                vistaPreparador.style.background = "#0F172A";
+                vistaPreparador.innerHTML = `<h4>PORTAL BANCARIO</h4><p style="margin-top:40px; text-align:right; font-weight:bold; font-size:15px;" id="vis-prep-total">$ ${(op.montoPrep || 0).toLocaleString()} ${op.moneda}</p><p style="text-align:center; color:#94A3B8; margin-top:20px;">Sin evidencia cargada</p>`;
+            }
+            
+            document.getElementById('modalDetalles').style.display = 'flex'; 
+        }
         function cerrarModal(id) { document.getElementById(id).style.display = 'none'; }
         function alternarVisor() { const sol = document.getElementById('vistaSolicitante'); const prep = document.getElementById('vistaPreparador'); sol.classList.toggle('hidden'); prep.classList.toggle('hidden'); document.getElementById('tabSol').classList.toggle('active'); document.getElementById('tabPrep').classList.toggle('active'); }
         function cambiarPestana(p) { const sol = document.getElementById('vistaSolicitante'); const prep = document.getElementById('vistaPreparador'); if (p === 'solicitante') { sol.classList.remove('hidden'); prep.classList.add('hidden'); document.getElementById('tabSol').classList.add('active'); document.getElementById('tabPrep').classList.remove('active'); } else { sol.classList.add('hidden'); prep.classList.remove('hidden'); document.getElementById('tabSol').classList.remove('active'); document.getElementById('tabPrep').classList.add('active'); } }
