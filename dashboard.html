@@ -211,12 +211,66 @@
         };
 
         document.addEventListener('DOMContentLoaded', function() {
-            activarVistaPorRol();
-            if (typeof inicializarArbol === "function") inicializarArbol();
-            if (typeof cargarListaPlantillas === "function") cargarListaPlantillas();
-            setTimeout(() => { if (typeof renderizarTabla === "function") renderizarTabla(); }, 500);
-        });
+            const btnSubir = document.getElementById('btnConfirmarSubidaEvidencia');
+            if (!btnSubir) return;
+            btnSubir.addEventListener('click', async function() {
+                const modal = document.getElementById('modalSubidaEvidencia');
+                const input = document.getElementById('inputSubidaEvidencia');
+                if (!modal || !input) return;
+                const radicado = modal.dataset.radicado;
+                const tipo = modal.dataset.tipo;
+                const file = input.files[0];
+                if (!radicado || !tipo) return;
+                if (!file) {
+                    alert('⚠️ Debes seleccionar un archivo antes de continuar.');
+                    return;
+                }
+                
+                try {
+                    btnSubir.disabled = true;
+                    btnSubir.textContent = 'Subiendo...';
+                    const urlArchivo = await subirArchivoAStorage(file, radicado, tipo);
+                    
+                    // 1. Intentamos actualizar la nube (Firestore)
+                    try {
+                        const db = firebase.app().firestore();
+                        const docId = radicado.replace(/\//g, '-');
+                        if (tipo === 'screenshot') {
+                            await db.collection('operaciones').doc(docId).update({ estado: 'En Aprobación', archivoScreenshot: urlArchivo });
+                        } else if (tipo === 'cierre') {
+                            await db.collection('operaciones').doc(docId).update({ estado: 'COMPLETADA / CERRADA ✓', archivoPDF: urlArchivo, comprobanteCerrado: true });
+                        }
+                    } catch (e) { console.log("Aviso: Actualización en nube pendiente o no encontrada, priorizando local."); }
 
+                    // 2. ⚡ LA MAGIA: Actualizamos la memoria local para que la tabla cambie instantáneamente
+                    const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : [];
+                    const op = ops.find(o => o.radicado === radicado);
+                    if (op) {
+                        if (tipo === 'screenshot') {
+                            op.estado = 'En Aprobación';
+                            op.archivoScreenshot = urlArchivo;
+                            alert('✅ Screenshot subido correctamente. La operación pasó a la bandeja del Aprobador.');
+                        } else if (tipo === 'cierre') {
+                            op.estado = 'COMPLETADA / CERRADA ✓';
+                            op.archivoPDF = urlArchivo;
+                            op.comprobanteCerrado = true;
+                            alert('✅ PDF definitivo subido correctamente. Operación cerrada.');
+                        }
+                        if (typeof guardarOperaciones === 'function') guardarOperaciones(ops);
+                    }
+
+                    cerrarModalSubidaEvidencia();
+                    renderizarTabla(); // Recargamos la tabla automáticamente
+                    
+                } catch (error) {
+                    console.error('Error al subir evidencia:', error);
+                    alert('❌ No se pudo subir el archivo: ' + (error.message || error));
+                } finally {
+                    btnSubir.disabled = false;
+                    btnSubir.textContent = 'Subir archivo';
+                }
+            });
+        });
         // Funciones de Solicitante
         function evaluarReglasExcel() {
             const cat = document.getElementById('niv-cat').value;
