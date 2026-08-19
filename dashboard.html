@@ -1,11 +1,4 @@
-<script>
-        if (!firebase.apps.length) { 
-            firebase.initializeApp({ 
-                projectId: "black-hulling-462522-j2",
-                storageBucket: "black-hulling-462522-j2.appspot.com"
-            }); 
-        }
-    </script>
+</script>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -195,7 +188,12 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
     <script>
-        if (!firebase.apps.length) { firebase.initializeApp({ projectId: "black-hulling-462522-j2" }); }
+        if (!firebase.apps.length) { 
+            firebase.initializeApp({ 
+                projectId: "black-hulling-462522-j2",
+                storageBucket: "black-hulling-462522-j2.appspot.com" // 👈 Aquí es donde debe ir
+            }); 
+        }
     </script>
     <script src="js/logica-comun.js?v=10"></script>
     
