@@ -508,8 +508,13 @@ function aplicarSeguridadYMenu() {
 }
 
 function cerrarSesion() {
-    sessionStorage.removeItem("usuarioLogueado");
-    localStorage.removeItem("bold_ultimo_usuario_backup");
+    // Limpiamos la sesión activa de la pestaña actual
+    sessionStorage.clear();
+    
+    // Limpiamos la memoria temporal en RAM de la nube
+    window.cacheOperacionesNube = [];
+    
+    // Redirigimos al deck de inicio
     window.location.href = "index.html";
 }
 
@@ -617,20 +622,16 @@ if (typeof arbolOperaciones !== "undefined") {
     }
 }
 
-// === RADAR EN VIVO Y MOTOR DE TABLA ROBUSTO (SIN F5) ===
+// === RADAR EN VIVO Y MOTOR DE TABLA ROBUSTO (SIN F5 - 100% FIRESTORE) ===
 function actualizarRadarYTablaEnVivo() {
     try {
         var tb = document.getElementById("tabla-recientes");
         if (!tb) return;
         
-        var ops = [];
-        if (typeof obtenerOperaciones === "function") {
-            ops = obtenerOperaciones() || [];
-        } else {
-            try { ops = JSON.parse(localStorage.getItem("bold_operaciones_bd") || "[]"); } catch(e) { ops = []; }
-        }
+        // Obtenemos las operaciones traídas directamente desde la nube
+        var ops = typeof obtenerOperaciones === "function" ? (obtenerOperaciones() || []) : (window.cacheOperacionesNube || []);
         
-        var usrRaw = sessionStorage.getItem("usuarioLogueado") || localStorage.getItem("bold_ultimo_usuario_backup") || "{}";
+        var usrRaw = sessionStorage.getItem("usuarioLogueado") || "{}";
         var usr = JSON.parse(usrRaw);
         var correoUsr = usr.correo || "lau@bold.co";
         
