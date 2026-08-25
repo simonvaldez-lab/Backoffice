@@ -327,13 +327,65 @@
         function poblarCtaDestino(cat, sub, det, empOri, ctaOri, empDes) { const el = document.getElementById('niv-cta-des'); el.innerHTML = '<option value="">-- Seleccione Cuenta Destino --</option>'; el.disabled = !empDes; if(empDes && arbolOperaciones[cat][sub][det][empOri][ctaOri][empDes]) arbolOperaciones[cat][sub][det][empOri][ctaOri][empDes].forEach(c => el.innerHTML += `<option value="${c}">${c}</option>`); }
         function limpiarNivelesDesde(nv) { if(nv <= 3) { const e = document.getElementById('niv-det'); e.innerHTML='<option value=""></option>'; e.disabled=true; } if(nv <= 4) { const e = document.getElementById('niv-emp-ori'); e.innerHTML='<option value=""></option>'; e.disabled=true; } if(nv <= 5) { const e = document.getElementById('niv-cta-ori'); e.innerHTML='<option value=""></option>'; e.disabled=true; } if(nv <= 6) { const e = document.getElementById('niv-emp-des'); e.innerHTML='<option value=""></option>'; e.disabled=true; } if(nv <= 7) { const e = document.getElementById('niv-cta-des'); e.innerHTML='<option value=""></option>'; e.disabled=true; } }
 
-        function cargarListaPlantillas() { const pls = JSON.parse(localStorage.getItem('bold_plantillas_bd') || '[]'); const sel = document.getElementById('select-plantilla'); if (sel) { sel.innerHTML = '<option value="">-- Seleccionar Plantilla Guardada --</option>'; pls.forEach((p, i) => sel.innerHTML += `<option value="${i}">${p.nombre}</option>`); } }
+      window.plantillasNube = [];
+
+        async function cargarListaPlantillas() { 
+            const sel = document.getElementById('select-plantilla'); 
+            if (sel) { 
+                sel.innerHTML = '<option value="">-- Cargando desde la nube... --</option>'; 
+                try {
+                    const snapshot = await firebase.app().firestore().collection('plantillas').get();
+                    window.plantillasNube = [];
+                    sel.innerHTML = '<option value="">-- Seleccionar Plantilla Guardada --</option>'; 
+                    let idx = 0;
+                    snapshot.forEach(doc => {
+                        const data = doc.data();
+                        window.plantillasNube.push(data);
+                        sel.innerHTML += `<option value="${idx}">☁️ ${data.nombre}</option>`;
+                        idx++;
+                    });
+                } catch (error) {
+                    console.error("Error al cargar plantillas:", error);
+                    sel.innerHTML = '<option value="">-- Error cargando plantillas --</option>';
+                }
+            } 
+        }
 
         function limpiarFormularioCompleto() { ['nombre-op', 'monto-sol', 'doc-link', 'doc-instrucciones', 'doc-archivo'].forEach(f => { const el = document.getElementById(f); if (el) el.value = ""; }); document.getElementById('prioridad-op').value = "2"; ajustarANS(); inicializarArbol(); evaluarReglasExcel(); }
 
-        function cargarPlantilla() { const idx = document.getElementById('select-plantilla').value; if(idx === "") return alert("Selecciona una plantilla del menú primero."); const p = JSON.parse(localStorage.getItem('bold_plantillas_bd') || '[]')[idx]; if(!p) return; limpiarFormularioCompleto(); document.getElementById('nombre-op').value = p.nombre; if(p.monto) document.getElementById('monto-sol').value = p.monto; if(p.moneda) document.getElementById('moneda-op').value = p.moneda; document.getElementById('niv-cat').value = p.cat; poblarSubtipos(p.cat); setTimeout(() => { document.getElementById('niv-sub').value = p.sub; poblarDetalles(p.cat, p.sub); setTimeout(() => { document.getElementById('niv-det').value = p.det; poblarEmpOrigen(p.cat, p.sub, p.det); setTimeout(() => { document.getElementById('niv-emp-ori').value = p.empOri; poblarCtaOrigen(p.cat, p.sub, p.det, p.empOri); setTimeout(() => { document.getElementById('niv-cta-ori').value = p.ctaOri; poblarEmpDestino(p.cat, p.sub, p.det, p.empOri, p.ctaOri); setTimeout(() => { document.getElementById('niv-emp-des').value = p.empDes; poblarCtaDestino(p.cat, p.sub, p.det, p.empOri, p.ctaOri, p.empDes); setTimeout(() => { document.getElementById('niv-cta-des').value = p.ctaDes; evaluarReglasExcel(); }, 40); }, 40); }, 40); }, 40); }, 40); }, 40); alert(`⚡ Plantilla "${p.nombre}" cargada con éxito.`); }
+        function cargarPlantilla() { 
+            const idx = document.getElementById('select-plantilla').value; 
+            if(idx === "") return alert("Selecciona una plantilla del menú primero."); 
+            const p = window.plantillasNube[idx]; 
+            if(!p) return; 
+            limpiarFormularioCompleto(); 
+            document.getElementById('nombre-op').value = p.nombre; 
+            if(p.monto) document.getElementById('monto-sol').value = p.monto; 
+            if(p.moneda) document.getElementById('moneda-op').value = p.moneda; 
+            document.getElementById('niv-cat').value = p.cat; 
+            poblarSubtipos(p.cat); 
+            setTimeout(() => { document.getElementById('niv-sub').value = p.sub; poblarDetalles(p.cat, p.sub); setTimeout(() => { document.getElementById('niv-det').value = p.det; poblarEmpOrigen(p.cat, p.sub, p.det); setTimeout(() => { document.getElementById('niv-emp-ori').value = p.empOri; poblarCtaOrigen(p.cat, p.sub, p.det, p.empOri); setTimeout(() => { document.getElementById('niv-cta-ori').value = p.ctaOri; poblarEmpDestino(p.cat, p.sub, p.det, p.empOri, p.ctaOri); setTimeout(() => { document.getElementById('niv-emp-des').value = p.empDes; poblarCtaDestino(p.cat, p.sub, p.det, p.empOri, p.ctaOri, p.empDes); setTimeout(() => { document.getElementById('niv-cta-des').value = p.ctaDes; evaluarReglasExcel(); }, 40); }, 40); }, 40); }, 40); }, 40); }, 40); 
+            alert(`⚡ Plantilla "${p.nombre}" cargada con éxito.`); 
+        }
 
-        function guardarComoPlantilla() { const nom = document.getElementById('nombre-op').value.trim(); if(!nom) return alert("Escribe el 'Nombre de Operación / Plantilla'."); const cat = document.getElementById('niv-cat').value; const ctaDes = document.getElementById('niv-cta-des').value; if(!cat || !ctaDes) return alert("Completa los 7 niveles del árbol."); const pls = JSON.parse(localStorage.getItem('bold_plantillas_bd') || '[]'); pls.push({nombre: nom, monto: document.getElementById('monto-sol').value, moneda: document.getElementById('moneda-op').value, cat: cat, sub: document.getElementById('niv-sub').value, det: document.getElementById('niv-det').value, empOri: document.getElementById('niv-emp-ori').value, ctaOri: document.getElementById('niv-cta-ori').value, empDes: document.getElementById('niv-emp-des').value, ctaDes: ctaDes}); localStorage.setItem('bold_plantillas_bd', JSON.stringify(pls)); cargarListaPlantillas(); alert(`💾 ¡Modelo "${nom}" guardado exitosamente!`); }
+        async function guardarComoPlantilla() { 
+            const nom = document.getElementById('nombre-op').value.trim(); 
+            if(!nom) return alert("Escribe el 'Nombre de Operación / Plantilla'."); 
+            const cat = document.getElementById('niv-cat').value; 
+            const ctaDes = document.getElementById('niv-cta-des').value; 
+            if(!cat || !ctaDes) return alert("Completa los 7 niveles del árbol."); 
+            
+            const nuevaPlantilla = {nombre: nom, monto: document.getElementById('monto-sol').value, moneda: document.getElementById('moneda-op').value, cat: cat, sub: document.getElementById('niv-sub').value, det: document.getElementById('niv-det').value, empOri: document.getElementById('niv-emp-ori').value, ctaOri: document.getElementById('niv-cta-ori').value, empDes: document.getElementById('niv-emp-des').value, ctaDes: ctaDes}; 
+            
+            try {
+                await firebase.app().firestore().collection('plantillas').add(nuevaPlantilla);
+                cargarListaPlantillas(); 
+                alert(`💾 ¡Modelo "${nom}" guardado exitosamente en la nube!`); 
+            } catch (error) {
+                console.error("Error al guardar en la nube:", error);
+                alert("❌ Ocurrió un error al intentar guardar la plantilla en Firestore.");
+            }
+        }
 
         function procesarRadicacion() { const nomOp = document.getElementById('nombre-op').value.trim(); const monto = document.getElementById('monto-sol').value; const ctaDes = document.getElementById('niv-cta-des').value; const ctaOri = document.getElementById('niv-cta-ori').value; const prio = document.getElementById('prioridad-op').value; const ans = document.getElementById('ans-op').value; const moneda = document.getElementById('moneda-op').value; const fileInput = document.getElementById('doc-archivo'); const link = document.getElementById('doc-link').value.trim(); const inst = document.getElementById('doc-instrucciones').value.trim(); if(!nomOp) return alert("El 'Nombre de Operación' es obligatorio."); if(!monto || monto <= 0) return alert("Ingresa un monto solicitado válido."); if(!ctaDes) return alert("Completa los 7 niveles de enrutamiento bancario."); document.getElementById('conf-nom').innerText = nomOp; document.getElementById('conf-prio').innerText = (prio === "1" ? "🔥 1 - Alta" : prio === "2" ? "⚡ 2 - Media" : "☕ 3 - Baja") + " | ANS: " + ans; document.getElementById('conf-monto').innerText = `$ ${parseFloat(monto).toLocaleString()} ${moneda}`; document.getElementById('conf-ori').innerText = ctaOri || "No seleccionada"; document.getElementById('conf-des').innerText = ctaDes; let docResumen = []; if (fileInput && fileInput.files[0]) docResumen.push(`📁 ${fileInput.files[0].name}`); if (link) docResumen.push("🔗 Link"); if (inst) docResumen.push("📝 Observaciones"); document.getElementById('conf-doc').innerText = docResumen.length > 0 ? docResumen.join(" | ") : "Ninguno"; document.getElementById('modalConfirmacion').style.display = 'flex'; }
 
