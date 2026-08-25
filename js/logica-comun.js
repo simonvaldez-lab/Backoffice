@@ -10,6 +10,18 @@ if (typeof firebase !== "undefined" && firebase.app) {
 
 // 1. ÁRBOL RELACIONAL DE 7 NIVELES (BASE DE DATOS OPERATIVA)
 const arbolOperaciones = {
+    "Traslados": {
+        "Traslados CUD": {
+            "Adelanto adquirencia doméstica": {
+                "Bold CF": {
+                    "BanRep - 62108160 CUD COP": {
+                        "Bold CO": ["Bold CF 170011844070 PO´S ACH", "Bold CF 000008024755 Deposito COP"]
+                        }
+                    }
+                }
+            }
+        }
+    },    
     "Traslados entre cuentas": {
         "Cuentas Propias": {
             "Canal Directo": {
