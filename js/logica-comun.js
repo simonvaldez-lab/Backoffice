@@ -1449,10 +1449,10 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 });
 // ============================================================================
-// 🚦 MOTOR DE ENRUTAMIENTO SPA (SINGLE PAGE APPLICATION)
+// 🚦 MOTOR DE ENRUTAMIENTO SPA (SINGLE PAGE APPLICATION) - 100% SESIÓN LIMPIA
 // ============================================================================
 function activarVistaPorRol() {
-    var usrRaw = sessionStorage.getItem("usuarioLogueado") || localStorage.getItem("bold_ultimo_usuario_backup") || "{}";
+    var usrRaw = sessionStorage.getItem("usuarioLogueado") || "{}";
     var usr = JSON.parse(usrRaw);
     var rol = String(usr.rol || "solicitante").toLowerCase().trim();
 
