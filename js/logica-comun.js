@@ -688,15 +688,7 @@ window.addEventListener("storage", function(e) {
     }
 });
 
-// Interceptor seguro en el propio navegador
-if (typeof guardarOperaciones === "function") {
-    var _oldGuardarRadar = guardarOperaciones;
-    guardarOperaciones = function(ops) {
-        _oldGuardarRadar(ops);
-        try { localStorage.setItem("bold_operaciones_bd", JSON.stringify(ops)); } catch(err){}
-        setTimeout(actualizarRadarYTablaEnVivo, 10);
-    };
-}
+
 
 setInterval(function() {
     if (typeof actualizarRadarYTablaEnVivo === "function") {
@@ -810,36 +802,50 @@ function guardiaRolRechazo(usr) {
     return true;
 }
 
-function ejecutarRechazoSeguro(radicado) {
+async function ejecutarRechazoSeguro(radicado) {
     try {
-        var usrRaw = sessionStorage.getItem("usuarioLogueado") || localStorage.getItem("bold_ultimo_usuario_backup") || "{}";
+        var usrRaw = sessionStorage.getItem("usuarioLogueado") || "{}";
         var usr = JSON.parse(usrRaw);
-        guardiaRolRechazo(usr);
-        var ops = typeof obtenerOperaciones === "function" ? obtenerOperaciones() : [];
+        if (typeof guardiaRolRechazo === "function") guardiaRolRechazo(usr);
+
+        var ops = typeof obtenerOperaciones === "function" ? obtenerOperaciones() : (window.cacheOperacionesNube || []);
         var op = ops.find(function(o) { return o.radicado === radicado; });
         if (!op) return alert("❌ No se encontró el radicado especificado: " + radicado);
+
         var motivo = prompt("🚨 MOTIVO DE DEVOLUCIÓN / RECHAZO (OBLIGATORIO):" + "\n\n" + "Por favor describe detalladamente el error encontrado para que el Solicitante (" + (op.solicitante || "Analista") + ") pueda corregirlo y volver a radicar:");
         if (motivo === null) return;
         if (!motivo || motivo.trim() === "") {
             alert("⚠️ VALIDACIÓN FALLIDA: Es absolutamente obligatorio escribir las observaciones o motivo de rechazo. No se puede devolver una operación en blanco.");
             return ejecutarRechazoSeguro(radicado);
         }
+
         var motivoLimpio = motivo.trim();
         var rechazador = (usr.nombre || "Analista") + " (" + (usr.rol || "Preparador").toUpperCase() + ")";
+        
         op.estado = "RECHAZADO";
         op.motivoRechazo = motivoLimpio;
         op.rechazadoPor = rechazador;
         op.enTransito = false;
+
         if (!op.historial) op.historial = [];
         op.historial.push({
-            fecha: typeof obtenerFechaHoraMilitar === "function" ? obtenerFechaHoraMilitar() : new Date().toLocaleString(),
+            fecha: typeof obtenerFechaHoraMilitar === "function" ? obtenerFechaHoraMilitar() : new Date().toLocaleString('es-CO'),
             paso: "⚫ OPERACIÓN RECHAZADA / DEVUELTA",
             detalle: "Devuelto por " + rechazador + ". Motivo obligatorio registrado: \"" + motivoLimpio + "\"",
             alerta: true
         });
-        if (typeof guardarOperaciones === "function") guardarOperaciones(ops);
-        if (typeof crearNotificacion === "function") crearNotificacion(radicado, "🚨 RECHAZADO: " + radicado + " fue devuelto por " + rechazador + ". Motivo: " + motivoLimpio, true);
+
+        // ☁️ Actualización directa a la base de datos Firestore
+        if (typeof guardarOperaciones === "function") {
+            await guardarOperaciones(ops);
+        }
+
+        if (typeof crearNotificacion === "function") {
+            await crearNotificacion(radicado, "🚨 RECHAZADO: " + radicado + " fue devuelto por " + rechazador + ". Motivo: " + motivoLimpio, true);
+        }
+
         alert("✅ OPERACIÓN RECHAZADA Y NOTIFICADA:" + "\n" + "El radicado " + radicado + " ha cambiado al estado RECHAZADO." + "\n" + "Se ha generado una alerta en la interfaz del Solicitante con tus observaciones.");
+
         if (typeof refrescarPantallasUniversales === "function") refrescarPantallasUniversales();
         else if (typeof renderizarTabla === "function") renderizarTabla();
         if (typeof cerrarModal === "function") cerrarModal("modalDetalles");
