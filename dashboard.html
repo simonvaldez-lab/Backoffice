@@ -210,6 +210,10 @@
         };
 
         document.addEventListener('DOMContentLoaded', function() {
+            activarVistaPorRol();     // Muestra la pantalla correcta
+            inicializarArbol();       // Carga las categorías en Nivel 1
+            cargarListaPlantillas();  // Carga el menú de plantillas
+            renderizarTabla();        // Pinta los datos de la base de datos
             const btnSubir = document.getElementById('btnConfirmarSubidaEvidencia');
             if (!btnSubir) return;
             btnSubir.addEventListener('click', async function() {
