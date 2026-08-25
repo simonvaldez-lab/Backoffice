@@ -945,47 +945,157 @@ if (typeof guardarOperaciones === "function") {
     };
 }
 
-// === MOTOR DE GOBIERNO: GESTIÓN DE ROLES (RBAC) Y MATRIZ DE ANS ===
-// 1. GESTIÓN DE USUARIOS Y ROLES
+// === MOTOR DE GOBIERNO: GESTIÓN DE ROLES (RBAC) Y MATRIZ DE ANS (100% FIRESTORE) ===
+window.cacheUsuariosNube = [];
+
+// Lista por defecto inicial
+const USUARIOS_DEFECTO = [
+    { nombre: "Laura (Bogotá)", correo: "lau@bold.co", rol: "solicitante", estado: "Activo", creado: "2026-01-10" },
+    { nombre: "Felipe (Preparador Banco)", correo: "fel@bold.co", rol: "preparador", estado: "Activo", creado: "2026-01-10" },
+    { nombre: "Kate (Check Final)", correo: "kat@bold.co", rol: "aprobador", estado: "Activo", creado: "2026-01-10" },
+    { nombre: "Simon Valdez (Director)", correo: "simon.valdez@bold.co", rol: "maestro", estado: "Activo", creado: "2026-01-01" }
+];
+
+// 1. GESTIÓN DE USUARIOS Y ROLES (Lectura sincrónica desde RAM / Caché de Nube)
 function obtenerUsuariosConfig() {
-    var def = [
-        { nombre: "Laura (Bogotá)", correo: "lau@bold.co", rol: "solicitante", estado: "Activo", creado: "2026-01-10" },
-        { nombre: "Felipe (Preparador Banco)", correo: "fel@bold.co", rol: "preparador", estado: "Activo", creado: "2026-01-10" },
-        { nombre: "Kate (Check Final)", correo: "kat@bold.co", rol: "aprobador", estado: "Activo", creado: "2026-01-10" },
-        { nombre: "Simon Valdez (Director)", correo: "simon.valdez@bold.co", rol: "maestro", estado: "Activo", creado: "2026-01-01" }
-    ];
-    var guardados = localStorage.getItem("bold_usuarios_config");
-    if (!guardados) {
-        localStorage.setItem("bold_usuarios_config", JSON.stringify(def));
-        return def;
+    if (window.cacheUsuariosNube && window.cacheUsuariosNube.length > 0) {
+        return window.cacheUsuariosNube;
     }
-    try { return JSON.parse(guardados); } catch(e) { return def; }
+    return USUARIOS_DEFECTO;
 }
 
-function guardarUsuariosConfig(lista) {
-    localStorage.setItem("bold_usuarios_config", JSON.stringify(lista));
-    if (typeof refrescarPantallasUniversales === 'function') refrescarPantallasUniversales();
+// Carga inicial y escucha directa desde Firestore
+async function cargarUsuariosDesdeNube() {
+    try {
+        if (typeof firebase !== 'undefined' && firebase.app) {
+            const db = firebase.app().firestore();
+            const snapshot = await db.collection('usuarios').get();
+            
+            if (snapshot.empty) {
+                // Si la colección está vacía en la nube, inicializamos con los usuarios por defecto
+                for (const u of USUARIOS_DEFECTO) {
+                    const docId = u.correo.replace(/[@.]/g, '_');
+                    await db.collection('usuarios').doc(docId).set(u);
+                }
+                window.cacheUsuariosNube = USUARIOS_DEFECTO;
+            } else {
+                const usrs = [];
+                snapshot.forEach(doc => usrs.push(doc.data()));
+                window.cacheUsuariosNube = usrs;
+            }
+        }
+    } catch (e) {
+        console.error("❌ Error cargando usuarios desde Firestore:", e);
+        window.cacheUsuariosNube = USUARIOS_DEFECTO;
+    }
+    return window.cacheUsuariosNube;
 }
 
-// 2. GESTIÓN DE MATRIZ DE ANS (SLA DE TESORERÍA EN MINUTOS)
+// Guardar usuarios directamente en Firestore
+async function guardarUsuariosConfig(usuarios) {
+    window.cacheUsuariosNube = usuarios;
+    try {
+        if (typeof firebase !== 'undefined' && firebase.app) {
+            const db = firebase.app().firestore();
+            for (const u of usuarios) {
+                if (u && u.correo) {
+                    const docId = u.correo.replace(/[@.]/g, '_');
+                    await db.collection('usuarios').doc(docId).set(u, { merge: true });
+                }
+            }
+        }
+    } catch (e) {
+        console.error("❌ Error guardando usuarios en Firestore:", e);
+    }
+}
+
+async function guardarUsuariosConfig(lista) {
+    window.cacheUsuariosNube = lista;
+    try {
+        if (typeof firebase !== 'undefined' && firebase.app) {
+            const db = firebase.app().firestore();
+            for (const u of lista) {
+                if (u && u.correo) {
+                    const docId = u.correo.replace(/[@.]/g, '_');
+                    await db.collection('usuarios').doc(docId).set(u, { merge: true });
+                }
+            }
+        }
+    } catch (e) {
+        console.error("❌ Error guardando usuarios en Firestore:", e);
+    }
+    
+    if (typeof refrescarPantallasUniversales === 'function') {
+        refrescarPantallasUniversales();
+    }
+}
+
+// === 2. GESTIÓN DE MATRIZ DE ANS (SLA DE TESORERÍA EN MINUTOS - 100% FIRESTORE) ===
+window.cacheANSNube = [];
+
+const CONFIG_ANS_DEFECTO = [
+    { prioridad: 1, nombre: "🔥 Prioridad 1 - Alta (Nómina/Impuestos/Urgente)", maxMontajeMin: 15, maxAprobacionMin: 10, alertaColor: "#991B1B" },
+    { prioridad: 2, nombre: "⚡ Prioridad 2 - Media (Proveedores/Estándar)", maxMontajeMin: 30, maxAprobacionMin: 20, alertaColor: "#D97706" },
+    { prioridad: 3, nombre: "☕ Prioridad 3 - Baja (OPEX Interno/Caja Menor)", maxMontajeMin: 60, maxAprobacionMin: 45, alertaColor: "#475569" }
+];
+
+// Lectura síncrona desde memoria RAM
 function obtenerConfigANS() {
-    var def = [
-        { prioridad: 1, nombre: "🔥 Prioridad 1 - Alta (Nómina/Impuestos/Urgente)", maxMontajeMin: 15, maxAprobacionMin: 10, alertaColor: "#991B1B" },
-        { prioridad: 2, nombre: "⚡ Prioridad 2 - Media (Proveedores/Estándar)", maxMontajeMin: 30, maxAprobacionMin: 20, alertaColor: "#D97706" },
-        { prioridad: 3, nombre: "☕ Prioridad 3 - Baja (OPEX Interno/Caja Menor)", maxMontajeMin: 60, maxAprobacionMin: 45, alertaColor: "#475569" }
-    ];
-    var guardados = localStorage.getItem("bold_config_ans");
-    if (!guardados) {
-        localStorage.setItem("bold_config_ans", JSON.stringify(def));
-        return def;
+    if (window.cacheANSNube && window.cacheANSNube.length > 0) {
+        return window.cacheANSNube;
     }
-    try { return JSON.parse(guardados); } catch(e) { return def; }
+    return CONFIG_ANS_DEFECTO;
 }
 
-function guardarConfigANS(lista) {
-    localStorage.setItem("bold_config_ans", JSON.stringify(lista));
-    if (typeof refrescarPantallasUniversales === 'function') refrescarPantallasUniversales();
+// Carga inicial e inicialización en Firestore
+async function cargarConfigANSDesdeNube() {
+    try {
+        if (typeof firebase !== 'undefined' && firebase.app) {
+            const db = firebase.app().firestore();
+            const snapshot = await db.collection('config_ans').get();
+            
+            if (snapshot.empty) {
+                // Si está vacía en la nube, subimos los defaults automáticamente
+                for (const item of CONFIG_ANS_DEFECTO) {
+                    await db.collection('config_ans').doc(`prio_${item.prioridad}`).set(item);
+                }
+                window.cacheANSNube = CONFIG_ANS_DEFECTO;
+            } else {
+                const items = [];
+                snapshot.forEach(doc => items.push(doc.data()));
+                items.sort((a, b) => a.prioridad - b.prioridad);
+                window.cacheANSNube = items;
+            }
+        }
+    } catch (e) {
+        console.error("❌ Error cargando ANS desde Firestore:", e);
+        window.cacheANSNube = CONFIG_ANS_DEFECTO;
+    }
+    return window.cacheANSNube;
 }
+
+// Guardar matriz de ANS en la nube
+async function guardarConfigANS(lista) {
+    window.cacheANSNube = lista;
+    try {
+        if (typeof firebase !== 'undefined' && firebase.app) {
+            const db = firebase.app().firestore();
+            for (const item of lista) {
+                if (item && item.prioridad) {
+                    await db.collection('config_ans').doc(`prio_${item.prioridad}`).set(item, { merge: true });
+                }
+            }
+        }
+    } catch (e) {
+        console.error("❌ Error guardando matriz ANS en Firestore:", e);
+    }
+    
+    if (typeof refrescarPantallasUniversales === 'function') {
+        refrescarPantallasUniversales();
+    }
+}
+
+
 
 // Función para calcular si una operación está vencida según la configuración real
 function auditarCumplimientoANS(operacion) {
@@ -1015,34 +1125,57 @@ function iniciarEscuchadoresNubeEnVivo() {
     try {
         if (typeof firebase !== "undefined" && firebase.firestore) {
             var db = firebase.app().firestore();
-            console.log("🟢 [INTERCEPTOR]: Conectado a la base de datos oficial: treasurybackoffice");
-            db.collection("operaciones").orderBy("fechaServidor", "desc").onSnapshot(function(snapshot) {
+            console.log("🟢 [TIEMPO REAL]: Conectado a Firestore sin almacenamiento local");
+            
+            // 1. Escuchador de Operaciones en Tiempo Real
+            db.collection("operaciones").onSnapshot(function(snapshot) {
                 var opsNube = [];
                 snapshot.forEach(function(doc) { opsNube.push(doc.data()); });
-                if (opsNube.length > 0) {
-                    localStorage.setItem("bold_operaciones_bd", JSON.stringify(opsNube));
-                    if (typeof refrescarPantallasUniversales === "function") refrescarPantallasUniversales();
-                    else if (typeof renderizarTabla === "function") renderizarTabla();
-                }
-            }, function(e) {});
+                
+                // Ordenamos por fecha ISO más reciente
+                opsNube.sort(function(a, b) {
+                    return new Date(b.fechaISO || '2026-01-01') - new Date(a.fechaISO || '2026-01-01');
+                });
+                
+                // Actualizamos la caché global en RAM
+                window.cacheOperacionesNube = opsNube;
+                
+                if (typeof refrescarPantallasUniversales === "function") refrescarPantallasUniversales();
+                else if (typeof renderizarTabla === "function") renderizarTabla();
+            }, function(e) {
+                console.error("Error en radar de operaciones:", e);
+            });
 
-            db.collection("configuracion").doc("usuarios").onSnapshot(function(doc) {
-                if (doc.exists && doc.data().lista) {
-                    localStorage.setItem("bold_usuarios_config", JSON.stringify(doc.data().lista));
+            // 2. Escuchador de Usuarios en Tiempo Real
+            db.collection("usuarios").onSnapshot(function(snapshot) {
+                var usrsNube = [];
+                snapshot.forEach(function(doc) { usrsNube.push(doc.data()); });
+                if (usrsNube.length > 0) {
+                    window.cacheUsuariosNube = usrsNube;
                     if (typeof renderizarUsuarios === "function") renderizarUsuarios();
                 }
-            }, function(e) {});
+            }, function(e) {
+                console.error("Error en radar de usuarios:", e);
+            });
 
-            db.collection("configuracion").doc("ans").onSnapshot(function(doc) {
+            // 3. Escuchador de Matriz ANS en Tiempo Real
+            db.collection("config_ans").onSnapshot(function(snapshot) {
                 console.log("⚡ [WEBSOCKET ANS] Cambio detectado en tiempo real desde Google Cloud!");
-                if (doc.exists && doc.data().lista) {
-                    localStorage.setItem("bold_config_ans", JSON.stringify(doc.data().lista));
-        if (typeof renderizarTablaANS === "function") renderizarTablaANS(doc.data().lista);
+                var ansNube = [];
+                snapshot.forEach(function(doc) { ansNube.push(doc.data()); });
+                if (ansNube.length > 0) {
+                    ansNube.sort(function(a, b) { return a.prioridad - b.prioridad; });
+                    window.cacheANSNube = ansNube;
+                    if (typeof renderizarTablaANS === "function") renderizarTablaANS(ansNube);
                     if (typeof renderizarANS === "function") renderizarANS();
                 }
-            }, function(e) {});
+            }, function(e) {
+                console.error("Error en radar ANS:", e);
+            });
         }
-    } catch(e) {}
+    } catch(e) {
+        console.error("Error iniciando escuchadores en vivo:", e);
+    }
 }
 
 if (typeof window !== "undefined") {
