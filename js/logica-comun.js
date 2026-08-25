@@ -20,8 +20,7 @@ const arbolOperaciones = {
                     }
                 }
             }
-        }
-    },    
+        },    
     "Traslados entre cuentas": {
         "Cuentas Propias": {
             "Canal Directo": {
