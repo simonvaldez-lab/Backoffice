@@ -202,15 +202,51 @@ async function crearNotificacion(radicado, mensaje) {
         console.error("❌ Error guardando notificación en la nube:", e);
     }
 }
-function guardarOperaciones(ops) {
-    localStorage.setItem('bold_operaciones_bd', JSON.stringify(ops));
+// 4. ALMACENAMIENTO 100% NUBE (FIRESTORE)
+async function guardarOperaciones(ops) {
+    // 1. Mantenemos una copia temporal en la memoria RAM del navegador para respuesta rápida
+    window.cacheOperacionesNube = ops; 
+
+    // 2. Enviamos cada operación directamente a los servidores de Firestore
+    try {
+        if (typeof firebase !== 'undefined' && firebase.app) {
+            const db = firebase.app().firestore();
+            
+            for (const op of ops) {
+                if (op && op.radicado) {
+                    // Reemplazamos las barras slash por guiones para generar un ID válido
+                    const docId = String(op.radicado).replace(/\//g, '-');
+                    await db.collection('operaciones').doc(docId).set(op, { merge: true });
+                }
+            }
+        }
+    } catch (e) {
+        console.error("❌ Error guardando directo en Firestore:", e);
+    }
 }
 
-// 5. NOTIFICACIONES
-function crearNotificacion(radicado, mensaje) {
-    const notifs = JSON.parse(localStorage.getItem('bold_notificaciones_bd') || '[]');
-    notifs.unshift({ id: Date.now(), radicado, mensaje, fecha: obtenerFechaHoraMilitar(), leida: false });
-    localStorage.setItem('bold_notificaciones_bd', JSON.stringify(notifs));
+// 5. NOTIFICACIONES 100% NUBE (FIRESTORE)
+async function crearNotificacion(radicado, mensaje) {
+    const fechaActual = typeof obtenerFechaHoraMilitar === 'function' 
+        ? obtenerFechaHoraMilitar() 
+        : new Date().toLocaleString('es-CO');
+
+    const nuevaNotif = {
+        id: Date.now(),
+        radicado: radicado || 'S/R',
+        mensaje: mensaje,
+        fecha: fechaActual,
+        leida: false
+    };
+
+    try {
+        if (typeof firebase !== 'undefined' && firebase.app) {
+            const db = firebase.app().firestore();
+            await db.collection('notificaciones').doc(String(nuevaNotif.id)).set(nuevaNotif);
+        }
+    } catch (e) {
+        console.error("❌ Error guardando notificación en Firestore:", e);
+    }
 }
 
 // 6. CONTROL DE SESIÓN Y DIBUJO DE TOPBAR (BARRA SUPERIOR DE USUARIO)
