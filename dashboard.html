@@ -473,8 +473,80 @@
 
         function confirmarYRadicar() { cerrarModalConfirmacion(); const fileInput = document.getElementById('doc-archivo'); const file = fileInput ? fileInput.files[0] : null; if (file) { const reader = new FileReader(); reader.onload = function(e) { finalizarGuardadoOperacion(e.target.result, file.name, file.type); }; reader.readAsDataURL(file); } else { finalizarGuardadoOperacion(null, null, null); } }
 
-        function finalizarGuardadoOperacion(fileData, fileName, fileType) { const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : []; const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}'); const sec = String(ops.length + 1).padStart(4, '0'); const rad = `TRAS-${new Date().toLocaleDateString('es-CO').substring(0,5)}-26-${sec}`; const nomOp = document.getElementById('nombre-op').value.trim(); const cat = document.getElementById('niv-cat').value; const sub = document.getElementById('niv-sub').value; const det = document.getElementById('niv-det').value; const empOri = document.getElementById('niv-emp-ori').value; const ctaOri = document.getElementById('niv-cta-ori').value; const empDes = document.getElementById('niv-emp-des').value; const ctaDes = document.getElementById('niv-cta-des').value; const monto = document.getElementById('monto-sol').value; const prio = document.getElementById('prioridad-op').value; const ans = document.getElementById('ans-op').value; const moneda = document.getElementById('moneda-op').value; const link = document.getElementById('doc-link').value.trim(); const inst = document.getElementById('doc-instrucciones').value.trim(); const nueva = {radicado: rad, nombreOperacion: nomOp, pais: usr.pais || "Colombia", empresa: empOri, compDestino: empDes, tipo: `${cat} - ${sub}`, detalle: det, ctaOrigen: ctaOri, ctaDestino: ctaDes, solicitante: usr.correo || "lau@bold.co", montoSol: parseFloat(monto), montoPrep: parseFloat(monto), moneda: moneda, registros: 1, ans: ans, estado: "Pendiente Validación", prioridad: parseInt(prio), fechaRadicacion: typeof obtenerFechaHoraMilitar === 'function' ? obtenerFechaHoraMilitar().split(" - ")[0] : new Date().toLocaleDateString('es-CO'), fechaISO: typeof obtenerFechaISO === 'function' ? obtenerFechaISO() : "2026-07-27", apartadaPor: null, enTransito: true, comprobanteCerrado: false, archivoNombre: fileName || null, archivoTipo: fileType || null, archivoData: fileData || null, archivoLink: link || null, instrucciones: inst || null, historial: [{fecha: typeof obtenerFechaHoraMilitar === 'function' ? obtenerFechaHoraMilitar() : "Hoy", paso: "1. RADICACIÓN EN CASCADA", detalle: `Operación "${nomOp}" radicada por ${usr.nombre || 'Solicitante'}.`}]}; ops.unshift(nueva); if(typeof guardarOperaciones === 'function') guardarOperaciones(ops); if(typeof crearNotificacion === 'function') crearNotificacion(rad, `📝 ¡NUEVA RADICACIÓN! ${usr.nombre || 'Laura'} radicó: "${nomOp}" por $${parseFloat(monto).toLocaleString()} ${moneda}.`); alert(`✅ ¡Operación Radicada con Éxito!\nRadicado: ${rad}\nNombre: ${nomOp}`); limpiarFormularioCompleto(); }
-
+        function finalizarGuardadoOperacion(fileData, fileName, fileType) { 
+            const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : []; 
+            const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}'); 
+            const sec = String(ops.length + 1).padStart(4, '0'); 
+            
+            // 🕒 ESTANDARIZACIÓN DE FECHAS (Sin depender del reloj local rebelde)
+            const fechaActual = new Date();
+            const dia = String(fechaActual.getDate()).padStart(2, '0');
+            const mes = String(fechaActual.getMonth() + 1).padStart(2, '0');
+            const anio = fechaActual.getFullYear();
+            
+            const fechaVisual = `${dia}/${mes}/${anio}`; // Ej: 25/08/2026
+            const fechaRad = `${dia}/${mes}`; // Ej: 25/08 para el número de radicado
+            const fechaISOReal = fechaActual.toISOString(); // Formato perfecto para la base de datos
+            
+            const rad = `TRAS-${fechaRad}-26-${sec}`; 
+            
+            const nomOp = document.getElementById('nombre-op').value.trim(); 
+            const cat = document.getElementById('niv-cat').value; 
+            const sub = document.getElementById('niv-sub').value; 
+            const det = document.getElementById('niv-det').value; 
+            const empOri = document.getElementById('niv-emp-ori').value; 
+            const ctaOri = document.getElementById('niv-cta-ori').value; 
+            const empDes = document.getElementById('niv-emp-des').value; 
+            const ctaDes = document.getElementById('niv-cta-des').value; 
+            const monto = document.getElementById('monto-sol').value; 
+            const prio = document.getElementById('prioridad-op').value; 
+            const ans = document.getElementById('ans-op').value; 
+            const moneda = document.getElementById('moneda-op').value; 
+            const link = document.getElementById('doc-link').value.trim(); 
+            const inst = document.getElementById('doc-instrucciones').value.trim(); 
+            
+            const nueva = {
+                radicado: rad, 
+                nombreOperacion: nomOp, 
+                pais: usr.pais || "Colombia", 
+                empresa: empOri, 
+                compDestino: empDes, 
+                tipo: `${cat} - ${sub}`, 
+                detalle: det, 
+                ctaOrigen: ctaOri, 
+                ctaDestino: ctaDes, 
+                solicitante: usr.correo || "lau@bold.co", 
+                montoSol: parseFloat(monto), 
+                montoPrep: parseFloat(monto), 
+                moneda: moneda, 
+                registros: 1, 
+                ans: ans, 
+                estado: "Pendiente Validación", 
+                prioridad: parseInt(prio), 
+                fechaRadicacion: fechaVisual, 
+                fechaISO: fechaISOReal, 
+                apartadaPor: null, 
+                enTransito: true, 
+                comprobanteCerrado: false, 
+                archivoNombre: fileName || null, 
+                archivoTipo: fileType || null, 
+                archivoData: fileData || null, 
+                archivoLink: link || null, 
+                instrucciones: inst || null, 
+                historial: [{
+                    fecha: fechaVisual, 
+                    paso: "1. RADICACIÓN EN CASCADA", 
+                    detalle: `Operación "${nomOp}" radicada por ${usr.nombre || 'Solicitante'}.`
+                }]
+            }; 
+            
+            ops.unshift(nueva); 
+            if(typeof guardarOperaciones === 'function') guardarOperaciones(ops); 
+            if(typeof crearNotificacion === 'function') crearNotificacion(rad, `📝 ¡NUEVA RADICACIÓN! ${usr.nombre || 'Laura'} radicó: "${nomOp}" por $${parseFloat(monto).toLocaleString()} ${moneda}.`); 
+            
+            alert(`✅ ¡Operación Radicada con Éxito!\nRadicado: ${rad}\nNombre: ${nomOp}`); 
+            limpiarFormularioCompleto(); 
+        }
         // Funciones de Preparador y Aprobador
         function renderizarTabla() {
             const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}');
