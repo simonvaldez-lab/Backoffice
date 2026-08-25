@@ -114,15 +114,94 @@ function fechasCoinciden(fechaOp, fechaInput) {
     return fNorm === fechaInput;
 }
 
-// 4. ALMACENAMIENTO LOCAL Y SINCRONIZACIÓN
+// ==============================================================
+// 4. ALMACENAMIENTO Y LECTURA 100% FIRESTORE (SIN LOCALSTORAGE)
+// ==============================================================
+
+// Enfriador/Memoria en RAM mientras la página está abierta
+window.cacheOperacionesNube = [];
+
+// Obtiene las operaciones cargadas desde Firestore
 function obtenerOperaciones() {
-    const ops = localStorage.getItem('bold_operaciones_bd');
-    if (ops) {
-        try { return JSON.parse(ops); } catch(e) { return []; }
-    }
-    return [];
+    return window.cacheOperacionesNube || [];
 }
 
+// Guarda DIRECTAMENTE en la nube de Firebase
+async function guardarOperaciones(ops) {
+    window.cacheOperacionesNube = ops; // Actualiza la memoria RAM temporal
+
+    try {
+        if (typeof firebase !== 'undefined' && firebase.app) {
+            const db = firebase.app().firestore();
+            
+            // Subimos cada operación a la colección de Firestore
+            for (const op of ops) {
+                if (op && op.radicado) {
+                    const docId = String(op.radicado).replace(/\//g, '-');
+                    await db.collection('operaciones').doc(docId).set(op, { merge: true });
+                }
+            }
+        }
+    } catch (e) {
+        console.error("❌ Error guardando directo en Firestore:", e);
+    }
+}
+
+// Escuchador en Tiempo Real (Mantiene la tabla de todos los usuarios conectada a la nube)
+function iniciarSincronizacionNube(callbackAlActualizar) {
+    try {
+        if (typeof firebase !== 'undefined' && firebase.app) {
+            const db = firebase.app().firestore();
+            
+            db.collection('operaciones').onSnapshot((snapshot) => {
+                const opsNube = [];
+                snapshot.forEach(doc => opsNube.push(doc.data()));
+                
+                // Ordenar por fecha reciente
+                opsNube.sort((a, b) => new Date(b.fechaISO || '2026-01-01') - new Date(a.fechaISO || '2026-01-01'));
+                
+                // Actualizamos la variable global 100% en la nube
+                window.cacheOperacionesNube = opsNube;
+                
+                // Si la pantalla tiene función para redibujar la tabla, la ejecuta
+                if (typeof callbackAlActualizar === 'function') {
+                    callbackAlActualizar();
+                } else if (typeof renderizarTabla === 'function') {
+                    renderizarTabla();
+                }
+            });
+        }
+    } catch (e) {
+        console.error("❌ Error iniciando radar de Firestore:", e);
+    }
+}
+
+// ==============================================================
+// 5. NOTIFICACIONES 100% FIRESTORE
+// ==============================================================
+
+async function crearNotificacion(radicado, mensaje) {
+    const fechaActual = typeof obtenerFechaHoraMilitar === 'function' 
+        ? obtenerFechaHoraMilitar() 
+        : new Date().toLocaleString('es-CO');
+
+    const nuevaNotif = {
+        id: Date.now(),
+        radicado: radicado || 'S/R',
+        mensaje: mensaje,
+        fecha: fechaActual,
+        leida: false
+    };
+
+    try {
+        if (typeof firebase !== 'undefined' && firebase.app) {
+            const db = firebase.app().firestore();
+            await db.collection('notificaciones').doc(String(nuevaNotif.id)).set(nuevaNotif);
+        }
+    } catch (e) {
+        console.error("❌ Error guardando notificación en la nube:", e);
+    }
+}
 function guardarOperaciones(ops) {
     localStorage.setItem('bold_operaciones_bd', JSON.stringify(ops));
 }
