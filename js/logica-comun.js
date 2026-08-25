@@ -455,15 +455,13 @@ document.addEventListener('DOMContentLoaded', () => {
 function aplicarSeguridadYMenu() {
     try {
         var usrRaw = sessionStorage.getItem("usuarioLogueado");
-        if (!usrRaw) usrRaw = localStorage.getItem("bold_ultimo_usuario_backup");
         
-        // Si no hay sesión, por seguridad iniciamos como Laura (Solicitante) para no abrir roles prohibidos
+        // Si no hay sesión activa en esta pestaña, se asigna por defecto Laura (Solicitante)
         if (!usrRaw) {
             usrRaw = JSON.stringify({ nombre: "Laura", rol: "Solicitante", pais: "Colombia", correo: "lau@bold.co" });
             sessionStorage.setItem("usuarioLogueado", usrRaw);
         }
         var usuario = JSON.parse(usrRaw);
-        localStorage.setItem("bold_ultimo_usuario_backup", usrRaw);
 
         // 1. DIBUJAR BARRA SUPERIOR DE USUARIO (TOPBAR)
         var topbarRight = document.querySelector(".topbar-derecha");
@@ -476,17 +474,15 @@ function aplicarSeguridadYMenu() {
             '</div>';
         }
 
-      // 2. PERMISOS ESTRICTOS POR ROL (ACTUALIZADO A SPA)
-        var rol = String(usuario.rol || "solicitante").toLowerCase().trim();
+        // 2. PERMISOS ESTRICTOS POR ROL (ACTUALIZADO A SPA)
+        var rolKey = String(usuario.rol || "solicitante").toLowerCase().trim();
         var mapaPermisos = {
             "solicitante": ["dashboard.html", "historial.html"],
             "preparador": ["dashboard.html", "historial.html"],
             "aprobador": ["dashboard.html", "historial.html"],
             "maestro": ["dashboard.html", "historial.html", "admin.html"]
         };
-        var permitidos = mapaPermisos[rol] || [];
-        var rol = usuario.rol || "Solicitante";
-        var permitidos = mapaPermisos[rol] || ["dashboard.html", "historial.html"];
+        var permitidos = mapaPermisos[rolKey] || ["dashboard.html", "historial.html"];
 
         document.querySelectorAll(".menu-item").forEach(function(item) {
             var enlace = item.getAttribute("href");
