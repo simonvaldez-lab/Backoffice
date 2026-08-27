@@ -1,91 +1,94 @@
+/* Importar la Tipografía Oficial de Bold */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800;900&display=swap');
+
 /* --- ESTILOS GENERALES Y DASHBOARD BOLD --- */
-body { font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; background-color: #F8FAFC; color: #1E293B; display: flex; flex-direction: column; height: 100vh; }
-.topbar { background-color: white; height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; border-bottom: 1px solid #E2E8F0; z-index: 100; }
-.logo { font-size: 24px; font-weight: 900; color: #0B1442; letter-spacing: -1px; text-decoration: none; }
+body { font-family: 'Montserrat', sans-serif; margin: 0; background-color: #f1f2f6; color: #121e6c; display: flex; flex-direction: column; height: 100vh; }
+.topbar { background-color: white; height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; border-bottom: 1px solid #d2d4e1; z-index: 100; }
+.logo { font-size: 24px; font-weight: 900; color: #121e6c; letter-spacing: -1px; text-decoration: none; }
 .topbar-derecha { display: flex; align-items: center; gap: 15px; }
-.avatar { width: 35px; height: 35px; background-color: #CBD5E1; border-radius: 50%; }
+.avatar { width: 35px; height: 35px; background-color: #d2d4e1; border-radius: 50%; }
 .contenedor-principal { display: flex; flex: 1; overflow: hidden; }
 
 /* --- BARRA LATERAL --- */
-.sidebar { width: 250px; background-color: white; border-right: 1px solid #E2E8F0; padding: 20px 0; overflow-y: auto; }
-.menu-categoria { font-size: 11px; color: #64748B; margin: 15px 0 5px 20px; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px; }
-.menu-item { padding: 12px 20px; display: flex; align-items: center; color: #475569; text-decoration: none; font-size: 13px; font-weight: 500; cursor: pointer; border-left: 3px solid transparent; transition: 0.2s; }
-.menu-item:hover { background-color: #F1F5F9; color: #0B1442; }
-.menu-item.activo { background-color: #F1F5F9; color: #0B1442; font-weight: 700; border-left: 3px solid #0B1442; }
+.sidebar { width: 250px; background-color: white; border-right: 1px solid #d2d4e1; padding: 20px 0; overflow-y: auto; }
+.menu-categoria { font-size: 11px; color: #6c759f; margin: 15px 0 5px 20px; font-weight: 700; letter-spacing: 0.5px; text-transform: none; }
+.menu-item { padding: 12px 20px; display: flex; align-items: center; color: #3e4983; text-decoration: none; font-size: 13px; font-weight: 600; cursor: pointer; border-left: 3px solid transparent; transition: 0.2s; }
+.menu-item:hover { background-color: #f1f2f6; color: #121e6c; }
+.menu-item.activo { background-color: #f1f2f6; color: #121e6c; font-weight: 700; border-left: 3px solid #121e6c; }
 
 /* --- ÁREA DE CONTENIDO Y CONTROLES --- */
-.contenido { flex: 1; padding: 35px 45px; overflow-y: auto; }
-.titulo-seccion { font-size: 24px; font-weight: 800; color: #0F172A; margin-bottom: 5px; }
-.subtitulo { color: #64748B; margin-bottom: 25px; font-size: 14px; }
+.contenido { flex: 1; padding: 35px 45px; overflow-y: auto; text-align: left; }
+.titulo-seccion { font-size: 24px; font-weight: 800; color: #121e6c; margin-bottom: 5px; text-transform: none; }
+.subtitulo { color: #6c759f; margin-bottom: 25px; font-size: 14px; text-transform: none; }
 .header-acciones { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 .controles { display: flex; gap: 15px; align-items: center; }
-.input-busqueda, .select-filtro { padding: 10px 14px; border: 1px solid #CBD5E1; border-radius: 6px; outline: none; width: 240px; font-size: 13px; background: white; }
-.input-busqueda:focus, .select-filtro:focus { border-color: #0B1442; }
+.input-busqueda, .select-filtro { padding: 10px 14px; border: 1px solid #969bbd; border-radius: 6px; outline: none; width: 240px; font-size: 13px; background: white; font-family: 'Montserrat', sans-serif; }
+.input-busqueda:focus, .select-filtro:focus { border-color: #121e6c; }
 
 /* --- TABLAS FINANCIERAS UNIFORMES --- */
-.tabla-contenedor { background: white; border-radius: 8px; border: 1px solid #E2E8F0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+.tabla-contenedor { background: white; border-radius: 8px; border: 1px solid #d2d4e1; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
 table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
-th { background: #F1F5F9; color: #475569; padding: 14px 18px; font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; border-bottom: 1px solid #E2E8F0; }
-td { padding: 14px 18px; border-bottom: 1px solid #E2E8F0; vertical-align: middle; }
-tr:hover { background-color: #F8FAFC; }
+th { background: #f1f2f6; color: #3e4983; padding: 14px 18px; font-weight: 700; font-size: 11px; letter-spacing: 0.5px; border-bottom: 1px solid #d2d4e1; text-transform: none; }
+td { padding: 14px 18px; border-bottom: 1px solid #d2d4e1; vertical-align: middle; }
+tr:hover { background-color: #f1f2f6; }
 
 /* --- BADGES, SEMÁFOROS Y ESTADOS --- */
-.badge { padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; text-transform: uppercase; display: inline-block; }
-.badge-moneda { background: #E0E7FF; color: #3730A3; border: 1px solid #C7D2FE; }
-.badge-opex { background: #F3E8FF; color: #7E22CE; border: 1px solid #D8B4FE; }
-.badge-estado-pendiente { background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; }
-.badge-estado-aprobado { background: #DCFCE7; color: #15803D; border: 1px solid #BBF7D0; }
-.badge-estado-banco { background: #E0E7FF; color: #3730A3; border: 1px solid #C7D2FE; }
-.badge-estado-rechazado { background: #FEE2E2; color: #991B1B; border: 1px solid #FECACA; }
-.semaforo-caja { display: inline-flex; align-items: center; gap: 6px; background: #F8FAFC; padding: 4px 8px; border-radius: 6px; border: 1px solid #E2E8F0; font-size: 11px; font-weight: bold; }
-.luz { width: 10px; height: 10px; border-radius: 50%; background: #22C55E; box-shadow: 0 0 5px #22C55E; }
-.luz.alerta { background: #F59E0B; box-shadow: 0 0 5px #F59E0B; }
+.badge { padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; display: inline-block; text-transform: none; }
+.badge-moneda { background: #d2d4e1; color: #121e6c; border: 1px solid #969bbd; } 
+.badge-opex { background: #fdeaeb; color: #ee424e; border: 1px solid #f7c1c5; }
+.badge-estado-pendiente { background: #fdeaeb; color: #ee424e; border: 1px solid #f7c1c5; }
+.badge-estado-aprobado { background: #d2d4e1; color: #121e6c; border: 1px solid #969bbd; } 
+.badge-estado-banco { background: #f1f2f6; color: #3e4983; border: 1px solid #969bbd; }
+.badge-estado-rechazado { background: #ee424e; color: white; border: 1px solid #c73c53; }
+.semaforo-caja { display: inline-flex; align-items: center; gap: 6px; background: white; padding: 4px 8px; border-radius: 6px; border: 1px solid #d2d4e1; font-size: 11px; font-weight: 700; }
+.luz { width: 10px; height: 10px; border-radius: 50%; background: #121e6c; box-shadow: 0 0 5px #121e6c; }
+.luz.alerta { background: #ee424e; box-shadow: 0 0 5px #ee424e; }
 
 /* --- BOTONES CORPORATIVOS --- */
-.btn { padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; border: none; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; }
-.btn-detalle { background: #F1F5F9; color: #475569; border: 1px solid #CBD5E1; }
-.btn-detalle:hover { background: #E2E8F0; color: #0F172A; }
-.btn-aprobar { background: #0B1442; color: white; }
-.btn-aprobar:hover { background: #172554; }
-.btn-primario { background: #4F46E5; color: white; }
-.btn-primario:hover { background: #3730A3; }
-.btn-rechazar { background: white; color: #EF4444; border: 1px solid #EF4444; }
-.btn-rechazar:hover { background: #FEF2F2; }
-.btn-reportes { background: #3B82F6; color: white; padding: 10px 15px; font-size: 13px; }
+.btn { padding: 8px 14px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 12px; border: none; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; font-family: 'Montserrat', sans-serif; }
+.btn-detalle { background: #f1f2f6; color: #3e4983; border: 1px solid #969bbd; }
+.btn-detalle:hover { background: #d2d4e1; color: #121e6c; }
+.btn-aprobar { background: #121e6c; color: white; }
+.btn-aprobar:hover { background: #3e4983; }
+.btn-primario { background: #ee424e; color: white; }
+.btn-primario:hover { background: #c73c53; }
+.btn-rechazar { background: white; color: #ee424e; border: 1px solid #ee424e; }
+.btn-rechazar:hover { background: #fdeaeb; }
+.btn-reportes { background: linear-gradient(to right, #121e6c 15%, #ee424e 85%); color: white; padding: 10px 15px; font-size: 13px; }
 
 /* --- MODALES Y LAYOUT SPLIT --- */
-.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(2px); }
+.modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(18, 30, 108, 0.6); justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(2px); }
 .modal { background: white; padding: 28px; border-radius: 10px; width: 450px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
 .modal-grande { width: 1050px; } 
-.modal h2 { margin-top: 0; font-size: 18px; color: #0F172A; border-bottom: 1px solid #E2E8F0; padding-bottom: 12px; margin-bottom: 20px; }
+.modal h2 { margin-top: 0; font-size: 18px; color: #121e6c; border-bottom: 1px solid #d2d4e1; padding-bottom: 12px; margin-bottom: 20px; font-weight: 800; text-transform: none; }
 .modal-layout-split { display: flex; gap: 25px; }
 .seccion-datos { flex: 1.1; }
-.seccion-visor { flex: 0.9; border-left: 1px solid #E2E8F0; padding-left: 25px; display: none; flex-direction: column; }
+.seccion-visor { flex: 0.9; border-left: 1px solid #d2d4e1; padding-left: 25px; display: none; flex-direction: column; }
 
 /* --- GRID DE AUDITORÍA Y TRAZA --- */
-.grid-detalles { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; background: #F8FAFC; padding: 14px; border-radius: 8px; border: 1px solid #E2E8F0; }
+.grid-detalles { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; background: #f1f2f6; padding: 14px; border-radius: 8px; border: 1px solid #d2d4e1; }
 .dato-grupo { display: flex; flex-direction: column; }
-.dato-label { font-size: 10px; color: #64748B; text-transform: uppercase; font-weight: 700; margin-bottom: 3px; }
-.dato-valor { font-size: 13px; color: #1E293B; font-weight: 600; }
-.auditor-data { border-top: 1px dashed #CBD5E1; margin-top: 5px; padding-top: 5px; font-size: 11px; }
-.auditor-ok { color: #15803D; font-weight: 600; }
-.auditor-alerta { color: #B45309; font-weight: bold; }
+.dato-label { font-size: 10px; color: #6c759f; font-weight: 700; margin-bottom: 3px; text-transform: none; }
+.dato-valor { font-size: 13px; color: #121e6c; font-weight: 600; }
+.auditor-data { border-top: 1px dashed #969bbd; margin-top: 5px; padding-top: 5px; font-size: 11px; }
+.auditor-ok { color: #121e6c; font-weight: 600; }
+.auditor-alerta { color: #ee424e; font-weight: bold; }
 
-.timeline { border-left: 2px solid #CBD5E1; padding-left: 20px; margin-left: 10px; margin-top: 15px; }
+.timeline { border-left: 2px solid #969bbd; padding-left: 20px; margin-left: 10px; margin-top: 15px; }
 .timeline-item { margin-bottom: 18px; position: relative; }
-.timeline-item::before { content: ''; position: absolute; left: -26px; top: 2px; width: 10px; height: 10px; background: #0B1442; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 0 2px #CBD5E1; }
-.timeline-fecha { font-size: 11px; color: #64748B; font-weight: 600; }
-.timeline-desc { font-size: 12px; color: #1E293B; margin-top: 4px; background: #F1F5F9; padding: 12px; border-radius: 6px; border: 1px solid #E2E8F0; }
+.timeline-item::before { content: ''; position: absolute; left: -26px; top: 2px; width: 10px; height: 10px; background: #121e6c; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 0 2px #d2d4e1; }
+.timeline-fecha { font-size: 11px; color: #6c759f; font-weight: 600; }
+.timeline-desc { font-size: 12px; color: #121e6c; margin-top: 4px; background: #f1f2f6; padding: 12px; border-radius: 6px; border: 1px solid #d2d4e1; }
 
 .msg-validacion { padding: 10px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
-.msg-discrepancia { background: #FEF3C7; color: #92400E; border: 1px solid #FDE68A; }
+.msg-discrepancia { background: #fdeaeb; color: #ee424e; border: 1px solid #f7c1c5; }
 
 /* --- VISOR DE EVIDENCIAS DUAL --- */
 .tab-container { display: flex; gap: 6px; margin-bottom: 10px; }
-.tab { padding: 8px 14px; border-radius: 6px 6px 0 0; background: #E2E8F0; border: none; font-size: 11px; font-weight: 700; cursor: pointer; color: #475569; }
-.tab.active { background: #334155; color: white; }
-.marco-visor { background: #334155; border-radius: 0 0 8px 8px; flex: 1; min-height: 420px; padding: 18px; color: white; overflow-y: auto; }
-.documento-simulado { background: white; color: #1E293B; padding: 22px; border-radius: 6px; min-height: 380px; font-size: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.15); }
+.tab { padding: 8px 14px; border-radius: 8px 8px 0 0; background: #d2d4e1; border: none; font-size: 11px; font-weight: 700; cursor: pointer; color: #3e4983; font-family: 'Montserrat', sans-serif; }
+.tab.active { background: #121e6c; color: white; }
+.marco-visor { background: #121e6c; border-radius: 0 0 8px 8px; flex: 1; min-height: 420px; padding: 18px; color: white; overflow-y: auto; }
+.documento-simulado { background: white; color: #121e6c; padding: 22px; border-radius: 6px; min-height: 380px; font-size: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.15); }
 .hidden { display: none !important; }
 .form-group { margin-bottom: 16px; }
-.form-control { width: 100%; padding: 10px 12px; border: 1px solid #CBD5E1; border-radius: 6px; box-sizing: border-box; font-size: 13px; font-family: inherit; }
+.form-control { width: 100%; padding: 10px 12px; border: 1px solid #969bbd; border-radius: 6px; box-sizing: border-box; font-size: 13px; font-family: 'Montserrat', sans-serif; }
