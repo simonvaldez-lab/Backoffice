@@ -87,7 +87,7 @@
                     <div><h1 class="titulo-seccion" style="margin: 0;">Paso 1 y 2: Validación Compliance & Montaje Bancario</h1><p class="subtitulo" style="margin: 4px 0 0 0;">Revisa la legitimidad del radicado (Compliance), realiza el montaje en banco y envíalo a Kate (Aprobador) para el Check Final.</p></div>
                     <div style="display: flex; gap: 8px; align-items: center; background: white; padding: 6px 12px; border-radius: 8px; border: 1px solid #CBD5E1;">
                         <label style="font-size: 12px; font-weight: bold; color: #0B1442; margin: 0;">📅 Filtrar por Fecha:</label>
-                        <input type="date" id="filtro-fecha-prep" class="form-control" style="width: 140px; padding: 4px 8px; height: 32px;" onchange="renderizarTabla()">
+                        <input type="date" id="filtro-fecha-prep" class="form-control" style="width: 140px; padding: 4px 8px; height: 32px;">
                         <button class="btn btn-detalle" onclick="limpiarFiltroPreprador()" style="padding: 4px 10px; height: 32px;">Limpiar</button>
                     </div>
                 </div>
@@ -100,7 +100,7 @@
                     <div><h1 class="titulo-seccion" style="margin: 0;">Paso 3: Check Final y Cierre de Comprobante</h1><p class="subtitulo" style="margin: 4px 0 0 0;">Control dual: Revisa la captura de pantalla del montaje bancario, autoriza la liberación definitiva del pago y cierra el comprobante.</p></div>
                     <div style="display: flex; gap: 8px; align-items: center; background: white; padding: 6px 12px; border-radius: 8px; border: 1px solid #CBD5E1;">
                         <label style="font-size: 12px; font-weight: bold; color: #0B1442; margin: 0;">📅 Filtrar por Fecha:</label>
-                        <input type="date" id="filtro-fecha-apro" class="form-control" style="width: 140px; padding: 4px 8px; height: 32px;" onchange="renderizarTabla()">
+                        <input type="date" id="filtro-fecha-apro" class="form-control" style="width: 140px; padding: 4px 8px; height: 32px;">
                         <button class="btn btn-detalle" onclick="limpiarFiltroAprobador()" style="padding: 4px 10px; height: 32px;">Limpiar</button>
                     </div>
                 </div>
@@ -214,6 +214,22 @@
             inicializarArbol();       // Carga las categorías en Nivel 1
             cargarListaPlantillas();  // Carga el menú de plantillas
             renderizarTabla();        // Pinta los datos de la base de datos
+            
+            // Agregar event listeners para los filtros de fecha
+            const filtroPreprador = document.getElementById('filtro-fecha-prep');
+            if (filtroPreprador) {
+                filtroPreprador.addEventListener('change', function() {
+                    if (typeof renderizarTabla === 'function') renderizarTabla();
+                });
+            }
+            
+            const filtroAprobador = document.getElementById('filtro-fecha-apro');
+            if (filtroAprobador) {
+                filtroAprobador.addEventListener('change', function() {
+                    if (typeof renderizarTabla === 'function') renderizarTabla();
+                });
+            }
+            
             const btnSubir = document.getElementById('btnConfirmarSubidaEvidencia');
             if (!btnSubir) return;
             btnSubir.addEventListener('click', async function() {
