@@ -822,7 +822,10 @@ async function ejecutarRechazoSeguro(radicado) {
         var motivoLimpio = motivo.trim();
         var rechazador = (usr.nombre || "Analista") + " (" + (usr.rol || "Preparador").toUpperCase() + ")";
         
-        op.estado = "RECHAZADO";
+        // 🔄 Cambio: Volver a "Pendiente Validación" para que reaparezca en Panel Principal
+        // pero mantener registro de que fue devuelta
+        op.estado = "Pendiente Validación";
+        op.fueDevuelta = true;  // Indicador de que fue rechazada y devuelta
         op.motivoRechazo = motivoLimpio;
         op.rechazadoPor = rechazador;
         op.enTransito = false;
@@ -841,10 +844,10 @@ async function ejecutarRechazoSeguro(radicado) {
         }
 
         if (typeof crearNotificacion === "function") {
-            await crearNotificacion(radicado, "🚨 RECHAZADO: " + radicado + " fue devuelto por " + rechazador + ". Motivo: " + motivoLimpio, true);
+            await crearNotificacion(radicado, "🚨 DEVUELTA: " + radicado + " fue devuelto por " + rechazador + " y retorna al Panel Principal para ajustes. Motivo: " + motivoLimpio, true);
         }
 
-        alert("✅ OPERACIÓN RECHAZADA Y NOTIFICADA:" + "\n" + "El radicado " + radicado + " ha cambiado al estado RECHAZADO." + "\n" + "Se ha generado una alerta en la interfaz del Solicitante con tus observaciones.");
+        alert("✅ OPERACIÓN DEVUELTA Y RETORNA AL PANEL:" + "\n" + "El radicado " + radicado + " cambió a 'Pendiente Validación' y reaparece en el Panel Principal." + "\n" + "El Preparador/Solicitante puede ahora corregir y volver a radicar." + "\n" + "Motivo: " + motivoLimpio);
 
         if (typeof refrescarPantallasUniversales === "function") refrescarPantallasUniversales();
         else if (typeof renderizarTabla === "function") renderizarTabla();
@@ -868,13 +871,13 @@ if (typeof auditarRadicado === "function") {
             var alertaExistente = document.getElementById("alerta-rechazo-ui");
             if (alertaExistente) alertaExistente.remove();
             
-            if (String(op.estado || "").toUpperCase().includes("RECHAZ") || String(op.estado || "").toUpperCase().includes("DEVUELT")) {
+            if (String(op.estado || "").toUpperCase().includes("RECHAZ") || String(op.estado || "").toUpperCase().includes("DEVUELT") || op.fueDevuelta) {
                 var cajaAlerta = document.createElement("div");
                 cajaAlerta.id = "alerta-rechazo-ui";
                 cajaAlerta.style.cssText = "background:#FEF2F2; border:2px solid #EF4444; color:#991B1B; padding:14px 18px; border-radius:10px; margin-bottom:16px; box-shadow:0 4px 12px rgba(239,68,68,0.15); animation: fadeIn 0.3s ease-in-out;";
                 cajaAlerta.innerHTML = '<div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">' +
                     '<span style="font-size:24px;">🚨</span>' +
-                    '<strong style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px;">Operación Rechazada / Devuelto a Origen</strong>' +
+                    '<strong style="font-size:14px; text-transform:uppercase; letter-spacing:0.5px;">Operación Devuelta para Ajustes</strong>' +
                 '</div>' +
                 '<div style="font-size:12px; line-height:1.5; background:white; padding:10px; border-radius:6px; border:1px dashed #FECACA; color:#7F1D1D;">' +
                     '<strong>👤 Devolución emitida por:</strong> ' + (op.rechazadoPor || "Equipo Preparador / Aprobador") + '<br>' +
@@ -1404,7 +1407,7 @@ window.invocarCloudAPI = function(url, payload, callbackExito) {
     else if (url.includes("apiRegistrarMontaje")) actualizacion = { estado: "En Aprobación", archivoScreenshot: payload.archivoScreenshot };
     else if (url.includes("apiAprobarMontaje")) actualizacion = { estado: "APROBADO" };
     else if (url.includes("apiCerrarComprobante")) actualizacion = { estado: "COMPLETADA / CERRADA ✓", archivoPDF: payload.archivoPDF, comprobanteCerrado: true };
-    else if (url.includes("apiRechazarOperacion")) actualizacion = { estado: "RECHAZADO", motivoRechazo: payload.motivo || "" };
+    else if (url.includes("apiRechazarOperacion")) actualizacion = { estado: "Pendiente Validación", fueDevuelta: true, motivoRechazo: payload.motivo || "" };
 
     var db = firebase.app().firestore();
     db.collection("operaciones").doc(docIdSeguro).update(actualizacion)
