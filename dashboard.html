@@ -314,18 +314,150 @@
 
         function inicializarArbol() {
             const catSelect = document.getElementById('niv-cat');
-            if (!catSelect) return;
+            if (!catSelect || typeof arbolOperaciones === 'undefined') return;
+            
+            // Limpiar y cargar categorías
             catSelect.innerHTML = '<option value="">-- Seleccione Categoría --</option>';
-            Object.keys(arbolOperaciones).forEach(c => catSelect.innerHTML += `<option value="${c}">${c}</option>`);
-            catSelect.onchange = () => { poblarSubtipos(catSelect.value); evaluarReglasExcel(); };
+            const categorias = Object.keys(arbolOperaciones || {});
+            categorias.forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c;
+                opt.textContent = c;
+                catSelect.appendChild(opt);
+            });
+            
+            // Asignar evento onChange
+            catSelect.addEventListener('change', function() { 
+                poblarSubtipos(this.value);
+                evaluarReglasExcel();
+            });
         }
-        function poblarSubtipos(cat) { const el = document.getElementById('niv-sub'); el.innerHTML = '<option value="">-- Seleccione Subtipo --</option>'; el.disabled = !cat; if(cat && arbolOperaciones[cat]) Object.keys(arbolOperaciones[cat]).forEach(s => el.innerHTML += `<option value="${s}">${s}</option>`); el.onchange = () => { poblarDetalles(cat, el.value); evaluarReglasExcel(); }; limpiarNivelesDesde(3); }
-        function poblarDetalles(cat, sub) { const el = document.getElementById('niv-det'); el.innerHTML = '<option value="">-- Seleccione Detalle --</option>'; el.disabled = !sub; if(sub && arbolOperaciones[cat][sub]) Object.keys(arbolOperaciones[cat][sub]).forEach(d => el.innerHTML += `<option value="${d}">${d}</option>`); el.onchange = () => { poblarEmpOrigen(cat, sub, el.value); evaluarReglasExcel(); }; limpiarNivelesDesde(4); }
-        function poblarEmpOrigen(cat, sub, det) { const el = document.getElementById('niv-emp-ori'); el.innerHTML = '<option value="">-- Seleccione Empresa Origen --</option>'; el.disabled = !det; if(det && arbolOperaciones[cat][sub][det]) Object.keys(arbolOperaciones[cat][sub][det]).forEach(e => el.innerHTML += `<option value="${e}">${e}</option>`); el.onchange = () => poblarCtaOrigen(cat, sub, det, el.value); limpiarNivelesDesde(5); }
-        function poblarCtaOrigen(cat, sub, det, empOri) { const el = document.getElementById('niv-cta-ori'); el.innerHTML = '<option value="">-- Seleccione Cuenta Origen --</option>'; el.disabled = !empOri; if(empOri && arbolOperaciones[cat][sub][det][empOri]) Object.keys(arbolOperaciones[cat][sub][det][empOri]).forEach(c => el.innerHTML += `<option value="${c}">${c}</option>`); el.onchange = () => poblarEmpDestino(cat, sub, det, empOri, el.value); limpiarNivelesDesde(6); }
-        function poblarEmpDestino(cat, sub, det, empOri, ctaOri) { const el = document.getElementById('niv-emp-des'); el.innerHTML = '<option value="">-- Seleccione Empresa Destino --</option>'; el.disabled = !ctaOri; if(ctaOri && arbolOperaciones[cat][sub][det][empOri][ctaOri]) Object.keys(arbolOperaciones[cat][sub][det][empOri][ctaOri]).forEach(e => el.innerHTML += `<option value="${e}">${e}</option>`); el.onchange = () => poblarCtaDestino(cat, sub, det, empOri, ctaOri, el.value); limpiarNivelesDesde(7); }
-        function poblarCtaDestino(cat, sub, det, empOri, ctaOri, empDes) { const el = document.getElementById('niv-cta-des'); el.innerHTML = '<option value="">-- Seleccione Cuenta Destino --</option>'; el.disabled = !empDes; if(empDes && arbolOperaciones[cat][sub][det][empOri][ctaOri][empDes]) arbolOperaciones[cat][sub][det][empOri][ctaOri][empDes].forEach(c => el.innerHTML += `<option value="${c}">${c}</option>`); }
-        function limpiarNivelesDesde(nv) { if(nv <= 3) { const e = document.getElementById('niv-det'); e.innerHTML='<option value=""></option>'; e.disabled=true; } if(nv <= 4) { const e = document.getElementById('niv-emp-ori'); e.innerHTML='<option value=""></option>'; e.disabled=true; } if(nv <= 5) { const e = document.getElementById('niv-cta-ori'); e.innerHTML='<option value=""></option>'; e.disabled=true; } if(nv <= 6) { const e = document.getElementById('niv-emp-des'); e.innerHTML='<option value=""></option>'; e.disabled=true; } if(nv <= 7) { const e = document.getElementById('niv-cta-des'); e.innerHTML='<option value=""></option>'; e.disabled=true; } }
+        
+        function poblarSubtipos(cat) { 
+            const el = document.getElementById('niv-sub');
+            if (!el) return;
+            el.innerHTML = '<option value="">-- Seleccione Subtipo --</option>';
+            el.disabled = !cat;
+            if(cat && arbolOperaciones && arbolOperaciones[cat]) {
+                Object.keys(arbolOperaciones[cat]).forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s;
+                    opt.textContent = s;
+                    el.appendChild(opt);
+                });
+            }
+            el.addEventListener('change', function() { 
+                poblarDetalles(cat, this.value);
+                evaluarReglasExcel();
+            });
+            limpiarNivelesDesde(3);
+        }
+        
+        function poblarDetalles(cat, sub) { 
+            const el = document.getElementById('niv-det');
+            if (!el) return;
+            el.innerHTML = '<option value="">-- Seleccione Detalle --</option>';
+            el.disabled = !sub;
+            if(sub && arbolOperaciones && arbolOperaciones[cat] && arbolOperaciones[cat][sub]) {
+                Object.keys(arbolOperaciones[cat][sub]).forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value = d;
+                    opt.textContent = d;
+                    el.appendChild(opt);
+                });
+            }
+            el.addEventListener('change', function() { 
+                poblarEmpOrigen(cat, sub, this.value);
+                evaluarReglasExcel();
+            });
+            limpiarNivelesDesde(4);
+        }
+        
+        function poblarEmpOrigen(cat, sub, det) { 
+            const el = document.getElementById('niv-emp-ori');
+            if (!el) return;
+            el.innerHTML = '<option value="">-- Seleccione Empresa Origen --</option>';
+            el.disabled = !det;
+            if(det && arbolOperaciones && arbolOperaciones[cat] && arbolOperaciones[cat][sub] && arbolOperaciones[cat][sub][det]) {
+                Object.keys(arbolOperaciones[cat][sub][det]).forEach(e => {
+                    const opt = document.createElement('option');
+                    opt.value = e;
+                    opt.textContent = e;
+                    el.appendChild(opt);
+                });
+            }
+            el.addEventListener('change', function() { 
+                poblarCtaOrigen(cat, sub, det, this.value);
+                evaluarReglasExcel();
+            });
+            limpiarNivelesDesde(5);
+        }
+        
+        function poblarCtaOrigen(cat, sub, det, empOri) { 
+            const el = document.getElementById('niv-cta-ori');
+            if (!el) return;
+            el.innerHTML = '<option value="">-- Seleccione Cuenta Origen --</option>';
+            el.disabled = !empOri;
+            if(empOri && arbolOperaciones && arbolOperaciones[cat] && arbolOperaciones[cat][sub] && arbolOperaciones[cat][sub][det] && arbolOperaciones[cat][sub][det][empOri]) {
+                Object.keys(arbolOperaciones[cat][sub][det][empOri]).forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c;
+                    opt.textContent = c;
+                    el.appendChild(opt);
+                });
+            }
+            el.addEventListener('change', function() { 
+                poblarEmpDestino(cat, sub, det, empOri, this.value);
+                evaluarReglasExcel();
+            });
+            limpiarNivelesDesde(6);
+        }
+        
+        function poblarEmpDestino(cat, sub, det, empOri, ctaOri) { 
+            const el = document.getElementById('niv-emp-des');
+            if (!el) return;
+            el.innerHTML = '<option value="">-- Seleccione Empresa Destino --</option>';
+            el.disabled = !ctaOri;
+            if(ctaOri && arbolOperaciones && arbolOperaciones[cat] && arbolOperaciones[cat][sub] && arbolOperaciones[cat][sub][det] && arbolOperaciones[cat][sub][det][empOri] && arbolOperaciones[cat][sub][det][empOri][ctaOri]) {
+                Object.keys(arbolOperaciones[cat][sub][det][empOri][ctaOri]).forEach(e => {
+                    const opt = document.createElement('option');
+                    opt.value = e;
+                    opt.textContent = e;
+                    el.appendChild(opt);
+                });
+            }
+            el.addEventListener('change', function() { 
+                poblarCtaDestino(cat, sub, det, empOri, ctaOri, this.value);
+                evaluarReglasExcel();
+            });
+            limpiarNivelesDesde(7);
+        }
+        
+        function poblarCtaDestino(cat, sub, det, empOri, ctaOri, empDes) { 
+            const el = document.getElementById('niv-cta-des');
+            if (!el) return;
+            el.innerHTML = '<option value="">-- Seleccione Cuenta Destino --</option>';
+            el.disabled = !empDes;
+            if(empDes && arbolOperaciones && arbolOperaciones[cat] && arbolOperaciones[cat][sub] && arbolOperaciones[cat][sub][det] && arbolOperaciones[cat][sub][det][empOri] && arbolOperaciones[cat][sub][det][empOri][ctaOri] && arbolOperaciones[cat][sub][det][empOri][ctaOri][empDes]) {
+                const cuentas = arbolOperaciones[cat][sub][det][empOri][ctaOri][empDes];
+                if (Array.isArray(cuentas)) {
+                    cuentas.forEach(c => {
+                        const opt = document.createElement('option');
+                        opt.value = c;
+                        opt.textContent = c;
+                        el.appendChild(opt);
+                    });
+                }
+            }
+        }
+        
+        function limpiarNivelesDesde(nv) { 
+            if(nv <= 3) { const e = document.getElementById('niv-det'); if(e) { e.innerHTML='<option value="">-- Seleccione Detalle --</option>'; e.disabled=true; } }
+            if(nv <= 4) { const e = document.getElementById('niv-emp-ori'); if(e) { e.innerHTML='<option value="">-- Seleccione Empresa Origen --</option>'; e.disabled=true; } }
+            if(nv <= 5) { const e = document.getElementById('niv-cta-ori'); if(e) { e.innerHTML='<option value="">-- Seleccione Cuenta Origen --</option>'; e.disabled=true; } }
+            if(nv <= 6) { const e = document.getElementById('niv-emp-des'); if(e) { e.innerHTML='<option value="">-- Seleccione Empresa Destino --</option>'; e.disabled=true; } }
+            if(nv <= 7) { const e = document.getElementById('niv-cta-des'); if(e) { e.innerHTML='<option value="">-- Seleccione Cuenta Destino --</option>'; e.disabled=true; } }
+        }
 
       window.plantillasNube = [];
 

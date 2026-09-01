@@ -49,11 +49,16 @@
     <script>
         function renderizarTabla() {
             const ops = typeof obtenerOperacionesActivas === 'function' ? obtenerOperacionesActivas() : obtenerOperaciones();
-            const opsFiltradas = ops.filter(o => coincideFechaFiltro(o));
+            // Filtrar solo estados "Completada" y "Rechazado" en Historial y Expediente
+            const opsEstadoFiltradas = ops.filter(o => {
+                const estado = String(o.estado || '').toUpperCase();
+                return estado.includes('COMPLETADA') || estado.includes('RECHAZADO') || estado.includes('DEVUELTO');
+            });
+            const opsFiltradas = opsEstadoFiltradas.filter(o => coincideFechaFiltro(o));
             const tb = document.getElementById('tabla-historial');
             tb.innerHTML = '';
             if(opsFiltradas.length === 0) {
-                tb.innerHTML = '<tr><td colspan="8" style="text-align:center; color:#64748B; padding:30px;">No hay expedientes para la fecha seleccionada.</td></tr>';
+                tb.innerHTML = '<tr><td colspan="8" style="text-align:center; color:#64748B; padding:30px;">No hay expedientes completados o rechazados para la fecha seleccionada.</td></tr>';
                 return;
             }
             opsFiltradas.forEach(o => {
