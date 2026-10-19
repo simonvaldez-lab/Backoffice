@@ -45,10 +45,11 @@
             console.log("🟢 [FIREBASE CORE]: Conectado exitosamente al motor en vivo.");
         }
     </script>
-    <script src="js/logica-comun.js"></script>
+    <script src="js/logica-comun.js?v=14"></script>
     <script>
         function renderizarTabla() {
-            const ops = typeof obtenerOperacionesActivas === 'function' ? obtenerOperacionesActivas() : obtenerOperaciones();
+            const opsBase = typeof obtenerOperacionesActivas === 'function' ? obtenerOperacionesActivas() : obtenerOperaciones();
+            const ops = typeof filtrarOperacionesPorPais === 'function' ? filtrarOperacionesPorPais(opsBase) : opsBase;
             // Filtrar solo estados "Completada" y "Rechazado" en Historial y Expediente
             const opsEstadoFiltradas = ops.filter(o => {
                 const estado = String(o.estado || '').toUpperCase();
