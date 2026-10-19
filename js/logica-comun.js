@@ -370,6 +370,19 @@ function auditarRadicado(radicado) {
 
     if (elDocSec) {
         var docHtml = "";
+        var escaparDoc = function(valor) {
+            return String(valor).replace(/[&<>"']/g, function(caracter) {
+                return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[caracter];
+            });
+        };
+        var urlSeguraEvidencia = function(valor) {
+            try {
+                var url = new URL(String(valor || ""), window.location.href);
+                return url.protocol === "https:" ? url.href : "";
+            } catch (error) {
+                return "";
+            }
+        };
         if (op.nombreOperacion) {
             docHtml += '<div style="font-size:12px; margin-bottom:6px;"><strong>🏷️ Operación:</strong> <span style="background:#EEF2FF; color:#3730A3; padding:2px 6px; border-radius:4px; font-weight:bold;">' + op.nombreOperacion + '</span></div>';
         }
@@ -386,6 +399,28 @@ function auditarRadicado(radicado) {
             } else if (op.archivoNombre.endsWith(".pdf") || (op.archivoTipo && op.archivoTipo.includes("pdf"))) {
                 docHtml += '<div style="margin-top:8px;"><iframe src="' + op.archivoData + '" style="width:100%; height:220px; border:1px solid #CBD5E1; border-radius:6px;"></iframe></div>';
             }
+        }
+        var screenshotUrl = urlSeguraEvidencia(op.archivoScreenshot);
+        if (screenshotUrl) {
+            docHtml += '<div style="margin-top:12px; padding-top:10px; border-top:1px solid #E2E8F0;">' +
+                '<strong style="font-size:12px; color:#0F172A;">🖼️ Evidencia del montaje bancario</strong>' +
+                '<div style="margin-top:6px;"><a href="' + escaparDoc(screenshotUrl) + '" target="_blank" rel="noopener noreferrer" style="color:#2563EB;">Abrir imagen en otra pestaña ↗</a></div>' +
+                '<img src="' + escaparDoc(screenshotUrl) + '" alt="Captura del montaje bancario" style="display:block; max-width:100%; max-height:320px; margin-top:8px; border:1px solid #CBD5E1; border-radius:6px; object-fit:contain;">' +
+            '</div>';
+        }
+        var pdfUrl = urlSeguraEvidencia(op.archivoPDF);
+        if (pdfUrl) {
+            docHtml += '<div style="margin-top:12px; padding-top:10px; border-top:1px solid #E2E8F0;">' +
+                '<strong style="font-size:12px; color:#0F172A;">📄 Comprobante PDF de cierre</strong>' +
+                '<div style="margin-top:6px;"><a href="' + escaparDoc(pdfUrl) + '" target="_blank" rel="noopener noreferrer" style="color:#2563EB;">Abrir PDF en otra pestaña ↗</a></div>' +
+                '<iframe title="Comprobante PDF de cierre" src="' + escaparDoc(pdfUrl) + '" style="width:100%; height:280px; margin-top:8px; border:1px solid #CBD5E1; border-radius:6px;"></iframe>' +
+            '</div>';
+        }
+        if (op.observacionesCierre && String(op.observacionesCierre).trim()) {
+            docHtml += '<div style="margin-top:12px; padding:10px; background:#F1F5F9; border-left:3px solid #0F766E; border-radius:4px;">' +
+                '<strong style="font-size:12px; color:#0F172A;">📝 Observaciones del Preparador</strong>' +
+                '<p style="margin:6px 0 0; color:#334155; font-size:12px; white-space:pre-wrap;">' + escaparDoc(op.observacionesCierre) + '</p>' +
+            '</div>';
         }
         if (docHtml !== "") {
             document.getElementById("mod-doc-contenido").innerHTML = docHtml;
@@ -629,7 +664,8 @@ function actualizarRadarYTablaEnVivo() {
         if (!tb) return;
         
         // Obtenemos las operaciones traídas directamente desde la nube
-        var ops = typeof obtenerOperaciones === "function" ? (obtenerOperaciones() || []) : (window.cacheOperacionesNube || []);
+        var opsBase = typeof obtenerOperaciones === "function" ? (obtenerOperaciones() || []) : (window.cacheOperacionesNube || []);
+        var ops = filtrarOperacionesPorPais(opsBase);
         
         var usrRaw = sessionStorage.getItem("usuarioLogueado") || "{}";
         var usr = JSON.parse(usrRaw);
@@ -702,6 +738,153 @@ if (document.readyState === "loading") {
     setTimeout(actualizarRadarYTablaEnVivo, 100);
 }
 
+function normalizarPaisActivo(pais) {
+    var valor = String(pais || "").trim().toLowerCase();
+    if (valor === "colombia" || valor === "co") return "Colombia";
+    if (valor === "peru" || valor === "perú" || valor === "pe") return "Perú";
+    return "";
+}
+
+function obtenerPaisActivo() {
+    try {
+        var paisGuardado = normalizarPaisActivo(localStorage.getItem("paisActivoOperaciones"));
+        if (paisGuardado) return paisGuardado;
+    } catch (error) {}
+    var usuario = JSON.parse(sessionStorage.getItem("usuarioLogueado") || "{}");
+    return normalizarPaisActivo(usuario.pais) || "Colombia";
+}
+
+function filtrarOperacionesPorPais(operaciones) {
+    var paisActivo = obtenerPaisActivo();
+    return (operaciones || []).filter(function(operacion) {
+        return normalizarPaisActivo(operacion.pais) === paisActivo;
+    });
+}
+
+function cambiarPaisActivo(pais) {
+    var paisValido = normalizarPaisActivo(pais);
+    if (!paisValido) return;
+    try {
+        localStorage.setItem("paisActivoOperaciones", paisValido);
+    } catch (error) {
+        console.error("No se pudo guardar el país activo:", error);
+    }
+    var selector = document.getElementById("selector-pais-activo");
+    if (selector) selector.value = paisValido;
+    if (typeof renderizarTabla === "function") renderizarTabla();
+    if (typeof actualizarRadarYTablaEnVivo === "function") actualizarRadarYTablaEnVivo();
+}
+
+window.notificacionesUsuario = window.notificacionesUsuario || [];
+window.emailEscuchaNotificaciones = window.emailEscuchaNotificaciones || "";
+
+function renderizarNotificacionesUsuario() {
+    var lista = document.getElementById("lista-notificaciones");
+    var contador = document.getElementById("contador-notificaciones");
+    if (!lista || !contador) return;
+    var noLeidas = window.notificacionesUsuario.filter(function(notificacion) { return !notificacion.leida; });
+    contador.textContent = noLeidas.length > 99 ? "99+" : String(noLeidas.length);
+    contador.style.display = noLeidas.length ? "inline-flex" : "none";
+    lista.replaceChildren();
+
+    if (!window.notificacionesUsuario.length) {
+        var vacio = document.createElement("p");
+        vacio.textContent = "No tienes notificaciones.";
+        vacio.style.cssText = "padding:14px; margin:0; color:#64748B; font-size:12px;";
+        lista.appendChild(vacio);
+        return;
+    }
+
+    window.notificacionesUsuario.forEach(function(notificacion) {
+        var fila = document.createElement("div");
+        fila.style.cssText = "padding:12px; border-bottom:1px solid #E2E8F0; background:" + (notificacion.leida ? "white" : "#F0F9FF") + ";";
+        var mensaje = document.createElement("p");
+        mensaje.textContent = notificacion.mensaje || ("Cambio de estado: " + (notificacion.estado || ""));
+        mensaje.style.cssText = "margin:0 0 6px; color:#0F172A; font-size:12px; line-height:1.4;";
+        fila.appendChild(mensaje);
+
+        var metadata = document.createElement("div");
+        var fecha = notificacion.fechaCreacion && typeof notificacion.fechaCreacion.toDate === "function"
+            ? notificacion.fechaCreacion.toDate()
+            : null;
+        metadata.textContent = (notificacion.radicado || "") + (fecha ? " · " + fecha.toLocaleString("es-CO") : "");
+        metadata.style.cssText = "color:#64748B; font-size:10px;";
+        fila.appendChild(metadata);
+
+        if (notificacion.pdfUrl) {
+            var enlacePdf = document.createElement("a");
+            enlacePdf.href = notificacion.pdfUrl;
+            enlacePdf.target = "_blank";
+            enlacePdf.rel = "noopener noreferrer";
+            enlacePdf.textContent = "Ver comprobante PDF";
+            enlacePdf.style.cssText = "display:inline-block; margin-top:7px; color:#2563EB; font-size:11px; font-weight:700;";
+            fila.appendChild(enlacePdf);
+        }
+
+        if (!notificacion.leida) {
+            var marcarLeida = document.createElement("button");
+            marcarLeida.type = "button";
+            marcarLeida.textContent = "Marcar como leída";
+            marcarLeida.style.cssText = "display:block; margin-top:7px; padding:0; border:0; background:none; color:#0F766E; font-size:11px; cursor:pointer;";
+            marcarLeida.addEventListener("click", function() { marcarNotificacionLeida(notificacion.id); });
+            fila.appendChild(marcarLeida);
+        }
+        lista.appendChild(fila);
+    });
+}
+
+function escucharNotificacionesUsuario(usuario) {
+    var correo = String(usuario.correo || "").trim().toLowerCase();
+    if (!correo || typeof firebase === "undefined" || !firebase.app) return;
+    if (window.emailEscuchaNotificaciones === correo && window.unsubscribeNotificaciones) return;
+    if (typeof window.unsubscribeNotificaciones === "function") window.unsubscribeNotificaciones();
+    window.emailEscuchaNotificaciones = correo;
+    var db = firebase.app().firestore();
+    window.unsubscribeNotificaciones = db.collection("notificaciones")
+        .where("destinatarioEmail", "==", correo)
+        .limit(50)
+        .onSnapshot(function(snapshot) {
+            window.notificacionesUsuario = [];
+            snapshot.forEach(function(doc) {
+                window.notificacionesUsuario.push(Object.assign({ id: doc.id }, doc.data()));
+            });
+            window.notificacionesUsuario.sort(function(a, b) {
+                var fechaA = a.fechaCreacion && a.fechaCreacion.toMillis ? a.fechaCreacion.toMillis() : 0;
+                var fechaB = b.fechaCreacion && b.fechaCreacion.toMillis ? b.fechaCreacion.toMillis() : 0;
+                return fechaB - fechaA;
+            });
+            renderizarNotificacionesUsuario();
+        }, function(error) {
+            console.error("No se pudieron cargar las notificaciones:", error);
+        });
+}
+
+function alternarPanelNotificaciones() {
+    var panel = document.getElementById("panel-notificaciones");
+    var boton = document.getElementById("boton-notificaciones");
+    if (!panel) return;
+    var visible = panel.style.display !== "block";
+    panel.style.display = visible ? "block" : "none";
+    if (boton) boton.setAttribute("aria-expanded", String(visible));
+}
+
+async function marcarNotificacionLeida(id) {
+    if (typeof firebase === "undefined" || !firebase.app) return;
+    try {
+        await firebase.app().firestore().collection("notificaciones").doc(id).update({
+            leida: true,
+            fechaLectura: firebase.firestore.FieldValue.serverTimestamp()
+        });
+    } catch (error) {
+        console.error("No se pudo marcar la notificación como leída:", error);
+    }
+}
+
+async function marcarTodasNotificacionesLeidas() {
+    var pendientes = window.notificacionesUsuario.filter(function(notificacion) { return !notificacion.leida; });
+    await Promise.all(pendientes.map(function(notificacion) { return marcarNotificacionLeida(notificacion.id); }));
+}
+
 // === MÓDULO MAESTRO DE SEGURIDAD RBAC, REDIRECCIÓN ESTRICTA Y SINCRONIZACIÓN UNIVERSAL ===
 function aplicarSeguridadYMenuUniversal() {
     try {
@@ -722,11 +905,30 @@ function aplicarSeguridadYMenuUniversal() {
         // 1. DIBUJAR TOPBAR
         var topbarRight = document.querySelector(".topbar-derecha");
         if (topbarRight) {
-            topbarRight.innerHTML = '<div style="display:flex; align-items:center; gap:12px;">' +
-                '<span style="font-size:12px; font-weight:bold; color:#0B1442;">👤 ' + (usuario.nombre || "Usuario") + ' (' + String(usuario.rol || "solicitante").toUpperCase() + ')</span>' +
-                '<button class="btn" style="background:#FEE2E2; color:#991B1B; font-size:11px; padding:4px 10px; font-weight:bold;" onclick="cerrarSesion()">Salir</button>' +
-            '</div>';
+            if (!document.getElementById("selector-pais-activo")) {
+                topbarRight.innerHTML = '<div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">' +
+                    '<div style="position:relative;">' +
+                        '<button type="button" id="boton-notificaciones" aria-label="Notificaciones" aria-expanded="false" onclick="alternarPanelNotificaciones()" style="position:relative; width:38px; height:34px; border:1px solid #CBD5E1; border-radius:6px; background:white; cursor:pointer; font-size:17px;">🔔' +
+                            '<span id="contador-notificaciones" style="display:none; position:absolute; top:-6px; right:-6px; min-width:16px; height:16px; padding:0 3px; align-items:center; justify-content:center; border-radius:10px; background:#DC2626; color:white; font-size:9px; font-weight:bold;"></span>' +
+                        '</button>' +
+                        '<div id="panel-notificaciones" style="display:none; position:absolute; z-index:5000; top:42px; right:0; width:340px; max-width:calc(100vw - 24px); max-height:420px; overflow:auto; border:1px solid #CBD5E1; border-radius:8px; background:white; box-shadow:0 12px 30px rgba(15,23,42,.18);">' +
+                            '<div style="position:sticky; top:0; display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-bottom:1px solid #E2E8F0; background:white;"><strong style="font-size:12px; color:#0F172A;">Notificaciones</strong><button type="button" onclick="marcarTodasNotificacionesLeidas()" style="border:0; background:none; color:#0F766E; font-size:10px; cursor:pointer;">Marcar todas leídas</button></div>' +
+                            '<div id="lista-notificaciones"></div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<label for="selector-pais-activo" style="font-size:12px; font-weight:bold; color:#334155;">País</label>' +
+                    '<select id="selector-pais-activo" aria-label="Filtrar operaciones por país" onchange="cambiarPaisActivo(this.value)" style="height:32px; padding:4px 8px; border:1px solid #CBD5E1; border-radius:6px; background:white; color:#0F172A; font-weight:600;">' +
+                        '<option value="Colombia">Colombia</option>' +
+                        '<option value="Perú">Perú</option>' +
+                    '</select>' +
+                    '<span style="font-size:12px; font-weight:bold; color:#0B1442;">👤 ' + (usuario.nombre || "Usuario") + ' (' + String(usuario.rol || "solicitante").toUpperCase() + ')</span>' +
+                    '<button class="btn" style="background:#FEE2E2; color:#991B1B; font-size:11px; padding:4px 10px; font-weight:bold;" onclick="cerrarSesion()">Salir</button>' +
+                '</div>';
+            }
+            var selectorPais = document.getElementById("selector-pais-activo");
+            if (selectorPais) selectorPais.value = obtenerPaisActivo();
         }
+        escucharNotificacionesUsuario(usuario);
 
         // 2. PERMISOS ESTRICTOS POR ROL
         var rol = String(usuario.rol || "solicitante").toLowerCase().trim();
@@ -766,7 +968,7 @@ function refrescarPantallasUniversales() {
 }
 
 window.addEventListener("storage", function(e) {
-    if (!e.key || e.key === "bold_operaciones_bd" || e.key === "bold_notificaciones_bd" || e.key === "usuarioLogueado") {
+    if (!e.key || e.key === "bold_operaciones_bd" || e.key === "bold_notificaciones_bd" || e.key === "usuarioLogueado" || e.key === "paisActivoOperaciones") {
         aplicarSeguridadYMenuUniversal();
         refrescarPantallasUniversales();
     }
@@ -1230,69 +1432,190 @@ function subirArchivoAStorage(file, radicado, tipo) {
 function abrirModalSubidaEvidencia(radicado, tipo, titulo, descripcion) {
     var modal = document.getElementById('modalSubidaEvidencia');
     var input = document.getElementById('inputSubidaEvidencia');
+    var captura = document.getElementById('contenedorCapturaPantalla');
+    var estadoCaptura = document.getElementById('estadoCapturaPantalla');
+    var vistaPrevia = document.getElementById('vistaPreviaCapturaPantalla');
+    var observaciones = document.getElementById('inputObservacionesCierre');
+    var contenedorObservaciones = document.getElementById('contenedorObservacionesCierre');
     var tituloEl = document.getElementById('tituloSubidaEvidencia');
     var textoEl = document.getElementById('textoSubidaEvidencia');
     if (!modal || !input || !tituloEl || !textoEl) return;
     modal.dataset.radicado = radicado;
     modal.dataset.tipo = tipo;
+    modal._capturedScreenshot = null;
+    if (modal._screenshotPreviewUrl) URL.revokeObjectURL(modal._screenshotPreviewUrl);
+    modal._screenshotPreviewUrl = null;
     tituloEl.textContent = titulo;
     textoEl.textContent = descripcion;
     input.value = '';
+    input.required = tipo !== 'cierre';
+    input.accept = tipo === 'cierre' ? 'application/pdf' : 'image/png,image/jpeg,image/jpg,application/pdf';
+    if (captura) captura.style.display = tipo === 'screenshot' ? 'block' : 'none';
+    if (estadoCaptura) estadoCaptura.textContent = 'El navegador te pedirá elegir qué compartir.';
+    if (vistaPrevia) {
+        vistaPrevia.removeAttribute('src');
+        vistaPrevia.style.display = 'none';
+    }
+    if (observaciones) observaciones.value = '';
+    if (contenedorObservaciones) contenedorObservaciones.style.display = tipo === 'cierre' ? 'block' : 'none';
     modal.style.display = 'flex';
 }
 
 function cerrarModalSubidaEvidencia() {
     var modal = document.getElementById('modalSubidaEvidencia');
-    if (modal) modal.style.display = 'none';
+    if (modal) {
+        modal.style.display = 'none';
+        modal._capturedScreenshot = null;
+        if (modal._screenshotPreviewUrl) URL.revokeObjectURL(modal._screenshotPreviewUrl);
+        modal._screenshotPreviewUrl = null;
+    }
+}
+
+async function capturarPantallaMontaje() {
+    var modal = document.getElementById('modalSubidaEvidencia');
+    var boton = document.getElementById('btnCapturarPantalla');
+    var estado = document.getElementById('estadoCapturaPantalla');
+    var vistaPrevia = document.getElementById('vistaPreviaCapturaPantalla');
+    if (!modal || !navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+        alert('La captura de pantalla no está disponible en este navegador o contexto. Abre el sistema en HTTPS y prueba con un navegador actualizado.');
+        return;
+    }
+
+    var stream;
+    if (boton) {
+        boton.disabled = true;
+        boton.textContent = 'Selecciona la ventana...';
+    }
+    if (estado) estado.textContent = 'Selecciona la ventana o pantalla que contiene el portal bancario.';
+
+    try {
+        stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+        var video = document.createElement('video');
+        video.srcObject = stream;
+        video.muted = true;
+        video.playsInline = true;
+        await video.play();
+        if (!video.videoWidth || !video.videoHeight) {
+            await new Promise(function(resolve, reject) {
+                video.addEventListener('loadedmetadata', resolve, { once: true });
+                setTimeout(function() { reject(new Error('No se pudo leer la imagen de la ventana compartida.')); }, 5000);
+            });
+        }
+
+        var canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+        var blob = await new Promise(function(resolve, reject) {
+            canvas.toBlob(function(result) {
+                if (result) resolve(result);
+                else reject(new Error('No se pudo generar el archivo de captura.'));
+            }, 'image/png');
+        });
+        var archivo = new File([blob], modal.dataset.radicado + '_screenshot.png', { type: 'image/png' });
+        modal._capturedScreenshot = archivo;
+
+        var input = document.getElementById('inputSubidaEvidencia');
+        if (input) input.value = '';
+        if (modal._screenshotPreviewUrl) URL.revokeObjectURL(modal._screenshotPreviewUrl);
+        modal._screenshotPreviewUrl = URL.createObjectURL(blob);
+        if (vistaPrevia) {
+            vistaPrevia.src = modal._screenshotPreviewUrl;
+            vistaPrevia.style.display = 'block';
+        }
+        if (estado) estado.textContent = 'Captura lista. Presiona "Subir archivo" para adjuntarla a la operación.';
+    } catch (error) {
+        console.error('No se pudo capturar la pantalla:', error);
+        if (estado) estado.textContent = error.name === 'NotAllowedError' ? 'No se concedió permiso para compartir la pantalla.' : 'No se pudo capturar la ventana. Inténtalo de nuevo.';
+    } finally {
+        if (stream) stream.getTracks().forEach(function(track) { track.stop(); });
+        if (boton) {
+            boton.disabled = false;
+            boton.textContent = 'Capturar ventana o pantalla';
+        }
+    }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
     var btn = document.getElementById('btnConfirmarSubidaEvidencia');
+    var input = document.getElementById('inputSubidaEvidencia');
     if (!btn) return;
-    btn.addEventListener('click', function() {
+    if (input) input.addEventListener('change', function() {
         var modal = document.getElementById('modalSubidaEvidencia');
-        var input = document.getElementById('inputSubidaEvidencia');
+        var estado = document.getElementById('estadoCapturaPantalla');
+        var vistaPrevia = document.getElementById('vistaPreviaCapturaPantalla');
+        if (!modal || !input.files.length) return;
+        modal._capturedScreenshot = null;
+        if (modal._screenshotPreviewUrl) URL.revokeObjectURL(modal._screenshotPreviewUrl);
+        modal._screenshotPreviewUrl = null;
+        if (vistaPrevia) {
+            vistaPrevia.removeAttribute('src');
+            vistaPrevia.style.display = 'none';
+        }
+        if (estado) estado.textContent = 'Archivo seleccionado para cargar.';
+    });
+    btn.addEventListener('click', async function() {
+        var modal = document.getElementById('modalSubidaEvidencia');
+        var campoObservaciones = document.getElementById('inputObservacionesCierre');
         if (!modal || !input) return;
         var radicado = modal.dataset.radicado;
         var tipo = modal.dataset.tipo;
-        var file = input.files[0];
+        var file = input.files[0] || modal._capturedScreenshot;
+        var observaciones = campoObservaciones ? campoObservaciones.value.trim() : '';
         if (!radicado || !tipo) return;
-        if (!file) {
+        if (!file && tipo !== 'cierre') {
             alert('⚠️ Debes seleccionar un archivo antes de continuar.');
             return;
         }
         btn.disabled = true;
-        btn.textContent = 'Subiendo...';
-        subirArchivoAStorage(file, radicado, tipo)
-        .then(function(urlArchivo) {
-            var db = firebase.app().firestore();
-            var docId = radicado.replace(/\//g, '-');
+        btn.textContent = file ? 'Subiendo...' : 'Guardando...';
+        try {
+            var urlArchivo = file ? await subirArchivoAStorage(file, radicado, tipo) : null;
+            var ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : [];
+            var op = ops.find(function(item) { return item.radicado === radicado; });
+            if (!op) throw new Error('No se encontró la operación en la bandeja actual.');
+
             if (tipo === 'screenshot') {
-                return db.collection('operaciones').doc(docId).update({
-                    estado: 'En Aprobación',
-                    archivoScreenshot: urlArchivo,
-                    fechaMontaje: new Date().toISOString()
+                var usuarioMontaje = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}');
+                op.estado = 'En Aprobación';
+                op.archivoScreenshot = urlArchivo;
+                op.fechaMontaje = new Date().toISOString();
+                op.montadoPor = usuarioMontaje.nombre || usuarioMontaje.correo || 'Preparador';
+                op.montadoPorCorreo = String(usuarioMontaje.correo || '').trim().toLowerCase();
+                op.historial = op.historial || [];
+                op.historial.push({
+                    fecha: typeof obtenerFechaHoraMilitar === 'function' ? obtenerFechaHoraMilitar() : new Date().toLocaleString(),
+                    paso: '3. MONTAJE EN BANCO',
+                    detalle: 'Evidencia bancaria cargada por ' + ((JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}').nombre) || 'Preparador') + '.'
+                });
+            } else if (tipo === 'cierre') {
+                var usuarioCierre = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}');
+                op.estado = 'COMPLETADA / CERRADA ✓';
+                op.comprobanteCerrado = true;
+                op.fechaCierre = new Date().toISOString();
+                op.cerradoPor = usuarioCierre.nombre || usuarioCierre.correo || 'Preparador';
+                op.cerradoPorCorreo = String(usuarioCierre.correo || '').trim().toLowerCase();
+                op.observacionesCierre = observaciones;
+                if (urlArchivo) op.archivoPDF = urlArchivo;
+                op.historial = op.historial || [];
+                op.historial.push({
+                    fecha: typeof obtenerFechaHoraMilitar === 'function' ? obtenerFechaHoraMilitar() : new Date().toLocaleString(),
+                    paso: '5. CIERRE DEL PREPARADOR',
+                    detalle: 'Cierre registrado por ' + ((JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}').nombre) || 'Preparador') + '. PDF adjunto: ' + (urlArchivo ? 'Sí.' : 'No.') + ' Observaciones registradas: ' + (observaciones ? 'Sí.' : 'No.')
                 });
             }
-            return db.collection('operaciones').doc(docId).update({
-                estado: 'COMPLETADA / CERRADA ✓',
-                archivoPDF: urlArchivo,
-                comprobanteCerrado: true,
-                fechaCierre: new Date().toISOString()
-            });
-        })
-        .then(function() {
+            await guardarOperaciones(ops);
             cerrarModalSubidaEvidencia();
             if (typeof refrescarPantallasUniversales === 'function') refrescarPantallasUniversales();
-        })
-        .catch(function(error) {
+            else if (typeof renderizarTabla === 'function') renderizarTabla();
+            alert(tipo === 'cierre' ? '✅ Operación cerrada correctamente.' : '✅ Screenshot cargado. La operación pasó a la bandeja del Aprobador.');
+        } catch (error) {
             console.error('Error al subir evidencia:', error);
             alert('❌ No se pudo subir el archivo: ' + (error.message || error));
-        })
-        .finally(function() {
+        } finally {
             btn.disabled = false;
             btn.textContent = 'Subir archivo';
-        });
+        }
     });
 });
 
@@ -1308,18 +1631,21 @@ if (typeof confirmarPagoFinal === "function") {
         var ops = typeof obtenerOperaciones === "function" ? obtenerOperaciones() : [];
         var op = ops.find(function(o) { return o.radicado === rad; });
         if (!op) return;
-        op.estado = 'APROBADO';
+        op.estado = 'Pendiente Cierre Preparador';
         op.enTransito = false;
         op.comprobanteCerrado = false;
+        op.aprobadoPor = usr.nombre || usr.correo || 'Aprobador';
+        op.aprobadoPorCorreo = String(usr.correo || '').trim().toLowerCase();
+        op.fechaAprobacion = new Date().toISOString();
         op.historial = op.historial || [];
         op.historial.push({
             fecha: typeof obtenerFechaHoraMilitar === 'function' ? obtenerFechaHoraMilitar() : new Date().toLocaleString(),
-            paso: '4. CHECK FINAL',
-            detalle: 'Liberación final por ' + (usr.nombre || 'Aprobador') + '.'
+            paso: '4. APROBACIÓN DEL MONTAJE',
+            detalle: 'Aprobado por ' + (usr.nombre || 'Aprobador') + '. Pendiente cierre por Preparador.'
         });
         if (typeof guardarOperaciones === 'function') guardarOperaciones(ops);
-        if (typeof crearNotificacion === 'function') crearNotificacion(rad, '🏁 ¡Check Final! ' + rad + ' quedó APROBADO.', true);
-        alert('✅ ¡Check Final Exitoso! La operación quedó en estado APROBADO.');
+        if (typeof crearNotificacion === 'function') crearNotificacion(rad, '✅ ' + rad + ' fue aprobado y está pendiente de cierre por Preparador.', true);
+        alert('✅ Aprobación registrada. La operación volvió a la bandeja del Preparador para el cierre.');
         if (typeof refrescarPantallasUniversales === 'function') refrescarPantallasUniversales();
     };
 }
@@ -1405,8 +1731,11 @@ window.invocarCloudAPI = function(url, payload, callbackExito) {
     
     if (url.includes("apiValidarKYC")) actualizacion = { estado: "En Preparación" };
     else if (url.includes("apiRegistrarMontaje")) actualizacion = { estado: "En Aprobación", archivoScreenshot: payload.archivoScreenshot };
-    else if (url.includes("apiAprobarMontaje")) actualizacion = { estado: "APROBADO" };
-    else if (url.includes("apiCerrarComprobante")) actualizacion = { estado: "COMPLETADA / CERRADA ✓", archivoPDF: payload.archivoPDF, comprobanteCerrado: true };
+    else if (url.includes("apiAprobarMontaje")) actualizacion = { estado: "Pendiente Cierre Preparador" };
+    else if (url.includes("apiCerrarComprobante")) {
+        actualizacion = { estado: "COMPLETADA / CERRADA ✓", comprobanteCerrado: true, observacionesCierre: payload.observacionesCierre || "" };
+        if (payload.archivoPDF) actualizacion.archivoPDF = payload.archivoPDF;
+    }
     else if (url.includes("apiRechazarOperacion")) actualizacion = { estado: "Pendiente Validación", fueDevuelta: true, motivoRechazo: payload.motivo || "" };
 
     var db = firebase.app().firestore();

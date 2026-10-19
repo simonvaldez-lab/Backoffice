@@ -1,7 +1,9 @@
 const functions = require("firebase-functions");
+const { onDocumentUpdated } = require("firebase-functions/v2/firestore");
 const admin = require("firebase-admin");
 const { getFirestore, FieldValue, Timestamp } = require("firebase-admin/firestore");
 const cors = require("cors")({ origin: true });
+const crypto = require("crypto");
 
 admin.initializeApp();
 const db = getFirestore("treasurybackoffice");
@@ -56,6 +58,87 @@ function crearRegistroHistorial(paso, detalle, usr, alerta = false) {
         alerta: alerta
     };
 }
+
+async function correosPorRol(dbRef, rol) {
+    const usuariosRef = await dbRef.collection("configuracion").doc("usuarios").get();
+    const lista = usuariosRef.exists && Array.isArray(usuariosRef.data().lista) ? usuariosRef.data().lista : [
+        { correo: "lau@bold.co", rol: "solicitante", estado: "Activo" },
+        { correo: "fel@bold.co", rol: "preparador", estado: "Activo" },
+        { correo: "kat@bold.co", rol: "aprobador", estado: "Activo" }
+    ];
+    return [...new Set(lista
+        .filter(usuario => String(usuario.rol || "").toLowerCase() === rol && String(usuario.estado || "Activo").toLowerCase() === "activo")
+        .map(usuario => String(usuario.correo || "").trim().toLowerCase())
+        .filter(Boolean))];
+}
+
+async function notificarCambioEstado(event) {
+    const anterior = event.data.before.data();
+    const operacion = event.data.after.data();
+    if (!anterior || !operacion || anterior.estado === operacion.estado) return;
+
+    const destinatarios = new Map();
+    const agregarDestinatario = (correo, rol, mensaje, pdfUrl = "") => {
+        const email = String(correo || "").trim().toLowerCase();
+        if (email) destinatarios.set(email, { destinatarioRol: rol, mensaje, pdfUrl });
+    };
+    const estado = String(operacion.estado || "");
+    const radicado = String(operacion.radicado || event.params.radicado || "");
+
+    if (operacion.solicitante) {
+        const esCompletada = estado.toUpperCase().includes("COMPLETADA");
+        const mensaje = esCompletada
+            ? (operacion.archivoPDF ? `La operación ${radicado} está completada. Ya puedes consultar el comprobante PDF.` : `La operación ${radicado} está completada. No se adjuntó comprobante PDF.`)
+            : `La operación ${radicado} cambió al estado: ${estado}.`;
+        agregarDestinatario(operacion.solicitante, "solicitante", mensaje, esCompletada ? operacion.archivoPDF || "" : "");
+    }
+
+    const dbUsuarios = getFirestore("treasurybackoffice");
+    if (estado === "En Aprobación") {
+        const aprobadores = await correosPorRol(dbUsuarios, "aprobador");
+        aprobadores.forEach(correo => agregarDestinatario(correo, "aprobador", `La operación ${radicado} solicita tu aprobación bancaria.`));
+    }
+
+    if (["Pendiente Cierre Preparador", "APROBADO"].includes(estado)) {
+        agregarDestinatario(operacion.preparadorAsignadoCorreo, "preparador", `El Aprobador aprobó ${radicado}. La operación está pendiente de tu cierre.`);
+    }
+
+    if (estado.toUpperCase().includes("COMPLETADA")) {
+        const aprobadores = await correosPorRol(dbUsuarios, "aprobador");
+        aprobadores.forEach(correo => agregarDestinatario(correo, "aprobador", `El Preparador cerró la operación ${radicado}.`));
+    }
+
+    if (!destinatarios.size) return;
+    const dbNotificaciones = getFirestore();
+    const batch = dbNotificaciones.batch();
+    destinatarios.forEach((destinatario, correo) => {
+        const id = crypto.createHash("sha256").update(`${event.id}:${correo}`).digest("hex");
+        batch.set(dbNotificaciones.collection("notificaciones").doc(id), {
+            destinatarioEmail: correo,
+            destinatarioRol: destinatario.destinatarioRol,
+            radicado,
+            pais: operacion.pais || "",
+            estado,
+            mensaje: destinatario.mensaje,
+            pdfUrl: destinatario.pdfUrl,
+            fechaCreacion: FieldValue.serverTimestamp(),
+            leida: false
+        });
+    });
+    await batch.commit();
+}
+
+exports.notificarCambioEstadoDefault = onDocumentUpdated({
+    document: "operaciones/{radicado}",
+    database: "(default)",
+    region: "us-central1"
+}, notificarCambioEstado);
+
+exports.notificarCambioEstadoTreasury = onDocumentUpdated({
+    document: "operaciones/{radicado}",
+    database: "treasurybackoffice",
+    region: "us-central1"
+}, notificarCambioEstado);
 
 // ============================================================================
 // 👥 APIS DE GOBIERNO (ROLES Y ANS)
@@ -122,16 +205,26 @@ exports.apiValidarKYC = functions.https.onRequest((req, res) => {
             if (!radicado) return res.status(400).json({ exito: false, error: "Falta radicado." });
 
             const docRef = db.collection("operaciones").doc(radicado);
-            const doc = await docRef.get();
-            if (!doc.exists) return res.status(404).json({ exito: false, error: "Operación no encontrada." });
-
             const nuevoHistorial = crearRegistroHistorial("2. 🛡️ CHECK KYC / COMPLIANCE APROBADO", "Revisión antifraude KYC certificada por el Preparador. Lista para iniciar montaje en portal bancario.", usrValidado);
-
-            await docRef.update({
-                estado: "En Preparación",
-                kycValidadoPor: usrValidado.nombre,
-                historial: FieldValue.arrayUnion(nuevoHistorial),
-                actualizadoEn: FieldValue.serverTimestamp()
+            const correoPreparador = String(usuario.correo || "").trim().toLowerCase();
+            await db.runTransaction(async transaction => {
+                const doc = await transaction.get(docRef);
+                if (!doc.exists) throw new Error("Operación no encontrada.");
+                const operacion = doc.data();
+                const asignado = String(operacion.preparadorAsignadoCorreo || "").toLowerCase();
+                if (asignado && asignado !== correoPreparador && usrValidado.rol !== "maestro") {
+                    throw new Error(`La operación ya está asignada a ${operacion.preparadorAsignado || asignado}.`);
+                }
+                if (operacion.estado !== "Pendiente Validación") throw new Error("La operación ya no está pendiente de validación KYC.");
+                transaction.update(docRef, {
+                    estado: "En Preparación",
+                    kycValidadoPor: usrValidado.nombre,
+                    kycValidadoEn: FieldValue.serverTimestamp(),
+                    preparadorAsignado: usrValidado.nombre,
+                    preparadorAsignadoCorreo: correoPreparador,
+                    historial: FieldValue.arrayUnion(nuevoHistorial),
+                    actualizadoEn: FieldValue.serverTimestamp()
+                });
             });
 
             console.log(`🛡️ [CLOUD] KYC Validado por Preparador: ${radicado}`);
@@ -159,6 +252,9 @@ exports.apiRegistrarMontaje = functions.https.onRequest((req, res) => {
             await docRef.update({
                 estado: "En Aprobación",
                 archivoScreenshot: archivoScreenshot.trim(),
+                montadoPor: usrValidado.nombre,
+                montadoPorCorreo: String(usuario.correo || "").trim().toLowerCase(),
+                fechaMontaje: FieldValue.serverTimestamp(),
                 fechaVencimientoSLA: fechaVencimiento,
                 historial: FieldValue.arrayUnion(nuevoHistorial),
                 actualizadoEn: FieldValue.serverTimestamp()
@@ -183,7 +279,10 @@ exports.apiAprobarMontaje = functions.https.onRequest((req, res) => {
             const nuevoHistorial = crearRegistroHistorial("4. 🟣 APROBACIÓN DE MONTAJE (VISTO BUENO)", "Check Final aprobado. Retorna a Preparador para PDF.", usrValidado);
 
             await docRef.update({
-                estado: "APROBADO",
+                estado: "Pendiente Cierre Preparador",
+                aprobadoPor: usrValidado.nombre,
+                aprobadoPorCorreo: String(usuario.correo || "").trim().toLowerCase(),
+                fechaAprobacion: FieldValue.serverTimestamp(),
                 historial: FieldValue.arrayUnion(nuevoHistorial),
                 actualizadoEn: FieldValue.serverTimestamp()
             });
@@ -199,21 +298,29 @@ exports.apiCerrarComprobante = functions.https.onRequest((req, res) => {
     return cors(req, res, async () => {
         try {
             if (req.method !== "POST") return res.status(405).json({ exito: false });
-            const { radicado, archivoPDF, usuario } = req.body;
+            const { radicado, archivoPDF, observacionesCierre, usuario } = req.body;
             const usrValidado = await validarPermiso(usuario, ["preparador"]);
-            if (!radicado || !archivoPDF) return res.status(400).json({ exito: false });
+            if (!radicado) return res.status(400).json({ exito: false });
 
             const docRef = db.collection("operaciones").doc(radicado);
-            const nuevoHistorial = crearRegistroHistorial("🏁 5. COMPROBANTE CERRADO Y ENTREGADO", `Comprobante PDF (${archivoPDF}) entregado exitosamente.`, usrValidado);
+            const pdfAdjunto = typeof archivoPDF === "string" && archivoPDF.trim() !== "";
+            const observacionesLimpias = typeof observacionesCierre === "string" ? observacionesCierre.trim().slice(0, 2000) : "";
+            const nuevoHistorial = crearRegistroHistorial("🏁 5. CIERRE DEL PREPARADOR", `Cierre registrado. PDF adjunto: ${pdfAdjunto ? "Sí" : "No"}. Observaciones registradas: ${observacionesLimpias ? "Sí" : "No"}.`, usrValidado);
 
-            await docRef.update({
+            const actualizacion = {
                 estado: "COMPLETADA / CERRADA ✓",
-                archivoPDF: archivoPDF.trim(),
                 comprobanteCerrado: true,
                 enTransito: false,
+                cerradoPor: usrValidado.nombre,
+                cerradoPorCorreo: String(usuario.correo || "").trim().toLowerCase(),
+                fechaCierre: FieldValue.serverTimestamp(),
+                observacionesCierre: observacionesLimpias,
                 historial: FieldValue.arrayUnion(nuevoHistorial),
                 actualizadoEn: FieldValue.serverTimestamp()
-            });
+            };
+            if (pdfAdjunto) actualizacion.archivoPDF = archivoPDF.trim();
+
+            await docRef.update(actualizacion);
 
             console.log(`🏁 [CLOUD] Cierre PDF: ${radicado}`);
             return res.status(200).json({ exito: true });
