@@ -1,3 +1,20 @@
+// === COMPLETAR CORREO EN LA SESIÓN ===
+// Las sesiones iniciadas sin `correo` (login anterior) rompían validarKYCOperacion,
+// que identifica al preparador por correo. Se completa a partir del rol de prueba.
+(function asegurarCorreoSesion() {
+    try {
+        var raw = sessionStorage.getItem("usuarioLogueado");
+        if (!raw) return;
+        var usr = JSON.parse(raw);
+        if (usr.correo) return;
+        var porRol = { solicitante: "lau@bold.co", preparador: "fel@bold.co", aprobador: "kat@bold.co", maestro: "simo@bold.co" };
+        var correo = porRol[String(usr.rol || "").toLowerCase().trim()];
+        if (!correo) return;
+        usr.correo = correo;
+        sessionStorage.setItem("usuarioLogueado", JSON.stringify(usr));
+    } catch (e) { console.error("No se pudo completar el correo de la sesión:", e); }
+})();
+
 if (typeof firebase !== "undefined" && firebase.app) {
     var _origFs = firebase.firestore;
     firebase.firestore = function(dbName) {
