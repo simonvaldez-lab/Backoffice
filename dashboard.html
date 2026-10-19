@@ -8,6 +8,11 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
         .vista-rol { display: none; animation: fadeIn 0.3s ease-in-out; }
         .vista-rol.activa { display: block; }
+        .auditoria-seccion { margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid #E2E8F0; }
+        .auditoria-seccion h3 { margin: 0 0 9px; color: #0B1442; font-size: 12px; }
+        .auditoria-seccion .grid-detalles { margin: 0; padding: 10px; gap: 10px; }
+        .parametros-atencion-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1.3fr; gap: 15px; }
+        @media (max-width: 900px) { .parametros-atencion-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
     </style>
 </head>
 <body>
@@ -34,10 +39,11 @@
                 </div>
                 <div style="background: white; border: 1px solid #CBD5E1; border-radius: 10px; padding: 16px; margin-bottom: 15px;">
                     <h3 style="margin: 0 0 12px 0; font-size: 14px; color: #0B1442; border-bottom: 1px solid #F1F5F9; padding-bottom: 8px;">1. Identificación y Parámetros de Atención</h3>
-                    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px;">
+                    <div class="parametros-atencion-grid">
                         <div><label style="font-size: 11px; font-weight: bold;">🏷️ Nombre de Operación / Plantilla <span style="color:#EF4444;">*</span></label><input type="text" id="nombre-op" class="form-control" placeholder="Ej: Nómina Quincenal Bold CO" style="width: 100%; font-weight: bold;" required></div>
                         <div><label style="font-size: 11px; font-weight: bold;">🔥 Prioridad <span style="color:#EF4444;">*</span></label><select id="prioridad-op" class="form-control" style="width: 100%;" onchange="ajustarANS()"><option value="1">1 - Alta (Urgente)</option><option value="2" selected>2 - Media (Normal)</option><option value="3">3 - Baja (Flexible)</option></select></div>
                         <div><label style="font-size: 11px; font-weight: bold;">⏱️ Tiempo ANS (SLA)</label><input type="text" id="ans-op" class="form-control" value="2 Horas" style="width: 100%; background: #F8FAFC; font-weight: bold;" readonly></div>
+                        <div><label style="font-size: 11px; font-weight: bold;">📅 Fecha de cumplimiento <span style="color:#EF4444;">*</span></label><input type="date" id="fecha-cumplimiento" class="form-control" style="width:100%;" required></div>
                     </div>
                 </div>
                 <div style="background: white; border: 1px solid #CBD5E1; border-radius: 10px; padding: 16px; margin-bottom: 15px;">
@@ -105,6 +111,10 @@
                     </div>
                 </div>
                 <div class="tabla-contenedor"><table><thead><tr><th>Control ANS / Radicado</th><th>Fecha</th><th>Compañía & Operación</th><th>Solicitante</th><th>Valor Montado</th><th>Estado</th><th>Acción Check Final</th></tr></thead><tbody id="tabla-aprobador"></tbody></table></div>
+                <section style="margin-top:24px;">
+                    <div style="margin-bottom:10px;"><h2 style="margin:0; font-size:17px; color:#0B1442;">Monitoreo global · Solo lectura</h2><p class="subtitulo" style="margin:4px 0 0; font-size:12px;">Consulta todas las operaciones del país activo, sus responsables y estado. Esta tabla no permite cambiar operaciones.</p></div>
+                    <div class="tabla-contenedor"><table><thead><tr><th>Radicado</th><th>Fecha</th><th>Compañía / operación</th><th>Solicitante</th><th>Preparador asignado</th><th>Aprobador</th><th>Monto</th><th>Estado</th><th>Última actualización</th><th>Detalle</th></tr></thead><tbody id="tabla-monitor-aprobador"></tbody></table></div>
+                </section>
             </div>
 
         </main>
@@ -125,6 +135,7 @@
                 <div style="display: flex; flex-direction: column; gap: 2px; border-bottom: 1px dashed #E2E8F0; padding-bottom: 6px;"><span style="color: #64748B; font-size: 11px;">🏦 Cuenta Origen (Débito):</span><strong id="conf-ori" style="color: #1E293B; font-size: 12px; word-break: break-all;"></strong></div>
                 <div style="display: flex; flex-direction: column; gap: 2px; border-bottom: 1px dashed #E2E8F0; padding-bottom: 6px;"><span style="color: #64748B; font-size: 11px;">🎯 Cuenta Destino (Crédito):</span><strong id="conf-des" style="color: #2563EB; font-size: 12px; word-break: break-all;"></strong></div>
                 <div style="display: flex; justify-content: space-between; padding-top: 2px;"><span style="color: #64748B;">📎 Adjuntos / Observaciones:</span><strong id="conf-doc" style="color: #475569; font-size: 12px; text-align: right;"></strong></div>
+                <div style="display: flex; justify-content: space-between; padding-top: 2px;"><span style="color: #64748B;">📅 Cumplimiento:</span><strong id="conf-cumplimiento" style="color: #0B1442; font-size: 12px;"></strong></div>
             </div>
             <div style="display: flex; justify-content: flex-end; gap: 12px;">
                 <button type="button" class="btn" style="background: white; border: 1px solid #94A3B8; color: #475569; padding: 8px 16px; font-weight: bold;" onclick="cerrarModalConfirmacion()">⬅️ Volver a Editar</button>
@@ -141,11 +152,38 @@
             </div>
             <div class="modal-layout-split">
                 <div class="seccion-datos">
-                    <div class="grid-detalles">
-                        <div class="dato-grupo"><span class="dato-label">Compañía</span><span class="dato-valor" id="mod-origen"></span></div>
-                        <div class="dato-grupo"><span class="dato-label">Moneda</span><span class="dato-valor" id="mod-moneda"></span></div>
-                        <div class="dato-grupo"><span class="dato-label">Valor Solicitado</span><span class="dato-valor" id="mod-val-sol"></span><div class="auditor-data auditor-alerta" id="mod-val-prep"></div></div>
-                        <div class="dato-grupo"><span class="dato-label">Registros</span><span class="dato-valor" id="mod-regs"></span></div>
+                    <div class="auditoria-seccion">
+                        <h3>Datos del pago</h3>
+                        <div class="grid-detalles">
+                            <div class="dato-grupo"><span class="dato-label">Compañía de origen</span><span class="dato-valor" id="mod-origen"></span></div>
+                            <div class="dato-grupo"><span class="dato-label">Moneda</span><span class="dato-valor" id="mod-moneda"></span></div>
+                            <div class="dato-grupo"><span class="dato-label">Monto solicitado</span><span class="dato-valor" id="mod-val-sol"></span></div>
+                            <div class="dato-grupo"><span class="dato-label">Monto montado</span><span class="dato-valor" id="mod-val-prep"></span></div>
+                            <div class="dato-grupo"><span class="dato-label">Tipo de pago</span><span class="dato-valor" id="mod-tipo-pago"></span></div>
+                            <div class="dato-grupo"><span class="dato-label">Operación / detalle</span><span class="dato-valor" id="mod-operacion"></span></div>
+                            <div class="dato-grupo"><span class="dato-label">Cantidad de registros</span><span class="dato-valor" id="mod-regs"></span></div>
+                        </div>
+                    </div>
+                    <div class="auditoria-seccion">
+                        <h3>Datos bancarios</h3>
+                        <div class="grid-detalles">
+                            <div class="dato-grupo"><span class="dato-label">Banco de origen</span><span class="dato-valor" id="mod-banco-origen"></span></div>
+                            <div class="dato-grupo"><span class="dato-label">Cuenta de origen</span><span class="dato-valor" id="mod-cuenta-origen"></span></div>
+                            <div class="dato-grupo"><span class="dato-label">Banco de destino</span><span class="dato-valor" id="mod-banco-destino"></span></div>
+                            <div class="dato-grupo"><span class="dato-label">Cuenta de destino</span><span class="dato-valor" id="mod-cuenta-destino"></span></div>
+                        </div>
+                    </div>
+                    <div class="auditoria-seccion">
+                        <h3>Gestión y fechas</h3>
+                        <div class="grid-detalles">
+                            <div class="dato-grupo"><span class="dato-label">Fecha de creación</span><span class="dato-valor" id="mod-fecha-creacion"></span></div>
+                            <div class="dato-grupo"><span class="dato-label">Fecha de cumplimiento</span><span class="dato-valor" id="mod-fecha-cumplimiento"></span></div>
+                            <div class="dato-grupo" style="grid-column:1/-1;"><span class="dato-label">Correo del solicitante</span><span class="dato-valor" id="mod-solicitante-email"></span></div>
+                        </div>
+                    </div>
+                    <div class="auditoria-seccion">
+                        <h3>Soportes y anexos</h3>
+                        <div id="mod-soportes" class="grid-detalles" style="display:block;"></div>
                     </div>
                     <div class="timeline" id="mod-timeline"></div>
                 </div>
@@ -174,7 +212,16 @@
             <p id="textoSubidaEvidencia" style="font-size: 13px; color: #475569; margin: 0 0 12px 0;">
                 Selecciona la imagen o PDF correspondiente.
             </p>
+            <div id="contenedorCapturaPantalla" style="display:none; margin-bottom:12px;">
+                <button type="button" id="btnCapturarPantalla" class="btn btn-primario" onclick="capturarPantallaMontaje()" style="background:#0F766E; color:white; padding:8px 14px;">Capturar ventana o pantalla</button>
+                <p id="estadoCapturaPantalla" style="margin:8px 0 0; font-size:12px; color:#475569;">El navegador te pedirá elegir qué compartir.</p>
+                <img id="vistaPreviaCapturaPantalla" alt="Vista previa de la captura" style="display:none; max-width:100%; max-height:220px; margin-top:10px; border:1px solid #CBD5E1; border-radius:6px;">
+            </div>
             <input type="file" id="inputSubidaEvidencia" accept="image/png,image/jpeg,image/jpg,application/pdf" style="width:100%; margin-bottom:16px; padding:10px; border:1px solid #CBD5E1; border-radius:8px; background:#F8FAFC;">
+            <div id="contenedorObservacionesCierre" style="display:none; margin-bottom:16px;">
+                <label for="inputObservacionesCierre" style="display:block; margin-bottom:6px; font-size:13px; font-weight:bold; color:#334155;">Observaciones</label>
+                <textarea id="inputObservacionesCierre" rows="4" maxlength="2000" placeholder="Agrega observaciones del cierre (opcional)" style="box-sizing:border-box; width:100%; padding:10px; border:1px solid #CBD5E1; border-radius:8px; resize:vertical;"></textarea>
+            </div>
             <div style="display:flex; justify-content:flex-end; gap:12px;">
                 <button type="button" class="btn" style="background:white; border:1px solid #94A3B8; color:#475569; padding:8px 16px; font-weight:bold;" onclick="cerrarModalSubidaEvidencia()">Cancelar</button>
                 <button type="button" id="btnConfirmarSubidaEvidencia" class="btn btn-primario" style="background:#2563EB; color:white; padding:8px 20px; font-weight:bold;">Subir archivo</button>
@@ -194,7 +241,7 @@
             }); 
         }
     </script>
-    <script src="js/logica-comun.js?v=10"></script>
+    <script src="js/logica-comun.js?v=15"></script>
     
     <!-- MOTOR SPA Y LOGICA COMPLETA -->
     <script>
@@ -230,65 +277,6 @@
                 });
             }
             
-            const btnSubir = document.getElementById('btnConfirmarSubidaEvidencia');
-            if (!btnSubir) return;
-            btnSubir.addEventListener('click', async function() {
-                const modal = document.getElementById('modalSubidaEvidencia');
-                const input = document.getElementById('inputSubidaEvidencia');
-                if (!modal || !input) return;
-                const radicado = modal.dataset.radicado;
-                const tipo = modal.dataset.tipo;
-                const file = input.files[0];
-                if (!radicado || !tipo) return;
-                if (!file) {
-                    alert('⚠️ Debes seleccionar un archivo antes de continuar.');
-                    return;
-                }
-                
-                try {
-                    btnSubir.disabled = true;
-                    btnSubir.textContent = 'Subiendo...';
-                    const urlArchivo = await subirArchivoAStorage(file, radicado, tipo);
-                    
-                    // 1. Intentamos actualizar la nube (Firestore)
-                    try {
-                        const db = firebase.app().firestore();
-                        const docId = radicado.replace(/\//g, '-');
-                        if (tipo === 'screenshot') {
-                            await db.collection('operaciones').doc(docId).update({ estado: 'En Aprobación', archivoScreenshot: urlArchivo });
-                        } else if (tipo === 'cierre') {
-                            await db.collection('operaciones').doc(docId).update({ estado: 'COMPLETADA / CERRADA ✓', archivoPDF: urlArchivo, comprobanteCerrado: true });
-                        }
-                    } catch (e) { console.log("Aviso: Actualización en nube pendiente o no encontrada, priorizando local."); }
-
-                    // 2. ⚡ LA MAGIA: Actualizamos la memoria local para que la tabla cambie instantáneamente
-                    const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : [];
-                    const op = ops.find(o => o.radicado === radicado);
-                    if (op) {
-                        if (tipo === 'screenshot') {
-                            op.estado = 'En Aprobación';
-                            op.archivoScreenshot = urlArchivo;
-                            alert('✅ Screenshot subido correctamente. La operación pasó a la bandeja del Aprobador.');
-                        } else if (tipo === 'cierre') {
-                            op.estado = 'COMPLETADA / CERRADA ✓';
-                            op.archivoPDF = urlArchivo;
-                            op.comprobanteCerrado = true;
-                            alert('✅ PDF definitivo subido correctamente. Operación cerrada.');
-                        }
-                        if (typeof guardarOperaciones === 'function') guardarOperaciones(ops);
-                    }
-
-                    cerrarModalSubidaEvidencia();
-                    renderizarTabla(); // Recargamos la tabla automáticamente
-                    
-                } catch (error) {
-                    console.error('Error al subir evidencia:', error);
-                    alert('❌ No se pudo subir el archivo: ' + (error.message || error));
-                } finally {
-                    btnSubir.disabled = false;
-                    btnSubir.textContent = 'Subir archivo';
-                }
-            });
         });
         // Funciones de Solicitante
         function evaluarReglasExcel() {
@@ -499,7 +487,7 @@
             } 
         }
 
-        function limpiarFormularioCompleto() { ['nombre-op', 'monto-sol', 'doc-link', 'doc-instrucciones', 'doc-archivo'].forEach(f => { const el = document.getElementById(f); if (el) el.value = ""; }); document.getElementById('prioridad-op').value = "2"; ajustarANS(); inicializarArbol(); evaluarReglasExcel(); }
+        function limpiarFormularioCompleto() { ['nombre-op', 'monto-sol', 'doc-link', 'doc-instrucciones', 'doc-archivo', 'fecha-cumplimiento'].forEach(f => { const el = document.getElementById(f); if (el) el.value = ""; }); document.getElementById('prioridad-op').value = "2"; ajustarANS(); inicializarArbol(); evaluarReglasExcel(); }
 
         function cargarPlantilla() { 
             const idx = document.getElementById('select-plantilla').value; 
@@ -535,7 +523,36 @@
             }
         }
 
-        function procesarRadicacion() { const nomOp = document.getElementById('nombre-op').value.trim(); const monto = document.getElementById('monto-sol').value; const ctaDes = document.getElementById('niv-cta-des').value; const ctaOri = document.getElementById('niv-cta-ori').value; const prio = document.getElementById('prioridad-op').value; const ans = document.getElementById('ans-op').value; const moneda = document.getElementById('moneda-op').value; const fileInput = document.getElementById('doc-archivo'); const link = document.getElementById('doc-link').value.trim(); const inst = document.getElementById('doc-instrucciones').value.trim(); if(!nomOp) return alert("El 'Nombre de Operación' es obligatorio."); if(!monto || monto <= 0) return alert("Ingresa un monto solicitado válido."); if(!ctaDes) return alert("Completa los 7 niveles de enrutamiento bancario."); document.getElementById('conf-nom').innerText = nomOp; document.getElementById('conf-prio').innerText = (prio === "1" ? "🔥 1 - Alta" : prio === "2" ? "⚡ 2 - Media" : "☕ 3 - Baja") + " | ANS: " + ans; document.getElementById('conf-monto').innerText = `$ ${parseFloat(monto).toLocaleString()} ${moneda}`; document.getElementById('conf-ori').innerText = ctaOri || "No seleccionada"; document.getElementById('conf-des').innerText = ctaDes; let docResumen = []; if (fileInput && fileInput.files[0]) docResumen.push(`📁 ${fileInput.files[0].name}`); if (link) docResumen.push("🔗 Link"); if (inst) docResumen.push("📝 Observaciones"); document.getElementById('conf-doc').innerText = docResumen.length > 0 ? docResumen.join(" | ") : "Ninguno"; document.getElementById('modalConfirmacion').style.display = 'flex'; }
+        function procesarRadicacion() {
+            const nomOp = document.getElementById('nombre-op').value.trim();
+            const monto = document.getElementById('monto-sol').value;
+            const ctaDes = document.getElementById('niv-cta-des').value;
+            const ctaOri = document.getElementById('niv-cta-ori').value;
+            const prio = document.getElementById('prioridad-op').value;
+            const ans = document.getElementById('ans-op').value;
+            const moneda = document.getElementById('moneda-op').value;
+            const fechaCumplimiento = document.getElementById('fecha-cumplimiento').value;
+            const fileInput = document.getElementById('doc-archivo');
+            const link = document.getElementById('doc-link').value.trim();
+            const inst = document.getElementById('doc-instrucciones').value.trim();
+            if (!nomOp) return alert("El 'Nombre de Operación' es obligatorio.");
+            if (!monto || monto <= 0) return alert('Ingresa un monto solicitado válido.');
+            if (!ctaDes) return alert('Completa los 7 niveles de enrutamiento bancario.');
+            if (!fechaCumplimiento) return alert('Selecciona la fecha de cumplimiento.');
+
+            document.getElementById('conf-nom').innerText = nomOp;
+            document.getElementById('conf-prio').innerText = (prio === '1' ? '🔥 1 - Alta' : prio === '2' ? '⚡ 2 - Media' : '☕ 3 - Baja') + ' | ANS: ' + ans;
+            document.getElementById('conf-monto').innerText = `$ ${parseFloat(monto).toLocaleString()} ${moneda}`;
+            document.getElementById('conf-ori').innerText = ctaOri || 'No seleccionada';
+            document.getElementById('conf-des').innerText = ctaDes;
+            document.getElementById('conf-cumplimiento').innerText = new Date(fechaCumplimiento + 'T00:00:00').toLocaleDateString('es-CO');
+            const docResumen = [];
+            if (fileInput && fileInput.files[0]) docResumen.push(`📁 ${fileInput.files[0].name}`);
+            if (link) docResumen.push('🔗 Link');
+            if (inst) docResumen.push('📝 Observaciones');
+            document.getElementById('conf-doc').innerText = docResumen.length ? docResumen.join(' | ') : 'Ninguno';
+            document.getElementById('modalConfirmacion').style.display = 'flex';
+        }
 
         function cerrarModalConfirmacion() { document.getElementById('modalConfirmacion').style.display = 'none'; }
 
@@ -554,70 +571,44 @@
         function abrirModalSubidaEvidencia(radicado, tipo, titulo, descripcion) {
             const modal = document.getElementById('modalSubidaEvidencia');
             const input = document.getElementById('inputSubidaEvidencia');
+            const captura = document.getElementById('contenedorCapturaPantalla');
+            const estadoCaptura = document.getElementById('estadoCapturaPantalla');
+            const vistaPrevia = document.getElementById('vistaPreviaCapturaPantalla');
+            const observaciones = document.getElementById('inputObservacionesCierre');
+            const contenedorObservaciones = document.getElementById('contenedorObservacionesCierre');
             const tituloEl = document.getElementById('tituloSubidaEvidencia');
             const textoEl = document.getElementById('textoSubidaEvidencia');
             if (!modal || !input || !tituloEl || !textoEl) return;
             modal.dataset.radicado = radicado;
             modal.dataset.tipo = tipo;
+            modal._capturedScreenshot = null;
+            if (modal._screenshotPreviewUrl) URL.revokeObjectURL(modal._screenshotPreviewUrl);
+            modal._screenshotPreviewUrl = null;
             tituloEl.textContent = titulo;
             textoEl.textContent = descripcion;
             input.value = '';
+            input.required = tipo !== 'cierre';
+            input.accept = tipo === 'cierre' ? 'application/pdf' : 'image/png,image/jpeg,image/jpg,application/pdf';
+            if (captura) captura.style.display = tipo === 'screenshot' ? 'block' : 'none';
+            if (estadoCaptura) estadoCaptura.textContent = 'El navegador te pedirá elegir qué compartir.';
+            if (vistaPrevia) {
+                vistaPrevia.removeAttribute('src');
+                vistaPrevia.style.display = 'none';
+            }
+            if (observaciones) observaciones.value = '';
+            if (contenedorObservaciones) contenedorObservaciones.style.display = tipo === 'cierre' ? 'block' : 'none';
             modal.style.display = 'flex';
         }
 
         function cerrarModalSubidaEvidencia() {
             const modal = document.getElementById('modalSubidaEvidencia');
-            if (modal) modal.style.display = 'none';
+            if (modal) {
+                modal.style.display = 'none';
+                modal._capturedScreenshot = null;
+                if (modal._screenshotPreviewUrl) URL.revokeObjectURL(modal._screenshotPreviewUrl);
+                modal._screenshotPreviewUrl = null;
+            }
         }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const btnSubir = document.getElementById('btnConfirmarSubidaEvidencia');
-            if (!btnSubir) return;
-            btnSubir.addEventListener('click', async function() {
-                const modal = document.getElementById('modalSubidaEvidencia');
-                const input = document.getElementById('inputSubidaEvidencia');
-                if (!modal || !input) return;
-                const radicado = modal.dataset.radicado;
-                const tipo = modal.dataset.tipo;
-                const file = input.files[0];
-                if (!radicado || !tipo) return;
-                if (!file) {
-                    alert('⚠️ Debes seleccionar un archivo antes de continuar.');
-                    return;
-                }
-                try {
-                    btnSubir.disabled = true;
-                    btnSubir.textContent = 'Subiendo...';
-                    const urlArchivo = await subirArchivoAStorage(file, radicado, tipo);
-                    const db = firebase.app().firestore();
-                    const docId = radicado.replace(/\//g, '-');
-                    if (tipo === 'screenshot') {
-                        await db.collection('operaciones').doc(docId).update({
-                            estado: 'En Aprobación',
-                            archivoScreenshot: urlArchivo,
-                            fechaMontaje: new Date().toISOString()
-                        });
-                        alert('✅ Screenshot subido correctamente y la operación pasó a En Aprobación.');
-                    } else if (tipo === 'cierre') {
-                        await db.collection('operaciones').doc(docId).update({
-                            estado: 'COMPLETADA / CERRADA ✓',
-                            archivoPDF: urlArchivo,
-                            comprobanteCerrado: true,
-                            fechaCierre: new Date().toISOString()
-                        });
-                        alert('✅ PDF final subido correctamente y la operación quedó cerrada.');
-                    }
-                    cerrarModalSubidaEvidencia();
-                    if (typeof refrescarPantallasUniversales === 'function') refrescarPantallasUniversales();
-                } catch (error) {
-                    console.error('Error al subir evidencia:', error);
-                    alert('❌ No se pudo subir el archivo: ' + (error.message || error));
-                } finally {
-                    btnSubir.disabled = false;
-                    btnSubir.textContent = 'Subir archivo';
-                }
-            });
-        });
 
         function confirmarYRadicar() { cerrarModalConfirmacion(); const fileInput = document.getElementById('doc-archivo'); const file = fileInput ? fileInput.files[0] : null; if (file) { const reader = new FileReader(); reader.onload = function(e) { finalizarGuardadoOperacion(e.target.result, file.name, file.type); }; reader.readAsDataURL(file); } else { finalizarGuardadoOperacion(null, null, null); } }
 
@@ -656,7 +647,7 @@
             const nueva = {
                 radicado: rad, 
                 nombreOperacion: nomOp, 
-                pais: usr.pais || "Colombia", 
+                pais: typeof obtenerPaisActivo === 'function' ? obtenerPaisActivo() : (usr.pais || "Colombia"),
                 empresa: empOri, 
                 compDestino: empDes, 
                 tipo: `${cat} - ${sub}`, 
@@ -673,6 +664,7 @@
                 prioridad: parseInt(prio), 
                 fechaRadicacion: fechaVisual, 
                 fechaISO: fechaISOReal, 
+                fechaCumplimiento: document.getElementById('fecha-cumplimiento').value,
                 apartadaPor: null, 
                 enTransito: true, 
                 comprobanteCerrado: false, 
@@ -699,22 +691,38 @@
         function renderizarTabla() {
             const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}');
             const rol = String(usr.rol || "solicitante").toLowerCase().trim();
-            const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : [];
+            const opsBase = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : [];
+            const ops = typeof filtrarOperacionesPorPais === 'function' ? filtrarOperacionesPorPais(opsBase) : opsBase;
             
             function coincideFecha(op, filtroId) { const input = document.getElementById(filtroId); const fechaInput = input ? input.value : ""; if (!fechaInput) return true; if (!op || !op.fechaRadicacion) return false; var limpiaOp = String(op.fechaRadicacion).split(" - ")[0].trim(); var partes = limpiaOp.split("/"); if (partes.length !== 3) return false; var fNorm = partes[2] + "-" + String(partes[1]).padStart(2, "0") + "-" + String(partes[0]).padStart(2, "0"); return fNorm === fechaInput; }
 
             if (rol === "preparador" || rol === "maestro") {
-                const listos = ops.filter(o => (o.estado === "Pendiente Validación" || o.estado === "En Preparación") && coincideFecha(o, 'filtro-fecha-prep'));
+                const listos = ops.filter(o => {
+                    const estado = String(o.estado || '').trim().toUpperCase();
+                    return ['PENDIENTE VALIDACIÓN', 'PENDIENTE VALIDACION', 'EN PREPARACIÓN', 'EN PREPARACION', 'PENDIENTE CIERRE PREPARADOR', 'APROBADO'].includes(estado) && coincideFecha(o, 'filtro-fecha-prep');
+                });
                 const tb = document.getElementById('tabla-preparador');
                 if(!tb) return;
                 tb.innerHTML = '';
                 if(listos.length === 0) { tb.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px;">No hay dispersiones en cola.</td></tr>'; return; }
                 listos.forEach(o => {
+                    const pendienteCierre = ['PENDIENTE CIERRE PREPARADOR', 'APROBADO'].includes(String(o.estado || '').trim().toUpperCase());
                     const prioBadge = o.prioridad === 1 ? '<span class="badge" style="background:#FEE2E2; color:#991B1B;">🔥 1 - Alta</span>' : o.prioridad === 3 ? '<span class="badge" style="background:#F1F5F9;">☕ 3 - Baja</span>' : '<span class="badge" style="background:#FEF3C7;">⚡ 2 - Media</span>';
                     let candado = "";
                     let btnStyle = "background:#15803D;";
-                    if (o.apartadaPor) { candado = `<span style="background:#FEF3C7; color:#92400E; padding:5px 8px; border-radius:6px; font-size:11px; font-weight:bold;">🔒 ${o.apartadaPor}</span>`; if (o.apartadaPor !== (usr.nombre || usr.correo) && usr.rol !== 'maestro') { btnStyle = "background:#94A3B8; cursor:not-allowed;"; } } else { candado = `<button class="btn" style="background:#FEF9C3; color:#A16207; border:1px dashed #CA8A04;" onclick="apartarRadicado('${o.radicado}')">🔓 Apartar</button>`; }
-                    let boton = o.estado === "Pendiente Validación" ? `<button class="btn btn-primario" style="background:#0284C7;" onclick="validarKYCOperacion('${o.radicado}')">🛡️ 1. Validar KYC</button>` : `<button class="btn btn-primario" style="${btnStyle}" ${o.apartadaPor && o.apartadaPor !== (usr.nombre || usr.correo) && usr.rol !== 'maestro' ? 'disabled' : ''} onclick="enviarAAprobador('${o.radicado}')">🚀 2. Montar Pago</button>`;
+                    const correoAsignado = String(o.preparadorAsignadoCorreo || '').toLowerCase();
+                    const preparadorAjeno = correoAsignado && correoAsignado !== String(usr.correo || '').toLowerCase() && String(usr.rol || '').toLowerCase() !== 'maestro';
+                    const apartadoAjeno = o.apartadaPor && o.apartadaPor !== (usr.nombre || usr.correo) && String(usr.rol || '').toLowerCase() !== 'maestro';
+                    if (correoAsignado) {
+                        candado = `<span style="background:#FEF3C7; color:#92400E; padding:5px 8px; border-radius:6px; font-size:11px; font-weight:bold;">🔒 ${o.preparadorAsignado || correoAsignado}</span>`;
+                    } else if (o.apartadaPor) {
+                        candado = `<span style="background:#FEF3C7; color:#92400E; padding:5px 8px; border-radius:6px; font-size:11px; font-weight:bold;">🔒 ${o.apartadaPor}</span>`;
+                    } else {
+                        candado = `<button class="btn" style="background:#FEF9C3; color:#A16207; border:1px dashed #CA8A04;" onclick="apartarRadicado('${o.radicado}')">🔓 Apartar</button>`;
+                    }
+                    if (preparadorAjeno || apartadoAjeno) btnStyle = 'background:#94A3B8; cursor:not-allowed;';
+                    const deshabilitado = preparadorAjeno || apartadoAjeno ? 'disabled title="Asignada o reservada por otro usuario"' : '';
+                    let boton = o.estado === "Pendiente Validación" ? `<button class="btn btn-primario" style="background:#0284C7;" ${deshabilitado} onclick="validarKYCOperacion('${o.radicado}')">🛡️ 1. Validar KYC</button>` : pendienteCierre ? `<button class="btn btn-primario" style="background:#15803D;" ${deshabilitado} onclick="finalizarYCerrarComprobante('${o.radicado}')">🏁 3. Cerrar operación</button>` : `<button class="btn btn-primario" style="${btnStyle}" ${deshabilitado} onclick="enviarAAprobador('${o.radicado}')">🚀 2. Montar Pago</button>`;
                     tb.innerHTML += `<tr><td><strong>${o.radicado}</strong><br>${prioBadge}</td><td>📅 ${o.fechaRadicacion}</td><td>${o.empresa}<br><span class="badge" style="margin-top:3px;">${o.tipo}</span></td><td><strong>$ ${o.montoPrep.toLocaleString()}</strong> <span class="badge">${o.moneda}</span></td><td>${candado}</td><td><button class="btn btn-detalle" onclick="auditarRadicado('${o.radicado}')">🔍 Auditar</button></td><td>${boton}</td></tr>`;
                 });
             }
@@ -724,11 +732,60 @@
                 const tb = document.getElementById('tabla-aprobador');
                 if(!tb) return;
                 tb.innerHTML = '';
-                if(cola.length === 0) { tb.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px;">No hay radicados en cola de Check Final.</td></tr>'; return; }
-                cola.forEach(o => {
+                if(cola.length === 0) {
+                    tb.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px;">No hay radicados en cola de Check Final.</td></tr>';
+                } else cola.forEach(o => {
                     const prioBadge = o.prioridad === 1 ? '<span class="badge" style="background:#FEE2E2;">🔥 1 - Alta</span>' : o.prioridad === 3 ? '<span class="badge" style="background:#F1F5F9;">☕ 3 - Baja</span>' : '<span class="badge" style="background:#FEF3C7;">⚡ 2 - Media</span>';
                     tb.innerHTML += `<tr><td><span>ANS: ${o.ans}</span><br><strong>${o.radicado}</strong><br>${prioBadge}</td><td>📅 ${o.fechaRadicacion}</td><td>${o.empresa}<br><span class="badge" style="margin-top:4px;">${o.tipo}</span></td><td>${o.solicitante}</td><td><strong>$ ${o.montoPrep.toLocaleString()}</strong> <span class="badge">${o.moneda}</span></td><td><span class="badge" style="background:#E0F2FE; color:#075985;">🔵 Pendiente</span></td><td style="display: flex; gap: 8px;"><button class="btn btn-detalle" onclick="auditarRadicado('${o.radicado}')">🔍</button><button class="btn btn-primario" style="background:#15803D;" onclick="confirmarPagoFinal('${o.radicado}')">🏁 Check Final</button><button class="btn" style="background:#EF4444; color:white;" onclick="cambiarEstadoRechazo('${o.radicado}', 'Rechazado')">✕ Devolver</button></td></tr>`;
                 });
+
+                const tbMonitor = document.getElementById('tabla-monitor-aprobador');
+                if (tbMonitor) {
+                    tbMonitor.replaceChildren();
+                    if (!ops.length) {
+                        const filaVacia = document.createElement('tr');
+                        const mensajeVacio = document.createElement('td');
+                        mensajeVacio.colSpan = 10;
+                        mensajeVacio.textContent = 'No hay operaciones registradas para este país.';
+                        mensajeVacio.style.textAlign = 'center';
+                        mensajeVacio.style.padding = '24px';
+                        filaVacia.appendChild(mensajeVacio);
+                        tbMonitor.appendChild(filaVacia);
+                    } else {
+                        ops.forEach(o => {
+                            const fila = document.createElement('tr');
+                            const fechaActualizacion = o.actualizadoEn && typeof o.actualizadoEn.toDate === 'function'
+                                ? o.actualizadoEn.toDate().toLocaleString('es-CO')
+                                : (o.fechaCierre || o.fechaAprobacion || o.fechaMontaje || o.fechaISO || '-');
+                            const campos = [
+                                o.radicado || '-',
+                                o.fechaRadicacion || '-',
+                                [o.empresa, o.nombreOperacion || o.detalle || o.tipo].filter(Boolean).join(' · ') || '-',
+                                o.solicitante || '-',
+                                o.preparadorAsignado || o.preparadorAsignadoCorreo || '-',
+                                o.aprobadoPor || o.aprobadoPorCorreo || '-',
+                                `$ ${(Number(o.montoPrep || o.montoSol) || 0).toLocaleString('es-CO')} ${o.moneda || ''}`.trim(),
+                                o.estado || '-',
+                                fechaActualizacion
+                            ];
+                            campos.forEach(valor => {
+                                const celda = document.createElement('td');
+                                celda.textContent = valor;
+                                fila.appendChild(celda);
+                            });
+                            const celdaDetalle = document.createElement('td');
+                            const botonDetalle = document.createElement('button');
+                            botonDetalle.type = 'button';
+                            botonDetalle.className = 'btn btn-detalle';
+                            botonDetalle.textContent = 'Ver';
+                            botonDetalle.setAttribute('aria-label', `Ver expediente ${o.radicado || ''}`);
+                            botonDetalle.addEventListener('click', () => auditarRadicado(o.radicado));
+                            celdaDetalle.appendChild(botonDetalle);
+                            fila.appendChild(celdaDetalle);
+                            tbMonitor.appendChild(fila);
+                        });
+                    }
+                }
             }
         }
 
@@ -737,7 +794,43 @@
 
         function apartarRadicado(rad) { const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}'); const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : []; const op = ops.find(o => o.radicado === rad); if(op) { op.apartadaPor = usr.nombre || usr.correo; if(typeof guardarOperaciones === 'function') guardarOperaciones(ops); alert(`🔒 Radicado ${rad} apartado por ti.`); renderizarTabla(); } }
 
-        function validarKYCOperacion(rad) { const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}'); const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : []; const op = ops.find(o => o.radicado === rad); if(op) { op.estado = "En Preparación"; op.historial.push({fecha: typeof obtenerFechaHoraMilitar === 'function' ? obtenerFechaHoraMilitar() : new Date().toLocaleString(), paso: "1. VALIDACIÓN KYC", detalle: `KYC validado por ${usr.nombre}.`}); if(typeof guardarOperaciones === 'function') guardarOperaciones(ops); alert(`🛡️ ¡Validación KYC completada!`); renderizarTabla(); } }
+        async function validarKYCOperacion(rad) {
+            const usr = JSON.parse(sessionStorage.getItem('usuarioLogueado') || '{}');
+            const correo = String(usr.correo || '').trim().toLowerCase();
+            if (!correo || typeof firebase === 'undefined' || !firebase.app) return alert('No se pudo identificar al Preparador o conectar con Firestore.');
+            const db = firebase.app().firestore();
+            const docId = rad.replace(/\//g, '-');
+            const docRef = db.collection('operaciones').doc(docId);
+            try {
+                await db.runTransaction(async transaction => {
+                    const doc = await transaction.get(docRef);
+                    if (!doc.exists) throw new Error('Operación no encontrada.');
+                    const op = doc.data();
+                    const asignado = String(op.preparadorAsignadoCorreo || '').toLowerCase();
+                    if (asignado && asignado !== correo && String(usr.rol || '').toLowerCase() !== 'maestro') throw new Error(`La operación ya está asignada a ${op.preparadorAsignado || asignado}.`);
+                    if (op.estado !== 'Pendiente Validación') throw new Error('La operación ya no está pendiente de validación KYC.');
+                    const registro = {
+                        fecha: typeof obtenerFechaHoraMilitar === 'function' ? obtenerFechaHoraMilitar() : new Date().toLocaleString(),
+                        paso: '1. VALIDACIÓN KYC',
+                        detalle: `KYC validado por ${usr.nombre || correo}.`
+                    };
+                    transaction.update(docRef, {
+                        estado: 'En Preparación',
+                        kycValidadoPor: usr.nombre || correo,
+                        kycValidadoEn: firebase.firestore.FieldValue.serverTimestamp(),
+                        preparadorAsignado: usr.nombre || correo,
+                        preparadorAsignadoCorreo: correo,
+                        historial: firebase.firestore.FieldValue.arrayUnion(registro),
+                        actualizadoEn: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                });
+                alert('🛡️ KYC validado. La operación quedó asignada a tu usuario.');
+                if (typeof refrescarPantallasUniversales === 'function') refrescarPantallasUniversales();
+                else renderizarTabla();
+            } catch (error) {
+                alert('No fue posible asignar la operación: ' + error.message);
+            }
+        }
 
         function enviarAAprobador(rad) {
             abrirModalSubidaEvidencia(
@@ -753,14 +846,17 @@
             const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : [];
             const op = ops.find(o => o.radicado === rad);
             if(op) {
-                op.estado = 'APROBADO';
+                op.estado = 'Pendiente Cierre Preparador';
                 op.enTransito = false;
                 op.comprobanteCerrado = false;
+                op.aprobadoPor = usr.nombre || usr.correo || 'Aprobador';
+                op.aprobadoPorCorreo = String(usr.correo || '').trim().toLowerCase();
+                op.fechaAprobacion = new Date().toISOString();
                 op.historial = op.historial || [];
-                op.historial.push({fecha: typeof obtenerFechaHoraMilitar === 'function' ? obtenerFechaHoraMilitar() : new Date().toLocaleString(), paso: '4. CHECK FINAL', detalle: `Liberación final por ${usr.nombre || 'Aprobador'}.`});
+                op.historial.push({fecha: typeof obtenerFechaHoraMilitar === 'function' ? obtenerFechaHoraMilitar() : new Date().toLocaleString(), paso: '4. APROBACIÓN DEL MONTAJE', detalle: `Aprobado por ${usr.nombre || 'Aprobador'}. Pendiente cierre por Preparador.`});
                 if(typeof guardarOperaciones === 'function') guardarOperaciones(ops);
-                if(typeof crearNotificacion === 'function') crearNotificacion(rad, `🏁 ¡Check Final! ${rad} quedó APROBADO.`, true);
-                alert('✅ ¡Check Final Exitoso! La operación quedó en estado APROBADO.');
+                if(typeof crearNotificacion === 'function') crearNotificacion(rad, `✅ ${rad} fue aprobado y está pendiente de cierre por Preparador.`, true);
+                alert('✅ Aprobación registrada. La operación volvió a la bandeja del Preparador para el cierre.');
                 renderizarTabla();
             }
         }
@@ -776,37 +872,138 @@
 
         function cambiarEstadoRechazo(rad, est) { const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : []; const op = ops.find(o => o.radicado === rad); if(op) { op.estado = est; op.historial.push({fecha: typeof obtenerFechaHoraMilitar === 'function' ? obtenerFechaHoraMilitar() : new Date().toLocaleString(), paso: "4. RECHAZADO", detalle: "Devuelto por el Aprobador."}); if(typeof guardarOperaciones === 'function') guardarOperaciones(ops); if(typeof crearNotificacion === 'function') crearNotificacion(rad, `🚨 ¡${rad} fue devuelto!`); alert("Operación devuelta para revisión."); renderizarTabla(); } }
 
-        function auditarRadicado(rad) { 
-            const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : []; 
-            const op = ops.find(o => o.radicado === rad); 
-            if(!op) return alert("Operación no encontrada."); 
-            
-            document.getElementById('mod-radicado-titulo').innerText = `Auditoria - ${rad}`; 
-            document.getElementById('mod-origen').innerText = op.empresa || '-'; 
-            document.getElementById('mod-moneda').innerText = op.moneda || '-'; 
-            document.getElementById('mod-val-sol').innerText = `$ ${(op.montoSol || 0).toLocaleString()}`; 
-            document.getElementById('mod-val-prep').innerText = `$ ${(op.montoPrep || 0).toLocaleString()}`; 
-            document.getElementById('mod-regs').innerText = op.registros || '1'; 
-            
-            let timeline = ''; 
-            if (op.historial) { 
-                op.historial.forEach(h => { timeline += `<div style="padding:8px 0; border-bottom:1px solid #E2E8F0;"><strong style="color:#0B1442; font-size:11px;">${h.paso}</strong><br><span style="color:#64748B; font-size:10px;">${h.fecha}</span><br><span style="color:#475569; font-size:11px;">${h.detalle}</span></div>`; }); 
-            } 
-            document.getElementById('mod-timeline').innerHTML = timeline; 
-            document.getElementById('vis-sol-prov').innerText = op.empresa || '-'; 
-            document.getElementById('vis-sol-total').innerText = `$ ${(op.montoSol || 0).toLocaleString()} ${op.moneda}`; 
-            
-            // 🖼️ NUEVA LÓGICA: DIBUJAR LA IMAGEN DEL BANCO
-            const vistaPreparador = document.getElementById('vistaPreparador');
-            if (op.archivoScreenshot) {
-                vistaPreparador.style.background = "transparent";
-                vistaPreparador.innerHTML = `<h4>EVIDENCIA DEL BANCO</h4><img src="${op.archivoScreenshot}" style="width:100%; border-radius:8px; margin-top:15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" alt="Screenshot Banco">`;
-            } else {
-                vistaPreparador.style.background = "#0F172A";
-                vistaPreparador.innerHTML = `<h4>PORTAL BANCARIO</h4><p style="margin-top:40px; text-align:right; font-weight:bold; font-size:15px;" id="vis-prep-total">$ ${(op.montoPrep || 0).toLocaleString()} ${op.moneda}</p><p style="text-align:center; color:#94A3B8; margin-top:20px;">Sin evidencia cargada</p>`;
+        function auditarRadicado(rad) {
+            const ops = typeof obtenerOperaciones === 'function' ? obtenerOperaciones() : [];
+            const op = ops.find(o => o.radicado === rad);
+            if (!op) return alert('Operación no encontrada.');
+
+            const asignarTexto = (id, valor) => {
+                const elemento = document.getElementById(id);
+                if (elemento) elemento.textContent = valor === 0 ? '0' : (valor || '-');
+            };
+            const separarBancoCuenta = (valor, bancoDeclarado) => {
+                const texto = String(valor || '').trim();
+                const separador = texto.indexOf(' - ');
+                return separador > 0
+                    ? { banco: texto.substring(0, separador), cuenta: texto.substring(separador + 3) }
+                    : { banco: bancoDeclarado || 'No especificado', cuenta: texto || 'No especificada' };
+            };
+            const formatoFecha = (valor, incluirHora) => {
+                if (!valor) return 'No registrada';
+                const texto = String(valor);
+                if (/^\d{4}-\d{2}-\d{2}$/.test(texto)) {
+                    const partes = texto.split('-');
+                    return `${partes[2]}/${partes[1]}/${partes[0]}`;
+                }
+                const fecha = new Date(valor);
+                if (Number.isNaN(fecha.getTime())) return texto;
+                return incluirHora ? fecha.toLocaleString('es-CO') : fecha.toLocaleDateString('es-CO');
+            };
+            const urlAuditoria = (valor, permitirData) => {
+                const texto = String(valor || '').trim();
+                if (permitirData && texto.startsWith('data:')) return texto;
+                try {
+                    const url = new URL(texto, window.location.href);
+                    return url.protocol === 'https:' || url.protocol === 'http:' ? url.href : '';
+                } catch (error) {
+                    return '';
+                }
+            };
+            const cuentaOrigen = separarBancoCuenta(op.ctaOrigen, op.bancoOrigen);
+            const cuentaDestino = separarBancoCuenta(op.ctaDestino, op.bancoDestino);
+
+            asignarTexto('mod-radicado-titulo', `Auditoría - ${rad}`);
+            asignarTexto('mod-origen', op.empresa);
+            asignarTexto('mod-moneda', op.moneda);
+            asignarTexto('mod-val-sol', `$ ${(Number(op.montoSol) || 0).toLocaleString('es-CO')} ${op.moneda || ''}`.trim());
+            asignarTexto('mod-val-prep', `$ ${(Number(op.montoPrep) || 0).toLocaleString('es-CO')} ${op.moneda || ''}`.trim());
+            asignarTexto('mod-tipo-pago', op.tipo);
+            asignarTexto('mod-operacion', [op.nombreOperacion, op.detalle].filter(Boolean).join(' - '));
+            asignarTexto('mod-regs', `${op.registros || 1} registro(s)`);
+            asignarTexto('mod-banco-origen', cuentaOrigen.banco);
+            asignarTexto('mod-cuenta-origen', cuentaOrigen.cuenta);
+            asignarTexto('mod-banco-destino', cuentaDestino.banco);
+            asignarTexto('mod-cuenta-destino', cuentaDestino.cuenta);
+            asignarTexto('mod-fecha-creacion', formatoFecha(op.fechaISO || op.fechaRadicacion, true));
+            asignarTexto('mod-fecha-cumplimiento', formatoFecha(op.fechaCumplimiento, false));
+            asignarTexto('mod-solicitante-email', op.solicitante);
+
+            const soportes = document.getElementById('mod-soportes');
+            if (soportes) {
+                soportes.replaceChildren();
+                const agregarEnlace = (etiqueta, url, nombreArchivo, descarga) => {
+                    if (!url) return;
+                    const urlSegura = urlAuditoria(url, descarga);
+                    if (!urlSegura) return;
+                    const fila = document.createElement('div');
+                    fila.style.marginBottom = '8px';
+                    const titulo = document.createElement('strong');
+                    titulo.textContent = etiqueta + ': ';
+                    const enlace = document.createElement('a');
+                    enlace.href = urlSegura;
+                    enlace.textContent = nombreArchivo || 'Abrir soporte';
+                    enlace.style.color = '#2563EB';
+                    if (descarga) enlace.download = nombreArchivo || 'soporte';
+                    else {
+                        enlace.target = '_blank';
+                        enlace.rel = 'noopener noreferrer';
+                    }
+                    fila.append(titulo, enlace);
+                    soportes.appendChild(fila);
+                };
+                const agregarImagen = (url, alt) => {
+                    if (!url) return;
+                    const imagen = document.createElement('img');
+                    imagen.src = url;
+                    imagen.alt = alt;
+                    imagen.style.cssText = 'display:block; max-width:100%; max-height:220px; margin:6px 0 12px; border:1px solid #CBD5E1; border-radius:6px; object-fit:contain;';
+                    soportes.appendChild(imagen);
+                };
+                const archivoOriginalUrl = urlAuditoria(op.archivoData, true);
+                const capturaUrl = urlAuditoria(op.archivoScreenshot, false);
+                agregarEnlace('Archivo original', archivoOriginalUrl, op.archivoNombre, true);
+                if (archivoOriginalUrl && op.archivoTipo && op.archivoTipo.startsWith('image/')) agregarImagen(archivoOriginalUrl, op.archivoNombre || 'Soporte original');
+                agregarEnlace('Link de referencia', op.archivoLink, op.archivoLink, false);
+                agregarEnlace('Captura del montaje para aprobación', capturaUrl, 'Abrir captura bancaria', false);
+                agregarImagen(capturaUrl, 'Captura del montaje bancario');
+                agregarEnlace('PDF de cierre del Preparador', op.archivoPDF, 'Abrir comprobante PDF', false);
+                if (op.instrucciones) {
+                    const observacionesOrigen = document.createElement('p');
+                    observacionesOrigen.style.cssText = 'margin:8px 0; white-space:pre-wrap; color:#334155;';
+                    observacionesOrigen.textContent = 'Observaciones del Solicitante: ' + op.instrucciones;
+                    soportes.appendChild(observacionesOrigen);
+                }
+                if (op.observacionesCierre) {
+                    const observacionesCierre = document.createElement('p');
+                    observacionesCierre.style.cssText = 'margin:8px 0; white-space:pre-wrap; color:#334155;';
+                    observacionesCierre.textContent = 'Observaciones del Preparador: ' + op.observacionesCierre;
+                    soportes.appendChild(observacionesCierre);
+                }
+                if (!soportes.childElementCount) soportes.textContent = 'Sin soportes ni observaciones registrados.';
             }
-            
-            document.getElementById('modalDetalles').style.display = 'flex'; 
+
+            let timeline = '';
+            if (op.historial) {
+                op.historial.forEach(h => {
+                    timeline += `<div style="padding:8px 0; border-bottom:1px solid #E2E8F0;"><strong style="color:#0B1442; font-size:11px;">${h.paso}</strong><br><span style="color:#64748B; font-size:10px;">${h.fecha}</span><br><span style="color:#475569; font-size:11px;">${h.detalle}</span></div>`;
+                });
+            }
+            asignarTexto('vis-sol-prov', op.empresa);
+            asignarTexto('vis-sol-total', `$ ${(Number(op.montoSol) || 0).toLocaleString('es-CO')} ${op.moneda || ''}`.trim());
+
+            const vistaPreparador = document.getElementById('vistaPreparador');
+            const capturaVisorUrl = urlAuditoria(op.archivoScreenshot, false);
+            if (vistaPreparador && capturaVisorUrl) {
+                vistaPreparador.style.background = 'transparent';
+                vistaPreparador.innerHTML = `<h4>EVIDENCIA DEL BANCO</h4><img src="${capturaVisorUrl}" style="width:100%; border-radius:8px; margin-top:15px; box-shadow:0 4px 6px rgba(0,0,0,0.1);" alt="Screenshot Banco">`;
+            } else if (vistaPreparador) {
+                vistaPreparador.style.background = '#0F172A';
+                vistaPreparador.innerHTML = `<h4>PORTAL BANCARIO</h4><p style="margin-top:40px; text-align:right; font-weight:bold; font-size:15px;">$ ${(Number(op.montoPrep) || 0).toLocaleString('es-CO')} ${op.moneda || ''}</p><p style="text-align:center; color:#94A3B8; margin-top:20px;">Sin evidencia cargada</p>`;
+            }
+
+            const timelineEl = document.getElementById('mod-timeline');
+            if (timelineEl) timelineEl.innerHTML = timeline;
+            document.getElementById('modalDetalles').style.display = 'flex';
         }
         function cerrarModal(id) { document.getElementById(id).style.display = 'none'; }
         function alternarVisor() { const sol = document.getElementById('vistaSolicitante'); const prep = document.getElementById('vistaPreparador'); sol.classList.toggle('hidden'); prep.classList.toggle('hidden'); document.getElementById('tabSol').classList.toggle('active'); document.getElementById('tabPrep').classList.toggle('active'); }

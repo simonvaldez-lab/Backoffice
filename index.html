@@ -64,7 +64,7 @@
             if (usuariosPrueba[email] && pass === "12") {
                 const usuario = usuariosPrueba[email];
                 alert("✅ ¡Ingreso exitoso! " + usuario.nombre + ".\nTe estamos redirigiendo al sistema...");
-                sessionStorage.setItem('usuarioLogueado', JSON.stringify(usuario));
+                sessionStorage.setItem('usuarioLogueado', JSON.stringify(Object.assign({ correo: email }, usuario)));
                 window.location.href = usuario.url;
             } else {
                 errorMsg.style.display = 'block';
