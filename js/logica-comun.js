@@ -9,68 +9,298 @@ if (typeof firebase !== "undefined" && firebase.app) {
 // ==========================================
 
 // 1. ÁRBOL RELACIONAL DE 7 NIVELES (BASE DE DATOS OPERATIVA)
-const arbolOperaciones = {
-    "Traslados": {
-        "Traslados CUD": {
-            "Adelanto adquirencia doméstica": {
-                "Bold CF": {
-                    "BanRep - 62108160 CUD COP": {
-                        "Bold CO": ["Bold CF 170011844070 PO´S ACH", "Bold CF 000008024755 Deposito COP"]
-                        }
-                    }
-                }
-            }
-        },    
-    "Traslados entre cuentas": {
-        "Cuentas Propias": {
-            "Canal Directo": {
-                "Bold CO": {
-                    "Bancolombia - *1234": {
-                        "Bold CO": ["Banco de Bogotá - *5678", "Citi - *9012"]
-                    },
-                    "Davivienda - *4321": {
-                        "Bold CO": ["Bancolombia - *1234"]
-                    }
-                },
-                "Bold CF": {
-                    "Bancolombia - *8888": {
-                        "Bold CO": ["Bancolombia - *1234"],
-                        "Bold PE": ["BCP Perú - *7777"]
-                    }
+// Fuente: formulario "Operaciones de Tesorería".
+// Niveles: 1 Tipo de Pago > 2 Tipo de Operación > 3 País > 4 Empresa Origen > 5 Cuenta Origen > 6 Empresa Destino > 7 Cuenta Destino
+const TIPIFICACION_TESORERIA = {
+    operaciones: {
+    "comp": [
+        "Confirmación abono por adquirencia",
+        "Pago de compensación CUD",
+        "Pago de compensación por Emisión",
+        "Pago de compensación Redeban",
+        "Pago de compensación Servibanca",
+        "Pago de compensación por TC",
+        "Ajuste Notas Débitos y Créditos",
+        "Pago Costos Fijos Servibanca"
+    ],
+    "nom": [
+        "Colaboradores (reembolsos, viáticos, etc)",
+        "Pacto Colectivo - Cheque",
+        "Pacto Colectivo - PSE",
+        "Pacto Colectivo - Transferencia"
+    ],
+    "pay": [
+        "Ajustes de nómina",
+        "Pago de liquidaciones",
+        "Pago de nómina",
+        "Pagos a SENA",
+        "Pagos AFC / Voluntarios - PSE",
+        "Pagos AFC / Voluntarios - Cheque",
+        "Pagos parciales de cesantias",
+        "Desembolso de Libranzas",
+        "Pago de Embargos",
+        "Pago Seguridad Social",
+        "Pacto Colectivo - PSE"
+    ],
+    "prov": [
+        "Cheques por Ventanilla",
+        "Devoluciones a Merchants",
+        "Efectivo por Ventanilla",
+        "Embargos",
+        "Pago TC Bancolombia",
+        "Pagos Customer Experience",
+        "Pagos Customer Success",
+        "Proveedores Internacionales",
+        "Proveedores Locales",
+        "Proveedores Locales - PSE",
+        "Registro cuenta propia y/o terceros",
+        "Impuestos - PSE",
+        "Impuestos - Cheque",
+        "Impuestos - Transferencias",
+        "Impuestos - Efectivo por Ventanilla",
+        "Inscripción Débito Automático - Tesorería",
+        "FOGAFIN",
+        "Débito Automático Inscripción - Pago Proveedores",
+        "Débito Automático Programación - Pago Proveedores",
+        "Débito Automático Actualización - Pago Proveedores",
+        "Débito Automático Recaudos - Créditos",
+        "Débito Automático Novedades - Créditos"
+    ],
+    "tras": [
+        "Adición FIC Agregadora Bold. CF: Credicorp 1-1-58903-3 CCA COP",
+        "Adición FIC Agregadora Bold. CO: Credicorp 1-1-56053-5 CCA COP",
+        "Adición FIC Operativa Bold. CO: Credicorp 1-1-56054-4 CCA COP",
+        "Retiros FIC Agregadora Bold. CF: Credicorp 1-1-58903-3 CCA COP",
+        "Retiros FIC Agregadora Bold. CO: Credicorp 1-1-56053-5 CCA COP",
+        "Retiros FIC Operativa Bold. CO: Credicorp 1-1-56054-4 CCA COP",
+        "Traslados Entre Cuentas",
+        "Traslados CUD",
+        "Recaudo TC",
+        "Recaudo Crédito Cupo Bold",
+        "Adición Dentro APT",
+        "Adición fuera APT",
+        "Recarga PSE",
+        "Retiro Cuenta de Administración Valores"
+    ]
+},
+    tipoPago: {
+    "Compensación": "comp",
+    "Nómina": "nom",
+    "Payroll": "pay",
+    "Proveedores": "prov",
+    "Traslados": "tras",
+    "PSE Cash In": "prov",
+    "Ajuste Notas Débitos y Créditos": "comp",
+    "Débitos Aútomaticos - Créditos": "prov"
+},
+    origen: {
+    "Bold CO": [
+        "Bold. CO: Davivienda 451770073547 Ahorros COP",
+        "Bold. CO: Bancolombia 04000000126 Ahorros COP",
+        "Bold. CO: Bancolombia 04000004981 Ahorros COP",
+        "Bold. CO: Bancolombia 04000006579 Corriente COP",
+        "Bold. CO: Bancolombia 04000000573 Ahorros COP",
+        "Bold. CO: Bancolombia 04000001617 Ahorros COP",
+        "Bold. CO: Bancolombia 04000029802 Ahorros COP",
+        "Bold. CO: Bancolombia 04000005928 Ahorros COP",
+        "Bold. CO: Bancolombia 65200002824 Ahorros COP",
+        "Bold. CO: Corredores Davivienda I 1-1-A-1 CCA COP",
+        "Bold. CO: Serfinanzas 221000016150 Corriente COP",
+        "Bold. CO: Scotiabank 161070270 Corriente COP",
+        "Bold. CO: Scotiabank 0112998066 Ahorros COP",
+        "Bold. CO: Citibank COL 0089550017 Corriente COP",
+        "Bold. CO: Citibank COL 0089550025 Corriente COP",
+        "Bold. CO: Citibank NY 36448843 Corriente USD",
+        "Bold. CO: Bancolombia 547480****6163 TC MC COP",
+        "Bold. CO: Bold CF 000008024755 Deposito COP",
+        "Bold. CO: Bold CF 170012719183 Punto Red - Pagos y Recargas",
+        "Bold. CO: Bold CF 170017479822 Recaudo datáfonos inbound",
+        "Bold. CO: Bold CF 170014863016 QR",
+        "Bold. CO: Bold CF 170011844070 PO´S ACH - QR Agregador",
+        "Bold. CO: Credicorp 1-1-56053-5 CCA COP",
+        "Bold. CO: Credicorp 1-1-56054-4 CCA COP",
+        "Bold. CO: Bold CF 170014863016",
+        "Bold CO - Bold CF 1700-1602-0586 Ahorros COP - nómina",
+        "Bold CO: BBVA 0432000412 Ahorros COP",
+        "Vendemás: BCP MN 191-8591606-0-96 Soles",
+        "Vendemás: BCP MN 191-8591607-0-06 Soles",
+        "Vendemás: BCP MN 191-8591608-0-16 Soles",
+        "Vendemás: BCP MN 191-8740048-0-11 Soles",
+        "Vendemás: BCP MN 191-9409795-0-32 Soles",
+        "Vendemás: BCP MN 191-9410871-0-01 Soles",
+        "Vendemás: BCP MN 1919914041027 Soles",
+        "Vendemás: BCP MN 194-2451630-0-38 Soles",
+        "Vendemás: BCP MN 194-2473891-0-96 Soles",
+        "Vedemás: BN VM 00-003-234045 Soles",
+        "Vendemás: BBVA MN 0100072003 Soles",
+        "Vendemás: BCP ME: 194-2454542-1-62 USD"
+    ],
+    "Bold CF": [
+        "Bold. CF: Bancolombia 04000002167 Ahorros COP",
+        "Bold. CF: Silicon Valley Bank 3303688751 Corriente USD",
+        "Bold. CF: Credicorp 1-1-58903-3 CCA COP",
+        "Bold. CF: Scotiabank 0152999019 Ahorros COP",
+        "Bold. CF: Jp Morgan 2600000209 Corriente COP",
+        "Bold. CF: Jp Morgan NY 523551565 Corriente USD",
+        "Bold. CF: Citibank COL 0090923013 Corriente COP",
+        "Bold. CF: Citibank COL 0090923021 Corriente COP (link CUD)",
+        "Bold CF: BanRep - 62108160 CUD COP",
+        "Bold. CF: Bold CF - 170013569539 COP",
+        "Bold. CF: Citibank -36498883 Corriente USD",
+        "Bold CF - Bold CF 1700-1047-2157 Ahorros COP - nómina",
+        "Bold CF - Bold CF25061001(Cuenta Contable)",
+        "Bold. CF: Credicorp N° CTA: 34707 Cod 102 Port 0",
+        "Bold. CF: Credicorp N° de CTA: 901522349-3 Cod 102 Port 0",
+        "Bold. CF: Banco de Bogotá Cta Cte 0039889878 COP"
+    ],
+    "Bold Capital": [
+        "Bold Capital: Bancolombia 04000003879 Ahorros COP",
+        "Bold Capital: Bancolombia 19300001947 Ahorros COP",
+        "Bold Capital: Bold CF 1700-1050-5296 Ahorros COP - nómina",
+        "Bold Capital: BBVA 0432000421 Ahorros COP"
+    ]
+},
+    destino: [
+    "Bold. CO: Davivienda 451770073547 Ahorros COP",
+    "Bold. CO: Bancolombia 04000000126 Ahorros COP",
+    "Bold. CO: Bancolombia 04000006579 Corriente COP",
+    "Bold. CO: Bancolombia 04000000573 Ahorros COP",
+    "Bold. CO: Bancolombia 04000001617 Ahorros COP",
+    "Bold. CO: Bancolombia 04000029802 Ahorros COP",
+    "Bold. CO: Bancolombia 04000005928 Ahorros COP",
+    "Bold. CO: Bancolombia 04000004981 Ahorros COP",
+    "Bold. CO: Bancolombia 65200002824 Ahorros COP",
+    "Bold. CO: Corredores Davivienda I 1-1-A-1 CCA COP",
+    "Bold. CO: Serfinanzas 221000016150 Corriente COP",
+    "Bold. CO: Scotiabank 161070270 Corriente COP",
+    "Bold. CO: Scotiabank 0112998066 Ahorros COP",
+    "Bold. CO: Citibank COL 0089550017 Corriente COP",
+    "Bold. CO: Citibank COL 0089550025 Corriente COP",
+    "Bold. CO: Citibank NY 36448843 Corriente USD",
+    "Bold. CO: Bancolombia 547480****6163 TC MC COP",
+    "Bold. CO: Bold CF 000008024755 Deposito COP",
+    "Bold. CO: Bold CF 170012719183 Punto Red - Pagos y Recargas",
+    "Bold. CO: Bold CF 170017479822 Recaudo datáfonos inbound",
+    "Bold. CO: Bold CF 170011844070 PO´S ACH - QR Agregador",
+    "Bold. CO: Credicorp 1-1-56053-5 CCA COP",
+    "Bold. CO: Credicorp 1-1-56054-4 CCA COP",
+    "Bold. CF: Bancolombia 04000002167 Ahorros COP",
+    "Bold. CF: Silicon Valley Bank 3303688751 Corriente USD",
+    "Bold. CF: Scotiabank 0152999019 Ahorros COP",
+    "Bold. CF: Jp Morgan 2600000209 Corriente COP",
+    "Bold. CF: Jp Morgan NY 523551565 Corriente USD",
+    "Bold. CF: Citibank COL 0090923013 Corriente COP",
+    "Bold. CF: Citibank COL 0090923021 Corriente COP (link CUD)",
+    "Bold CF: BanRep - 62108160 CUD COP",
+    "Bold CF: ACH - 65818221 COP PORT 0 TRANSFIYA",
+    "Bold. CF: Credicorp Sebra 62250113 COD 102 Portaf 0 COP",
+    "Bold. CF: MCCA COD 163 Sebra 65818197 Portaf 0 COP (Compensación)",
+    "Bold. CF: Servibanca COD 152 Sebra 62011200 Portaf 0 COP (Compensación)",
+    "Bold. CF: Redeban COD 154 Sebra 65818210 Portaf 0 COP (Compensación)",
+    "Bold. CF: Redeban COD 117 Sebra 65818210 Portaf 0 COP (Comisión)",
+    "Bold. CO: Bold CF 170014863016 QR",
+    "Bold Capital: Bancolombia 04000003879 Ahorros COP",
+    "Bold Capital: Bancolombia 19300001947 Ahorros COP",
+    "N/A",
+    "Bold. CF: Citibank -36498883 Corriente USD",
+    "Bold. CF: Bold CF - 170013569539 COP",
+    "Bold. CF: Fogafin COD 117 Sebra 62090022 Portaf 1 COP (Prima Fogafin )",
+    "Bold. CF: Sebra 62010905 Portaf 0 COP COD 102 Citibank COL 0090923021 (Traslado CUD CITI)",
+    "Bold. CF: Sebra CUD 62250113 Portafolio 0 COD 102 Credicorp Capital",
+    "Bold. CF: Sebra CUD 62010707 Portafolio 25 COD 102 Bancolombia",
+    "Bold. CF: B2B Citi Credicorp NIT 8300462686 cta AH 5083808014",
+    "Bold CO - Bold CF 1700-1602-0586 Ahorros COP - nómina",
+    "Bold CF - Bold CF 1700-1047-2157 Ahorros COP - nómina",
+    "Bold Capital: Bold CF 1700-1050-5296 Ahorros COP - nómina",
+    "Bold CF - 41151024 Cuenta de Ingreso (Cuenta Contable)",
+    "Bold CF: Credicorp Capital Alta Liquidez NIT 830046268 Cta Ahorros 03181146167",
+    "Bold CO: BBVA 0432000412 Ahorros COP",
+    "Bold Capital: BBVA 0432000421 Ahorros COP",
+    "Bold. CF: Servibanca COD 117 Sebra 62011200 Portaf 0 COP (Costos Fijos)"
+],
+    nomina: [
+    "Bold CO - Bancolombia 04000004981 Ahorros COP",
+    "Bold CF - Bancolombia 04000002167 Ahorros COP",
+    "Bold Capital - Bancolombia 04000003879 Ahorros COP",
+    "Bold CO - Bold CF 1700-1602-0586 Ahorros COP",
+    "Bold CF - Bold CF 1700-1047-2157 Ahorros COP",
+    "Bold Capital: Bold CF 1700-1050-5296 Ahorros COP",
+    "Vendemás: BCP MN 191-8740048-0-11 Soles"
+]
+};
+
+function empresaDeCuenta(cta) {
+    var t = String(cta || "");
+    if (/^Bold\.? ?CO/i.test(t) || /^Vend[eé]m[aá]s|^Vedem[aá]s/i.test(t)) return "Bold CO";
+    if (/^Bold\.? ?CF/i.test(t)) return "Bold CF";
+    if (/^Bold Capital/i.test(t)) return "Bold Capital";
+    return "Otros";
+}
+
+function construirArbolTesoreria(T) {
+    // Destinos agrupados por empresa (objetos compartidos, no se duplican en memoria)
+    var destinos = {};
+    T.destino.forEach(function(c) {
+        var e = c === "N/A" ? "N/A" : empresaDeCuenta(c);
+        (destinos[e] = destinos[e] || []).push(c);
+    });
+    var porEmpresa = {};
+    Object.keys(T.origen).forEach(function(emp) {
+        porEmpresa[emp] = {};
+        T.origen[emp].forEach(function(cta) { porEmpresa[emp][cta] = destinos; });
+    });
+    var nominaPorEmpresa = {};
+    T.nomina.forEach(function(cta) {
+        var e = empresaDeCuenta(cta);
+        nominaPorEmpresa[e] = nominaPorEmpresa[e] || {};
+        nominaPorEmpresa[e][cta] = { [e]: ["N/A"] };   // Payroll no tiene cuenta destino en el formulario
+    });
+    var paises = ["Colombia", "Perú"];
+    var arbol = {};
+    Object.keys(T.tipoPago).forEach(function(tp) {
+        var esPayroll = tp === "Payroll";
+        var base = esPayroll ? nominaPorEmpresa : porEmpresa;
+        arbol[tp] = {};
+        T.operaciones[T.tipoPago[tp]].forEach(function(op) {
+            arbol[tp][op] = {};
+            paises.forEach(function(p) { arbol[tp][op][p] = base; });
+        });
+    });
+    return arbol;
+}
+
+const arbolOperaciones = construirArbolTesoreria(TIPIFICACION_TESORERIA);
+
+// Ramas operativas anteriores (alimentan el modo Excel masivo)
+arbolOperaciones["Inversiones y Pactos"] = {
+    "Pactos Bancarios": {
+        "Mesa de Dinero": {
+            "Bold CO": {
+                "Bancolombia - *1234": {
+                    "Fidubancolombia": ["Encargo Fiduciario - *001"],
+                    "Corficolombiana": ["CDT Especial - *002"]
                 }
             }
         }
-    },
-    "Inversiones y Pactos": {
-        "Pactos Bancarios": {
-            "Mesa de Dinero": {
-                "Bold CO": {
-                    "Bancolombia - *1234": {
-                        "Fidubancolombia": ["Encargo Fiduciario - *001"],
-                        "Corficolombiana": ["CDT Especial - *002"]
-                    }
+    }
+};
+arbolOperaciones["Impuestos y Taxes"] = {
+    "Impuestos Nacionales": {
+        "Portal DIAN": {
+            "Bold CO": {
+                "Bancolombia - *1234": {
+                    "DIAN Colombia": ["Cuenta Única Nacional DIAN"]
                 }
             }
         }
-    },
-    "Impuestos y Taxes": {
-        "Impuestos Nacionales": {
-            "Portal DIAN": {
-                "Bold CO": {
-                    "Bancolombia - *1234": {
-                        "DIAN Colombia": ["Cuenta Única Nacional DIAN"]
-                    }
-                }
-            }
-        }
-    },
-    "Dispersión Masiva": {
-        "Dispersión PSE": {
-            "Lote ACH": {
-                "Bold CO": {
-                    "Bancolombia - *1234": {
-                        "ACH Colombia (PSE)": ["Convenio Dispersión Lote #99"]
-                    }
+    }
+};
+arbolOperaciones["Dispersión Masiva"] = {
+    "Dispersión PSE": {
+        "Lote ACH": {
+            "Bold CO": {
+                "Bancolombia - *1234": {
+                    "ACH Colombia (PSE)": ["Convenio Dispersión Lote #99"]
                 }
             }
         }
@@ -594,68 +824,6 @@ if (typeof arbolOperaciones !== "undefined") {
     };
 }
 
-
-// === EXPANSION DE CUENTAS BANCARIAS COMPLETAS SIN ASTERISCOS ===
-if (typeof arbolOperaciones !== "undefined") {
-    // 1. Agregamos una categoría formal con todas las cuentas completas (sin asteriscos ni resúmenes)
-    arbolOperaciones["Traslados entre cuentas"]["Cuentas Propias"]["Canal Directo"]["Bold CO"] = {
-        "Bancolombia - Cta. Corriente # 001-98765432-1 (Bold CO)": {
-            "Bold CO": [
-                "Banco de Bogotá - Cta. Corriente # 033-45678901-2 (Bold CO)",
-                "Citibank Colombia - Cta. Corriente # 100-200300400-5 (Bold CO)",
-                "Davivienda - Cta. Ahorros # 4568-7788-9900 (Bold CO)",
-                "Banco de Occidente - Cta. Corriente # 230-88997766-4 (Bold CO)",
-                "BBVA Colombia - Cta. Corriente # 310-99887766-5 (Bold CO)"
-            ]
-        },
-        "Davivienda - Cta. Ahorros # 4568-7788-9900 (Bold CO)": {
-            "Bold CO": [
-                "Bancolombia - Cta. Corriente # 001-98765432-1 (Bold CO)",
-                "Banco de Bogotá - Cta. Corriente # 033-45678901-2 (Bold CO)"
-            ]
-        },
-        "Citibank Colombia - Cta. Corriente # 100-200300400-5 (Bold CO)": {
-            "Bold CO": [
-                "Bancolombia - Cta. Corriente # 001-98765432-1 (Bold CO)",
-                "Banco de Occidente - Cta. Corriente # 230-88997766-4 (Bold CO)"
-            ]
-        }
-    };
-
-    // 2. Expandimos también las cuentas en las rutas operativas especiales (PSE, Pactos, Taxes)
-    if (arbolOperaciones["Pago PSE"] && arbolOperaciones["Pago PSE"]["Pago Proveedores"]) {
-        arbolOperaciones["Pago PSE"]["Pago Proveedores"]["Pago Proveedores Locales"]["Bold CO"] = {
-            "Bancolombia - Cta. Corriente # 001-98765432-1 (Bold CO)": {
-                "Proveedores Varios": [
-                    "ACH Colombia (PSE) - Dispersión Lote Proveedores Cta # 99001122",
-                    "ACH Colombia (PSE) - Dispersión Nómina y Honorarios Cta # 88776655"
-                ]
-            }
-        };
-    }
-    
-    if (arbolOperaciones["Pago PSE"] && arbolOperaciones["Pago PSE"]["Payroll"]) {
-        arbolOperaciones["Pago PSE"]["Payroll"]["Pacto Colectivo"]["Bold CO"] = {
-            "Bancolombia - Cta. Corriente # 001-98765432-1 (Bold CO)": {
-                "Fondo Pacto Colectivo": [
-                    "Fiduciaria Bancolombia - Encargo Fiduciario Cta # 55443322-1",
-                    "Fiduciaria Bogotá - Fondo Pacto Colectivo Cta # 11223344-9"
-                ]
-            }
-        };
-    }
-
-    if (arbolOperaciones["Pago PSE"] && arbolOperaciones["Pago PSE"]["Pago Impuestos"]) {
-        arbolOperaciones["Pago PSE"]["Pago Impuestos"]["Impuestos Nacionales DIAN"]["Bold CO"] = {
-            "Bancolombia - Cta. Corriente # 001-98765432-1 (Bold CO)": {
-                "DIAN / Tesorería Distrital": [
-                    "Cuenta Única Nacional DIAN - Recaudo Impuestos Cta # 0000-9999-8888",
-                    "Tesorería Distrital Bogotá - Recaudo ICA y Retención Cta # 1111-2222-3333"
-                ]
-            }
-        };
-    }
-}
 
 // === RADAR EN VIVO Y MOTOR DE TABLA ROBUSTO (SIN F5 - 100% FIRESTORE) ===
 function actualizarRadarYTablaEnVivo() {
